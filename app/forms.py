@@ -92,5 +92,5 @@ class MultiCheckboxField(SelectMultipleField):
 
 
 class GroupEditForm(FlaskForm):
-    name = StringField('Name', [DataRequired(), Length(100)])
-    description = TextAreaField('Beschreibung', [Length(1000)])
+    name = StringField('Name', [DataRequired(), Length(max=100)])
+    description = TextAreaField('Beschreibung', [Length(max=1000)])

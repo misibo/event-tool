@@ -24,8 +24,8 @@
                 <td>{{ group.name }}</td>
                 <td>{{ group.description }}</td>
                 <td>
-                    <a href="{{ url_for('group.edit', group.id) }}" uk-icon="pencil"></a>
-                    <a href="{{ url_for('group.edit', group.id) }}" uk-icon="trash"></a>
+                    <a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a>
+                    <a class="uk-margin-small-left" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a>
                 </td>
             </tr>
             {% endfor %}
