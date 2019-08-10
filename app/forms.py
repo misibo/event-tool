@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField
+from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField, TextAreaField
 from wtforms.fields.html5 import EmailField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.validators import DataRequired, Length, Email
@@ -59,6 +59,7 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
+
 class CheckboxListWidget(object):
 
     def __init__(self, stack=True, prefix_label=True):
@@ -70,11 +71,14 @@ class CheckboxListWidget(object):
         html = ["<%s %s>" % (self.html_tag, html_params(**kwargs))]
         for subfield in field:
             if self.prefix_label:
-                html.append("<label>%s %s</label>" % (subfield.label, subfield()))
+                html.append("<label>%s %s</label>" %
+                            (subfield.label, subfield()))
             else:
-                html.append("<label>%s %s</label>" % (subfield(), subfield.label))
+                html.append("<label>%s %s</label>" %
+                            (subfield(), subfield.label))
         html.append("</%s>" % self.html_tag)
         return Markup("".join(html))
+
 
 class MultiCheckboxField(SelectMultipleField):
     widget = CheckboxListWidget()
@@ -85,3 +89,8 @@ class MultiCheckboxField(SelectMultipleField):
 #             'Code', [Required(message='Please enter your code')])
 #         Tasks = MultiCheckboxField('Proses', [Required(message='Please tick your task')], choices=[
 #                                     ('nyapu', 'Nyapu'), ('ngepel', 'Ngepel')])
+
+
+class GroupEditForm(FlaskForm):
+    name = StringField('Name', [DataRequired(), Length(100)])
+    description = TextAreaField('Beschreibung', [Length(1000)])

@@ -85,6 +85,7 @@ class Group(Base):
     __tablename__ = 'Group'
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    description = Column(String)
     admin_id = Column(Integer, ForeignKey(User.id))
 
     # a group admin can add and remove users from a group

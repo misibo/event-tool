@@ -1,9 +1,9 @@
-{% extends 'layout.html' %}
+{% extends 'form.html' %}
 {% from 'macros.html' import render_field %}
 
 {% block title %}Anmelden{% endblock %}
 
-{% block content %}
+{% block form %}
 <form class="uk-form-stacked" method="POST">
     {{ render_field(form.username, class='uk-input') }}
     {{ render_field(form.password, class='uk-input') }}
