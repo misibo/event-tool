@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, ValidationError
+from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField
 from wtforms.fields.html5 import EmailField
+from wtforms.widgets.core import CheckboxInput
 from wtforms.validators import DataRequired, Length, Email
 from .models import User, db_session
 import hashlib
@@ -61,8 +62,7 @@ class RegisterForm(FlaskForm):
 class CheckboxListWidget(object):
 
     def __init__(self, stack=True, prefix_label=True):
-        assert html_tag in ("ol", "ul")
-        self.html_tag = html_tag
+        self.html_tag = 'div'
         self.prefix_label = prefix_label
 
     def __call__(self, field, **kwargs):
