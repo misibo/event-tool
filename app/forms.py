@@ -1,6 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField
 from wtforms.fields.html5 import EmailField
+from flask import Markup
+from wtforms.widgets import html_params
 from wtforms.widgets.core import CheckboxInput
 from wtforms.validators import DataRequired, Length, Email
 from .models import User, db_session
@@ -41,7 +43,8 @@ class EditUserForm(FlaskForm):
     def validate_username(self, field):
         user = db_session.query(User).filter_by(
             id=flask.session['user_id']).first()
-        if field.data != user.username and db_session.query(User).filter_by(username=field.data).first() is not None:
+        if field.data != user.username and db_session.query(User) \
+                .filter_by(username=field.data).first() is not None:
             raise ValidationError('Benutzername existiert bereits.')
 
 
@@ -58,6 +61,7 @@ class RegisterForm(FlaskForm):
         user = db_session.query(User).filter_by(username=username).first()
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
+
 
 class CheckboxListWidget(object):
 
@@ -76,12 +80,15 @@ class CheckboxListWidget(object):
         html.append("</%s>" % self.html_tag)
         return Markup("".join(html))
 
+
 class MultiCheckboxField(SelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
+
 # class FormProject(FlaskForm):
 #         Code = StringField(
 #             'Code', [Required(message='Please enter your code')])
-#         Tasks = MultiCheckboxField('Proses', [Required(message='Please tick your task')], choices=[
-#                                     ('nyapu', 'Nyapu'), ('ngepel', 'Ngepel')])
+#         Tasks = MultiCheckboxField(
+#             'Proses', [Required(message='Please tick your task')],
+#             choices=[('nyapu', 'Nyapu'), ('ngepel', 'Ngepel')])

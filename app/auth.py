@@ -1,4 +1,7 @@
-import functools, hashlib, uuid
+
+import functools
+import uuid
+import hashlib
 from datetime import datetime, timedelta
 from flask import Blueprint, g, session, render_template, url_for, redirect, flash
 from .models import User, db_session
@@ -29,7 +32,8 @@ def is_session_active():
 #     if is_session_active():
 #         timestamp = datetime.datetime.strptime(
 #             flask.session['timestamp'], '%Y-%m-%d %H:%M:%S')
-#         if not (timestamp <= datetime.datetime.utcnow() < timestamp + datetime.timedelta(hours=2)):
+#         if not (timestamp <= datetime.datetime.utcnow() < \
+#                 timestamp + datetime.timedelta(hours=2)):
 #             # timestamp has expired
 #             return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
