@@ -3,9 +3,9 @@ import functools
 import uuid
 import hashlib
 from datetime import datetime, timedelta
-from flask import Blueprint, g, session, render_template, url_for, redirect, flash
+from flask import Blueprint, g, session, render_template, url_for, redirect, flash, request
 from .models import User, db_session
-from .forms import RegisterForm, LoginForm
+from .forms import RegisterForm, LoginForm, ChangePasswordForm
 
 bp = Blueprint("auth", __name__, url_prefix="/auth", template_folder='templates/auth')
 
@@ -118,6 +118,26 @@ def login():
         return redirect(url_for('account'))
 
     return render_template('login.html', form=form)
+
+
+@bp.route('/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        user = db_session.query(User).filter_by(
+            id=session['user_id']).first()
+        password_hash = hashlib.pbkdf2_hmac(
+            'sha256', form.new_password.data.encode('UTF-8'),
+            user.password_salt.encode('UTF-8'), 1000)
+        user.password_hash = password_hash
+        db_session.commit()
+
+        flash('Passwort wurde erfolgreich geändert.')
+        return redirect(url_for('account'))
+
+    return render_template('user/password.html', form=form)
 
 
 @bp.route('/logout')

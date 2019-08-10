@@ -48,6 +48,31 @@ class EditUserForm(FlaskForm):
             raise ValidationError('Benutzername existiert bereits.')
 
 
+class ChangePasswordForm(FlaskForm):
+    old_password = PasswordField('Altes Passwort', [DataRequired()])
+    new_password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])
+    confirm_new_password = PasswordField('Neues Passwort bestätigen', [DataRequired(), Length(min=8)])
+
+    def validate_old_password(self, field):
+        user = db_session.query(User).filter_by(
+            id=flask.session['user_id']).first()
+        password_hash = hashlib.pbkdf2_hmac(
+            'sha256', self.old_password.data.encode('UTF-8'), user.password_salt.encode('UTF-8'), 1000)
+        if password_hash != user.password_hash:
+            raise ValidationError('Altes Passwort ist falsch.')
+
+    def validate(self):
+        if not super(ChangePasswordForm, self).validate():
+            return False
+
+        if self.new_password.data != self.confirm_new_password.data:
+            self.confirm_new_password.errors.append(
+                'Bestätigung stimmt nicht mit neuem Passwort überrein.')
+            return False
+
+        return True
+
+
 class RegisterForm(FlaskForm):
 
     username = StringField('Benutzername', [DataRequired(), Length(max=100)])
