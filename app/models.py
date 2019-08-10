@@ -3,7 +3,7 @@ from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Boo
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine('sqlite:///database.sqlite', echo=True)
+engine = create_engine('sqlite:///db.sqlite3', echo=True)
 Base = declarative_base()
 
 GroupMembers = Table(
