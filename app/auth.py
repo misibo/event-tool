@@ -1,0 +1,121 @@
+import functools, datetime
+from flask import Blueprint, g, session, render_template, url_for, redirect, flash
+from .models import User, db_session
+from .forms import RegisterForm, LoginForm
+
+bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+
+def close_session():
+    for key in {'user_id', 'timestamp'}:
+        if key in session:
+            session.pop(key)
+
+
+def create_session(user_id):
+    close_session()
+    created_at = datetime.datetime.utcnow()
+    session['user_id'] = user_id
+    session['timestamp'] = f'{created_at:%Y-%m-%d %H:%M:%S}'
+
+
+def is_session_active():
+    return all(key in session for key in {'user_id', 'timestamp'})
+
+
+# def with_checked_session(callback):
+#     app.logger.warning(flask.session)
+#     if is_session_active():
+#         timestamp = datetime.datetime.strptime(
+#             flask.session['timestamp'], '%Y-%m-%d %H:%M:%S')
+#         if not (timestamp <= datetime.datetime.utcnow() < timestamp + datetime.timedelta(hours=2)):
+#             # timestamp has expired
+#             return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+
+#         user = db_session.query(User).filter_by(
+#             id=flask.session['user_id']).first()
+#         if user is None:
+#             # user has been deleted
+#             return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+
+#         return callback(user)
+#     else:
+#         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+
+def login_required(view):
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for("auth.login"))
+
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+@bp.before_app_request
+def load_logged_in_user():
+    if is_session_active():
+        timestamp = datetime.datetime.strptime(
+            session['timestamp'], '%Y-%m-%d %H:%M:%S')
+        if not (timestamp <= datetime.datetime.utcnow() < timestamp + datetime.timedelta(hours=2)):
+            g.user = None
+        g.user = db_session.query(User).filter_by(
+            id=session['user_id']).first()
+        # if user is None:
+        #     # user has been deleted
+        #     return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+    else:
+        g.user = None
+
+
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        salt = str(uuid.uuid4())
+        password_hash = hashlib.pbkdf2_hmac(
+            'sha256', form.password.data.encode('UTF-8'), salt.encode('UTF-8'), 1000)
+
+        user = User(
+            username=form.username.data,
+            first_name=form.first_name.data,
+            family_name=form.family_name.data,
+            email=form.email.data,
+            password_salt=salt,
+            password_hash=password_hash,
+        )
+
+        db_session.add(user)
+        db_session.commit()
+
+        create_session(user.id)
+
+        flash('Du hast dich erfolgreich registriert.', 'info')
+
+        return redirect(flask.url_for('account'))
+
+    return render_template('user/register.html', form=form)
+
+
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = db_session.query(User).filter_by(
+            username=form.username.data).first()
+        create_session(user.id)
+        flash('Du hast dich erfolgreich eingeloggt.')
+        return redirect(url_for('account'))
+
+    return render_template('user/login.html', form=form)
+
+
+@bp.route('/logout')
+def logout():
+    close_session()
+    return redirect(url_for('index'))
