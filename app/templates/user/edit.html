@@ -12,7 +12,5 @@
     {{ form.csrf_token }}
     <input type="submit" class="uk-button uk-button-default" value="Speichern">
 </form>
-<form action="/auth/password">
-    <input type="submit" class="uk-button" value="Passwort ändern" />
-</form>
+<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.change_password') }}">Passwort ändern</a>
 {% endblock %}
