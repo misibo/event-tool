@@ -1,12 +1,12 @@
-import os
-import hashlib
-import uuid
 import flask
-import datetime
-from .forms import RegisterForm, LoginForm, EditUserForm
-from .models import User, db_session
+from .forms import EditUserForm
+from .models import db_session
+from . import auth
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, instance_relative_config=True)
+app.config.from_object('config')  # load ./config.py
+app.config.from_pyfile('config.py')  # load ./instance/config.py
+
 app.secret_key = b'misibo'  # os.urandom(16)
 
 
@@ -46,7 +46,6 @@ app.secret_key = b'misibo'  # os.urandom(16)
 #     else:
 #         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
-from . import auth
 app.register_blueprint(auth.bp)
 
 
