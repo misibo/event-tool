@@ -52,7 +52,7 @@ app.register_blueprint(auth.bp)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return 'Hello World'
+    return flask.render_template('home.html')
 
 
 @app.route('/account/', methods=['GET', 'POST'])

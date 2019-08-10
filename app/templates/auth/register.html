@@ -1,13 +1,16 @@
 {% extends 'layout.html' %}
 {% from 'macros.html' import render_field %}
 
-{% block title %}Anmelden{% endblock %}
+{% block title %}Registrieren{% endblock %}
 
 {% block content %}
 <form class="uk-form-stacked" method="POST">
     {{ render_field(form.username, class='uk-input') }}
+    {{ render_field(form.email, class='uk-input') }}
+    {{ render_field(form.first_name, class='uk-input') }}
+    {{ render_field(form.family_name, class='uk-input') }}
     {{ render_field(form.password, class='uk-input') }}
     {{ form.csrf_token }}
-    <input type="submit" class="uk-button" value="Anmelden">
+    <input type="submit" class="uk-button uk-button-default" value="Registrieren">
 </form>
 {% endblock %}

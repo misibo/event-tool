@@ -1,9 +1,10 @@
-import functools, datetime
+import functools, hashlib, uuid
+from datetime import datetime, timedelta
 from flask import Blueprint, g, session, render_template, url_for, redirect, flash
 from .models import User, db_session
 from .forms import RegisterForm, LoginForm
 
-bp = Blueprint("auth", __name__, url_prefix="/auth")
+bp = Blueprint("auth", __name__, url_prefix="/auth", template_folder='templates/auth')
 
 
 def close_session():
@@ -14,7 +15,7 @@ def close_session():
 
 def create_session(user_id):
     close_session()
-    created_at = datetime.datetime.utcnow()
+    created_at = datetime.utcnow()
     session['user_id'] = user_id
     session['timestamp'] = f'{created_at:%Y-%m-%d %H:%M:%S}'
 
@@ -47,7 +48,7 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for("auth.login"))
+            return redirect(url_for('auth.login'))
 
         return view(**kwargs)
 
@@ -57,9 +58,9 @@ def login_required(view):
 @bp.before_app_request
 def load_logged_in_user():
     if is_session_active():
-        timestamp = datetime.datetime.strptime(
+        timestamp = datetime.strptime(
             session['timestamp'], '%Y-%m-%d %H:%M:%S')
-        if not (timestamp <= datetime.datetime.utcnow() < timestamp + datetime.timedelta(hours=2)):
+        if not (timestamp <= datetime.utcnow() < timestamp + timedelta(hours=2)):
             g.user = None
         g.user = db_session.query(User).filter_by(
             id=session['user_id']).first()
@@ -95,9 +96,9 @@ def register():
 
         flash('Du hast dich erfolgreich registriert.', 'info')
 
-        return redirect(flask.url_for('account'))
+        return redirect(url_for('account'))
 
-    return render_template('user/register.html', form=form)
+    return render_template('register.html', form=form)
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -112,7 +113,7 @@ def login():
         flash('Du hast dich erfolgreich eingeloggt.')
         return redirect(url_for('account'))
 
-    return render_template('user/login.html', form=form)
+    return render_template('login.html', form=form)
 
 
 @bp.route('/logout')
