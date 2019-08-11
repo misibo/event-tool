@@ -2,10 +2,12 @@ import flask
 from .forms import EditUserForm
 from .models import db_session
 from . import auth
+from flask_mail import Mail
 
 app = flask.Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')  # load ./config.py
 app.config.from_pyfile('config.py')  # load ./instance/config.py
+mail = Mail(app)
 
 app.secret_key = b'misibo'  # os.urandom(16)
 
