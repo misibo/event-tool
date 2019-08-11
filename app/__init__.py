@@ -1,9 +1,9 @@
 import flask
-from flask import request, url_for
+from flask import request, url_for, render_template
 from .forms import EditUserForm
 from .models import db_session, User
 from . import auth
-import app.mailing as mailing
+from . import mailing
 from datetime import datetime
 import os
 from flask_mail import Mail
@@ -11,9 +11,8 @@ from flask_mail import Mail
 app = flask.Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')  # load ./config.py
 app.config.from_pyfile('config.py')  # load ./instance/config.py
-mail = Mail(app)
-
 app.secret_key = b'misibo'  # os.urandom(16)
+app.mail = Mail(app)
 
 
 # def close_session():
@@ -83,13 +82,11 @@ def account():
             app.logger.info(f'New email address is activated by {confirm_url}')
 
             success = mailing.send_single_mail(
-                user.email_change_request, 'E-Mail Bestätigung',
-                text=(
-                    f'Hallo {user.first_name}, \n',
-                    f'Du hast die im Account die E-Mail-Adresse geändert. ',
-                    f'Klicke auf folgenden Link, '
-                    f'um die neue E-Mail-Adresse zu bestätigen: {confirm_url}'
-                ))
+                recipient=user.email_change_request,
+                subject='E-Mail-Adresse ändern',
+                text=render_template('mail/change_email.text', user=user, confirm_url=confirm_url),
+                html=render_template('mail/change_email.html', user=user, confirm_url=confirm_url),
+            )
 
             if not success:
                 flask.flash((

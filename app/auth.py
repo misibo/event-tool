@@ -4,13 +4,16 @@ import uuid
 import hashlib
 import os
 from datetime import datetime, timedelta
-from flask import Blueprint, g, session, render_template, url_for, redirect, flash, request, escape
+from flask import (
+    Blueprint, g, session, render_template, url_for, redirect, flash, request, escape,
+    current_app)
 from flask_mail import Message
 from .models import PendingUser, User, db_session
 from .forms import (
     RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm,
     ConfirmPasswordResetForm)
-import app as root
+from . import mailing
+
 
 bp = Blueprint("auth", __name__, url_prefix="/auth", template_folder='templates/auth')
 
@@ -106,33 +109,30 @@ def register():
         db_session.add(user)
         db_session.commit()
 
-        msg = Message(
-            "Please register",
-            sender="root@localhost",
-            recipients=[user.email])
-
         confirm_url = request.url_root + url_for('auth.confirm', token=token)[1:]
+        current_app.logger.info(f'{user.email} can confirmed by {confirm_url}')
 
-        msg.body = (
-            f'Hallo {escape(user.username)}, \n'
-            f'Du hast dich erfolgreich registriert. '
-            f'Bitte klicke auf folgenden Link, um die E-Mail Adresse zu bestätigen: {confirm_url}'
+        success = mailing.send_single_mail(
+            recipient=user.email,
+            subject="Registrierung",
+            text=render_template(
+                'mail/confirm_registration.text',
+                user=user, confirm_url=confirm_url),
+            html=render_template(
+                'mail/confirm_registration.html',
+                user=user, confirm_url=confirm_url),
         )
-        root.app.logger.info(f'{user.email} can confirmed by {confirm_url}')
 
-        try:
-            root.mail.send(msg)
-        except Exception:
-            root.app.logger.exception('Could not delivery e-mail.')
+        if not success:
+            current_app.logger.exception('Could not delivery e-mail.')
             flash((
-                'Beim Versenden der E-Mail ist ein Fehler aufgetreten, '
-                'deshalb wirst du wahrscheinlich keine E-Mail erhalten. '
+                'Beim Versenden der E-Mail ist ein Fehler aufgetreten. '
                 'Bitte überprüfe die E-Mail-Adresse auf Tippfehler.'),
                 'error')
         else:
             flash((
                 'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
-                'um den Account zu aktivieren.'),
+                'um die Registrierung abzuschliessen.'),
                 'info')
 
         # TODO: Implement page to explain what the user has to do now
@@ -162,7 +162,7 @@ def confirm():
         expiry_date = temp.insertion_time_utc + timedelta(days=1)
 
         if existing_user is not None:
-            flash(('Der Account wurde bereits aktiviert. Versuche dich anmelden.'), 'info')
+            flash(('Der Account wurde bereits aktiviert.'), 'info')
             return redirect(url_for('auth.login'))
         elif not(temp.insertion_time_utc <= datetime.utcnow() < expiry_date):
             flash((
@@ -242,30 +242,24 @@ def reset_password():
         db_session.commit()
 
         confirm_url = request.url_root + url_for('auth.confirm_password_reset', token=token)[1:]
+        current_app.logger.info(f'The password of {username} is reset by {confirm_url}')
 
-        msg = Message(
-            "Please register",
-            sender="root@localhost",
-            recipients=[email])
-
-        msg.body = (
-            f'Bitte klicke auf folgenden Link, um das Passwort zurückzusetzen: {confirm_url}'
+        success = mailing.send_single_mail(
+            recipient=email,
+            subject='Passwort zurücksetzen',
+            text=render_template('mail/reset_password.text', user=user, confirm_url=confirm_url),
+            html=render_template('mail/reset_password.html', user=user, confirm_url=confirm_url),
         )
-        root.app.logger.info(f'The password of {username} is reset by {confirm_url}')
 
-        try:
-            root.mail.send(msg)
-        except Exception:
-            root.app.logger.exception('Could not delivery e-mail.')
+        if not success:
             flash((
-                'Beim Versenden der E-Mail ist ein Fehler aufgetreten, '
-                'deshalb wirst du wahrscheinlich keine E-Mail erhalten. '
-                'Bitte kontaktiere einen Admin.'),
+                'Beim Versenden der E-Mail ist ein Fehler aufgetreten. '
+                'Möglicherweise ist die E-Mail-Adresse ungültig.'),
                 'error')
         else:
             flash((
                 'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
-                'um das Passwort zurücksusetzen.'),
+                'um das Passwort zurückzusetzen.'),
                 'info')
 
     return render_template('auth/reset_password.html', form=form)
@@ -281,8 +275,9 @@ def confirm_password_reset():
 
     if user is None:
         flash((
-            'Das Passwort konnte nicht zurückgesetzt werden, weil der Link ungültig ist. '
-            'Bitte versuche erneut, das Passwort zurückzusetzen.'), 'error')
+            'Das Passwort kann nicht zurückgesetzt werden, '
+            'weil der Link bereits verwendet wurde, oder ungültig ist. '
+            'Bitte fordere erneut eine E-Mail an.'), 'error')
         return redirect(url_for('auth.reset_password'))
     else:
         insertion_time = user.password_reset_insertion_time_utc
@@ -290,8 +285,9 @@ def confirm_password_reset():
 
         if not(insertion_time <= datetime.utcnow() < expiry_date):
             flash((
-                'Das Passwort konnte nicht zurückgesetzt werden, weil der Link abgelaufen ist. '
-                'Bitte versuche erneut, das Passwort zurückzusetzen.'), 'error')
+                'Das Passwort kann nicht zurückgesetzt werden, weil der Link abgelaufen ist, '
+                'und deshalb nicht mehr verwendet werden kann. '
+                'Bitte fordere erneut eine E-Mail an.'), 'error')
             return redirect(url_for('auth.reset_password'))
         else:
             form = ConfirmPasswordResetForm()
@@ -307,8 +303,8 @@ def confirm_password_reset():
                 db_session.commit()
 
                 flash((
-                    'Das Passwort wurde erfolgreich zurückgesetzt. '
-                    'Du kannst dich jetzt mit dem neuen Passwort anmelden.'), 'info')
+                    'Das Passwort wurde erfolgreich geändert. '
+                    'Melde dich jetzt mit dem neuen Passwort an.'), 'info')
                 return redirect(url_for('auth.login'))
             else:
                 return render_template('auth/confirm_password_reset.html', form=form)
@@ -341,6 +337,9 @@ def confirm_changed_email():
             user.email_change_token = None
             db_session.commit()
 
+            flash((
+                'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
+                 'info')
             return redirect(url_for('account'))
 
 
