@@ -48,6 +48,11 @@ class EditUserForm(FlaskForm):
             raise ValidationError('Benutzername existiert bereits.')
 
 
+class ChangeEmailForm(FlaskForm):
+    old_email = EmailField('Alte E-Mail', [DataRequired(), Email()])
+    new_email = EmailField('Neue E-Mail', [DataRequired(), Email()])
+
+
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField('Altes Passwort', [DataRequired()])
     new_password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])

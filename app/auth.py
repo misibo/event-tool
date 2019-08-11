@@ -11,7 +11,7 @@ from flask_mail import Message
 from .models import PendingUser, User, db_session
 from .forms import (
     RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm,
-    ConfirmPasswordResetForm)
+    ConfirmPasswordResetForm, ChangeEmailForm)
 from . import mailing
 
 
@@ -310,8 +310,49 @@ def confirm_password_reset():
                 return render_template('auth/confirm_password_reset.html', form=form)
 
 
-@bp.route('/confirm_changed_email', methods=['GET', 'POST'])
-def confirm_changed_email():
+@bp.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email():
+    user = g.user
+
+    form = ChangeEmailForm(old_email=user.email)
+
+    if form.validate_on_submit():
+        token = os.urandom(16).hex()
+
+        user.email_change_request = form.new_email.data
+        user.email_change_insertion_time_utc = datetime.utcnow()
+        user.email_change_token = token
+        db_session.commit()
+
+        confirm_url = request.url_root + url_for('auth.confirm_email', token=token)[1:]
+
+        current_app.logger.info(f'New email address is activated by {confirm_url}')
+
+        success = mailing.send_single_mail(
+            recipient=user.email_change_request,
+            subject='E-Mail-Adresse ändern',
+            text=render_template('mail/change_email.text', user=user, confirm_url=confirm_url),
+            html=render_template('mail/change_email.html', user=user, confirm_url=confirm_url),
+        )
+
+        if not success:
+            flash((
+                'Beim Versenden des Bestätigungs-Link '
+                'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
+                'Möglicherweise enthält die Adresse ein Tippfehler.'),
+                'error')
+        else:
+            flash((
+                'Es wurde eine Mail mit einem Bestätigungs-Link '
+                'an die neue E-Mail-Addresse verschickt.'),
+                'info')
+
+    return render_template('user/email.html', form=form)
+
+
+@bp.route('/confirm_email', methods=['GET', 'POST'])
+def confirm_email():
     token = str(request.args.get('token', 'invalid'))
 
     user: User = db_session.query(User).filter_by(email_change_token=token).first()

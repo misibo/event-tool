@@ -69,37 +69,6 @@ def account():
         user.username = form.username.data
         user.first_name = form.first_name.data
         user.family_name = form.family_name.data
-
-        if user.email != form.email.data:
-            token = os.urandom(16).hex()
-
-            user.email_change_request = form.email.data
-            user.email_change_insertion_time_utc = datetime.utcnow()
-            user.email_change_token = token
-
-            confirm_url = request.url_root + url_for('auth.confirm_changed_email', token=token)[1:]
-
-            app.logger.info(f'New email address is activated by {confirm_url}')
-
-            success = mailing.send_single_mail(
-                recipient=user.email_change_request,
-                subject='E-Mail-Adresse ändern',
-                text=render_template('mail/change_email.text', user=user, confirm_url=confirm_url),
-                html=render_template('mail/change_email.html', user=user, confirm_url=confirm_url),
-            )
-
-            if not success:
-                flask.flash((
-                    'Beim Versenden des Bestätigungs-Link '
-                    'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
-                    'Möglicherweise enthält die Adresse ein Tippfehler.'),
-                    'info')
-            else:
-                flask.flash((
-                    'Es wurde eine Mail mit einem Bestätigungs-Link '
-                    'an die neue E-Mail-Addresse verschickt.'),
-                    'info')
-
         db_session.commit()
 
         flask.flash('Profil erfolgreich angepasst.')
