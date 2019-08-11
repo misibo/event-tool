@@ -42,6 +42,8 @@ class User(Base):
 
     password_salt = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
+    password_reset_token = Column(String)
+    password_reset_insertion_time_utc = Column(DateTime)
 
     # can create events and assign an admin
     create_events_permissions = Column(Boolean)

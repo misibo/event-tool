@@ -10,4 +10,5 @@
     {{ form.csrf_token }}
     <input type="submit" class="uk-button uk-button-default" value="Anmelden">
 </form>
+<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.reset_password') }}">Passwort zurücksetzen</a>
 {% endblock %}
