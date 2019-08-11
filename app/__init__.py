@@ -46,9 +46,10 @@ app.secret_key = b'misibo'  # os.urandom(16)
 #     else:
 #         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
-from . import auth, group
+from . import auth, group, event
 app.register_blueprint(auth.bp)
 app.register_blueprint(group.bp)
+app.register_blueprint(event.bp)
 
 
 @app.route('/', methods=['GET', 'POST'])

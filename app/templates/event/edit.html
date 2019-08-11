@@ -1,0 +1,13 @@
+{% extends 'form.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block title %}Event bearbeiten{% endblock %}
+
+{% block form %}
+<form class="uk-form-stacked" method="POST">
+    {{ render_field(form.title, class='uk-input') }}
+    {{ render_field(form.groups) }}
+    {{ form.csrf_token }}
+    <input type="submit" class="uk-button uk-button-default" value="Speichern">
+</form>
+{% endblock %}

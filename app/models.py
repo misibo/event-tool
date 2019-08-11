@@ -62,11 +62,12 @@ class Event(Base):
     __tablename__ = 'Event'
     id = Column(Integer, primary_key=True)
     title = Column(String)
-    message = Column(String)
+    info = Column(String)
     location = Column(String)
-    time = Column(DateTime)
+    start = Column(DateTime)
+    end = Column(DateTime)
     equipment = Column(String)
-    money = Column(Integer)
+    cost = Column(Integer)
 
     send_invitations = Column(Boolean)
     deadline = Column(DateTime)

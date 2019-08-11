@@ -1,8 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField, TextAreaField
+from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField, TextAreaField, DateTimeField, IntegerField
 from wtforms.fields.html5 import EmailField
 from wtforms.widgets.core import CheckboxInput
-from wtforms.validators import DataRequired, Length, Email
+from wtforms.widgets import html_params, HTMLString
+from markupsafe import Markup
+from wtforms.validators import DataRequired, Length, Email, NumberRange
 from .models import User, db_session
 import hashlib
 import flask
@@ -60,37 +62,44 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Benutzername bereits benutzt.')
 
 
-class CheckboxListWidget(object):
-
-    def __init__(self, stack=True, prefix_label=True):
-        self.html_tag = 'div'
-        self.prefix_label = prefix_label
-
-    def __call__(self, field, **kwargs):
-        kwargs.setdefault("id", field.id)
-        html = ["<%s %s>" % (self.html_tag, html_params(**kwargs))]
-        for subfield in field:
-            if self.prefix_label:
-                html.append("<label>%s %s</label>" %
-                            (subfield.label, subfield()))
-            else:
-                html.append("<label>%s %s</label>" %
-                            (subfield(), subfield.label))
-        html.append("</%s>" % self.html_tag)
-        return Markup("".join(html))
-
-
 class MultiCheckboxField(SelectMultipleField):
+
+    class CheckboxListWidget(object):
+
+        def __init__(self, stack=True):
+            self.stack = stack
+
+        def __call__(self, field, **kwargs):
+            kwargs.setdefault('id', field.id)
+            html = ['<div %s>' % html_params(**kwargs)]
+            for subfield in field:
+                class_ = 'uk-checkbox'
+                br = '<br>'
+                if self.stack is False:
+                    br = ''
+                else:
+                    class_ += ' uk-margin-small-left'
+                html.append('%s %s %s' %
+                            (subfield(class_=class_), subfield.label, br))
+            html.append('</div>')
+            return HTMLString(''.join(html))
+
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
-
-# class FormProject(FlaskForm):
-#         Code = StringField(
-#             'Code', [Required(message='Please enter your code')])
-#         Tasks = MultiCheckboxField('Proses', [Required(message='Please tick your task')], choices=[
-#                                     ('nyapu', 'Nyapu'), ('ngepel', 'Ngepel')])
 
 
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Beschreibung', [Length(max=1000)])
+
+
+class EventEditForm(FlaskForm):
+    title = StringField('Titel', [DataRequired(), Length(max=100)])
+    info = TextAreaField('Info', [Length(max=10000)])
+    location = StringField('Standort', [Length(max=100)])
+    start = DateTimeField('Start', [DataRequired()])
+    end = DateTimeField('Ende')
+    equipement = TextAreaField('Ausrüstung')
+    cost = IntegerField('Kosten', [NumberRange(min=0)])
+    deadline = DateTimeField('Deadline'),
+    groups = MultiCheckboxField('Gruppen', [DataRequired()])
