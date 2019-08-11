@@ -35,6 +35,7 @@ class User(Base):
     __tablename__ = 'User'
     id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False, unique=True)
+
     email = Column(String, nullable=False)
 
     first_name = Column(String, nullable=False)
@@ -44,6 +45,10 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     password_reset_token = Column(String)
     password_reset_insertion_time_utc = Column(DateTime)
+
+    email_change_request = Column(String)
+    email_change_token = Column(String)
+    email_change_insertion_time_utc = Column(DateTime)
 
     # can create events and assign an admin
     create_events_permissions = Column(Boolean)

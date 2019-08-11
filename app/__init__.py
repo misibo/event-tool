@@ -1,7 +1,11 @@
 import flask
+from flask import request, url_for
 from .forms import EditUserForm
-from .models import db_session
+from .models import db_session, User
 from . import auth
+import app.mailing as mailing
+from datetime import datetime
+import os
 from flask_mail import Mail
 
 app = flask.Flask(__name__, instance_relative_config=True)
@@ -59,14 +63,48 @@ def index():
 @app.route('/account/', methods=['GET', 'POST'])
 @auth.login_required
 def account():
-    user = flask.g.user
+    user: User = flask.g.user
     form = EditUserForm(obj=user)
+
     if form.validate_on_submit():
         user.username = form.username.data
         user.first_name = form.first_name.data
-        user.email = form.email.data
         user.family_name = form.family_name.data
+
+        if user.email != form.email.data:
+            token = os.urandom(16).hex()
+
+            user.email_change_request = form.email.data
+            user.email_change_insertion_time_utc = datetime.utcnow()
+            user.email_change_token = token
+
+            confirm_url = request.url_root + url_for('auth.confirm_changed_email', token=token)[1:]
+
+            app.logger.info(f'New email address is activated by {confirm_url}')
+
+            success = mailing.send_single_mail(
+                user.email_change_request, 'E-Mail Bestätigung',
+                text=(
+                    f'Hallo {user.first_name}, \n',
+                    f'Du hast die im Account die E-Mail-Adresse geändert. ',
+                    f'Klicke auf folgenden Link, '
+                    f'um die neue E-Mail-Adresse zu bestätigen: {confirm_url}'
+                ))
+
+            if not success:
+                flask.flash((
+                    'Beim Versenden des Bestätigungs-Link '
+                    'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
+                    'Möglicherweise enthält die Adresse ein Tippfehler.'),
+                    'info')
+            else:
+                flask.flash((
+                    'Es wurde eine Mail mit einem Bestätigungs-Link '
+                    'an die neue E-Mail-Addresse verschickt.'),
+                    'info')
+
         db_session.commit()
+
         flask.flash('Profil erfolgreich angepasst.')
 
     return flask.render_template('user/edit.html', form=form)

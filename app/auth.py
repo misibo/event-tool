@@ -314,6 +314,36 @@ def confirm_password_reset():
                 return render_template('auth/confirm_password_reset.html', form=form)
 
 
+@bp.route('/confirm_changed_email', methods=['GET', 'POST'])
+def confirm_changed_email():
+    token = str(request.args.get('token', 'invalid'))
+
+    user: User = db_session.query(User).filter_by(email_change_token=token).first()
+
+    if user is None:
+        flash((
+            'Das E-Mail-Adresse konnte nicht geändert werden, '
+            'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
+        return redirect(url_for('account'))
+    else:
+        insertion_time = user.email_change_insertion_time_utc
+        expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
+
+        if not(insertion_time <= datetime.utcnow() < expiry_date):
+            flash((
+                'Das E-Mail-Adresse konnte nicht geändert werden, '
+                'weil der Link abgelaufen ist. '), 'error')
+            return redirect(url_for('account'))
+        else:
+            user.email = user.email_change_request
+            user.email_change_insertion_time_utc = None
+            user.email_change_request = None
+            user.email_change_token = None
+            db_session.commit()
+
+            return redirect(url_for('account'))
+
+
 @bp.route('/logout')
 def logout():
     close_session()
