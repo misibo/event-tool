@@ -8,8 +8,8 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 
 @bp.route('/', methods=['GET'])
 def list():
-    events = db_session.query(Group).all()
-    return render_template('index.html', events=groups)
+    events = db_session.query(Event).all()
+    return render_template('event/index.html', events=events)
 
 
 @bp.route('/create', methods=['GET', 'POST'], defaults={'id': None})
@@ -23,16 +23,17 @@ def edit(id):
             abort(NotFound)
 
     form = EventEditForm(obj=event)
-    form.groups.choices = []
-    for group in db_session.query(Group).all():
-        form.groups.choices.append( (group.id, group.name) )
+    form.groups.query = db_session.query(Group).all()
+    # form.groups.choices = []
+    # for group in db_session.query(Group).all():
+    #     form.groups.choices.append( (group.id, group.name) )
 
     if form.validate_on_submit():
         form.populate_obj(event)
         if id is None:
             db_session.add(event)
         db_session.commit()
-        flash(f'Event "{event.title}" wurde erfolgreich gespeichert.')
+        flash(f'Event "{event.name}" wurde erfolgreich gespeichert.')
         return redirect(url_for('event.list'))
 
     return render_template('event/edit.html', form=form)

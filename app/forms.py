@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField, TextAreaField, DateTimeField, IntegerField
-from wtforms.fields.html5 import EmailField
+from wtforms import ValidationError, StringField, PasswordField, SelectMultipleField, TextAreaField
+from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.widgets import html_params, HTMLString
 from markupsafe import Markup
-from wtforms.validators import DataRequired, Length, Email, NumberRange
+from wtforms.validators import Optional, DataRequired, Length, Email, NumberRange, Required
 from .models import User, db_session
 import hashlib
 import flask
@@ -61,8 +61,10 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
-class MultiCheckboxField(SelectMultipleField):
+# class MultiCheckboxField(SelectMultipleField):
+class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     class CheckboxListWidget(object):
 
@@ -87,19 +89,20 @@ class MultiCheckboxField(SelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
-
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Beschreibung', [Length(max=1000)])
 
 
 class EventEditForm(FlaskForm):
-    title = StringField('Titel', [DataRequired(), Length(max=100)])
-    info = TextAreaField('Info', [Length(max=10000)])
-    location = StringField('Standort', [Length(max=100)])
-    start = DateTimeField('Start', [DataRequired()])
-    end = DateTimeField('Ende')
-    equipement = TextAreaField('Ausrüstung')
-    cost = IntegerField('Kosten', [NumberRange(min=0)])
-    deadline = DateTimeField('Deadline'),
-    groups = MultiCheckboxField('Gruppen', [DataRequired()])
+    name = StringField('Name', [DataRequired(), Length(max=100)])
+    description = TextAreaField('Info', [Length(max=10000)])
+    location = StringField('Standort', [DataRequired(), Length(max=100)])
+    # https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+    start = DateTimeField('Start', format='%d.%m.%y %H:%M')
+    end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
+    equipement = TextAreaField('Ausrüstung', [Optional()])
+    cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
+    deadline = DateTimeField('Deadline', format='%d.%m.%y %H:%M')
+    groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
+    # groups = MultiCheckboxField('Gruppen', [DataRequired()])

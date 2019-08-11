@@ -61,8 +61,8 @@ class User(Base):
 class Event(Base):
     __tablename__ = 'Event'
     id = Column(Integer, primary_key=True)
-    title = Column(String)
-    info = Column(String)
+    name = Column(String)
+    description = Column(String)
     location = Column(String)
     start = Column(DateTime)
     end = Column(DateTime)
