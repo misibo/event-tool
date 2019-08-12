@@ -51,10 +51,7 @@ app.mail = Mail(app)
 #     else:
 #         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
-<<<<<<< HEAD
 from . import auth, group, event
-=======
->>>>>>> e274cf988119a9bbad0dbaa266c0ced32a8fb2df
 app.register_blueprint(auth.bp)
 app.register_blueprint(group.bp)
 app.register_blueprint(event.bp)
