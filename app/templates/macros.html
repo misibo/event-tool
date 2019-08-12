@@ -15,26 +15,18 @@
 </div>
 {% endmacro %}
 
-<!-- {% macro pagination(page, pages, range=2) %}
-<ul class="uk-pagination uk-flex-center" uk-margin>
-    {% if page > 1 %}
-    <li><a href="page={{page-1}}"><span uk-pagination-previous></span></a></li>
+<!-- {% macro render_pagination(pagination, endpoint) %}
+  <div class=pagination>
+  {%- for page in pagination.iter_pages() %}
+    {% if page %}
+      {% if page != pagination.page %}
+        <a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+      {% else %}
+        <strong>{{ page }}</strong>
+      {% endif %}
+    {% else %}
+      <span class=ellipsis>…</span>
     {% endif %}
-    {% if page > range %}
-
-    <li><a href="page=1">1</a></li>
-    <li class="uk-disabled"><span>...</span></li>
-    {% endif %}
-    {% for p in range(page-range,page+range) %}
-        {% if p > 0 and p <= pages %}
-            {% if p == page %}
-            <li class="uk-active"><span>{{ p }}</span></li>
-            {% else %}
-            <li><a href="page={{p}}">{{ p }}</a></li>
-            {% endif %}
-    {% endfor %}
-    {% if page < pages %}
-    <li><a href="page={{page+1}}"><span uk-pagination-next></span></a></li>
-    {% endif %}
-</ul>
+  {%- endfor %}
+  </div>
 {% endmacro %} -->

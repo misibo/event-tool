@@ -24,9 +24,6 @@ def edit(id):
 
     form = EventEditForm(obj=event)
     form.groups.query = db_session.query(Group).all()
-    # form.groups.choices = []
-    # for group in db_session.query(Group).all():
-    #     form.groups.choices.append( (group.id, group.name) )
 
     if form.validate_on_submit():
         form.populate_obj(event)
@@ -47,5 +44,5 @@ def delete(id):
     else:
         db_session.delete(event)
         db_session.commit()
-        flash(f'Event "{event.title}" wurde erfolgreich gelöscht.')
+        flash(f'Event "{event.name}" wurde erfolgreich gelöscht.')
         return redirect(url_for('event.list'))
