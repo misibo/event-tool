@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Gruppen
+{% endblock %}
+
+{% block content %}
+    <div class="uk-flex uk-flex-between uk-flex-middle">
+        <h2>Gruppen</h2>
+        <a href="{{ url_for('group.edit') }}" class="uk-button uk-button-default">Hinzufügen</a>
+    </div>
+    {% if groups %}
+    <table class="uk-table uk-table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Beschreibung</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr>
+                <td>{{ group.name }}</td>
+                <td>{{ group.description }}</td>
+                <td>
+                    <a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a>
+                    <a class="uk-margin-small-left" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Gruppen gefunden</h3>
+    </div>
+    {% endif %}
+{% endblock %}

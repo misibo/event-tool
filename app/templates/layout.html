@@ -34,21 +34,21 @@
                 </nav>
             </div>
         </div>
-        <div class="uk-container">
-            <div class="uk-flex-center uk-flex-middle" uk-grid uk-height-viewport="expand: true">
-                <div class="uk-width-1-2@s uk-width-1-3@m uk-width-1-4@l uk-text-center">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                        {% for category, message in messages %}
-                        <div uk-alert>
-                                <a class="uk-alert-close" uk-close></a>
-                                <p>{{ message }}</p>
-                            </div>
-                        {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    {% block content %}Content{% endblock %}
-                </div>
+        <div class="uk-container" uk-height-viewport="expand: true">
+            <div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div uk-alert>
+                            <a class="uk-alert-close" uk-close></a>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div>
+                {% block content %}Content{% endblock %}
             </div>
         </div>
     </div>

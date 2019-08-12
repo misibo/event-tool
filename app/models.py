@@ -1,7 +1,8 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 engine = create_engine('sqlite:///db.sqlite3', echo=True)
 Base = declarative_base()
@@ -61,30 +62,32 @@ class User(Base):
 class Event(Base):
     __tablename__ = 'Event'
     id = Column(Integer, primary_key=True)
-    title = Column(String)
-    message = Column(String)
+    name = Column(String)
+    description = Column(String)
     location = Column(String)
-    time = Column(DateTime)
+    start = Column(DateTime)
+    end = Column(DateTime)
     equipment = Column(String)
-    money = Column(Integer)
-
+    cost = Column(Integer)
+    modified = Column(DateTime)
     send_invitations = Column(Boolean)
     deadline = Column(DateTime)
     created_at = Column(DateTime)
     admin_id = Column(Integer, ForeignKey(User.id))
-
     admin = relationship(User, back_populates='administrated_events')
     groups = relationship(
         'Group', secondary=GroupEventRelations, back_populates='events')
     invitations = relationship('Invitation', back_populates='event')
-    updates = relationship(
-        'EventUpdate', order_by='EventUpdate.created_at', back_populates='event')
+    # updates = relationship(
+    #     'EventUpdate', order_by='EventUpdate.created_at', back_populates='event')
 
 
 class Group(Base):
     __tablename__ = 'Group'
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    description = Column(String)
+    modified = Column(DateTime)
     admin_id = Column(Integer, ForeignKey(User.id))
 
     # a group admin can add and remove users from a group
@@ -96,14 +99,22 @@ class Group(Base):
         'Event', secondary=GroupEventRelations, back_populates='groups')
 
 
-class EventUpdate(Base):
-    __tablename__ = 'EventUpdate'
-    id = Column(Integer, primary_key=True)
-    message = Column(String)
-    event_id = Column(Integer, ForeignKey(Event.id))
-    created_at = Column(DateTime)
+@event.listens_for(Event, 'before_insert')
+@event.listens_for(Event, 'before_update')
+@event.listens_for(Group, 'before_insert')
+@event.listens_for(Group, 'before_update')
+def receive_before_modified(mapper, connection, target):
+    target.modified = datetime.now()
 
-    event = relationship(Event, back_populates='updates')
+
+# class EventUpdate(Base):
+#     __tablename__ = 'EventUpdate'
+#     id = Column(Integer, primary_key=True)
+#     message = Column(String)
+#     event_id = Column(Integer, ForeignKey(Event.id))
+#     created_at = Column(DateTime)
+
+#     event = relationship(Event, back_populates='updates')
 
 
 Base.metadata.create_all(engine)

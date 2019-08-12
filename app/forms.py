@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, ValidationError, SelectMultipleField
-from wtforms.fields.html5 import EmailField
-from flask import Markup
-from wtforms.widgets import html_params
+from wtforms import ValidationError, StringField, PasswordField, SelectMultipleField, TextAreaField
+from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
 from wtforms.widgets.core import CheckboxInput
-from wtforms.validators import DataRequired, Length, Email
+from wtforms.widgets import html_params, HTMLString
+from markupsafe import Markup
+from wtforms.validators import Optional, DataRequired, Length, Email, NumberRange, Required
 from .models import User, db_session
 import hashlib
 import flask
@@ -87,33 +87,48 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
-class CheckboxListWidget(object):
+# class MultiCheckboxField(SelectMultipleField):
+class QueryMultiCheckboxField(QuerySelectMultipleField):
 
-    def __init__(self, stack=True, prefix_label=True):
-        self.html_tag = 'div'
-        self.prefix_label = prefix_label
+    class CheckboxListWidget(object):
 
-    def __call__(self, field, **kwargs):
-        kwargs.setdefault("id", field.id)
-        html = ["<%s %s>" % (self.html_tag, html_params(**kwargs))]
-        for subfield in field:
-            if self.prefix_label:
-                html.append("<label>%s %s</label>" % (subfield.label, subfield()))
-            else:
-                html.append("<label>%s %s</label>" % (subfield(), subfield.label))
-        html.append("</%s>" % self.html_tag)
-        return Markup("".join(html))
+        def __init__(self, stack=True):
+            self.stack = stack
 
+        def __call__(self, field, **kwargs):
+            kwargs.setdefault('id', field.id)
+            html = ['<div %s>' % html_params(**kwargs)]
+            for subfield in field:
+                class_ = 'uk-checkbox'
+                br = '<br>'
+                if self.stack is False:
+                    br = ''
+                else:
+                    class_ += ' uk-margin-small-left'
+                html.append('%s %s %s' %
+                            (subfield(class_=class_), subfield.label, br))
+            html.append('</div>')
+            return HTMLString(''.join(html))
 
-class MultiCheckboxField(SelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
+class GroupEditForm(FlaskForm):
+    name = StringField('Name', [DataRequired(), Length(max=100)])
+    description = TextAreaField('Beschreibung', [Length(max=1000)])
 
-# class FormProject(FlaskForm):
-#         Code = StringField(
-#             'Code', [Required(message='Please enter your code')])
-#         Tasks = MultiCheckboxField(
-#             'Proses', [Required(message='Please tick your task')],
-#             choices=[('nyapu', 'Nyapu'), ('ngepel', 'Ngepel')])
+
+class EventEditForm(FlaskForm):
+    name = StringField('Name', [DataRequired(), Length(max=100)])
+    description = TextAreaField('Info', [Length(max=10000)])
+    location = StringField('Standort', [DataRequired(), Length(max=100)])
+    # https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+    start = DateTimeField('Start', format='%d.%m.%y %H:%M')
+    end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
+    equipement = TextAreaField('Ausrüstung', [Optional()])
+    cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
+    deadline = DateTimeField('Deadline', format='%d.%m.%y %H:%M')
+    groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
+    # groups = MultiCheckboxField('Gruppen', [DataRequired()])
