@@ -1,13 +1,18 @@
-import os
-import hashlib
-import uuid
 import flask
-import datetime
-from .forms import RegisterForm, LoginForm, EditUserForm
-from .models import User, db_session
+from flask import request, url_for, render_template
+from .forms import EditUserForm
+from .models import db_session, User
+from . import auth
+from . import mailing
+from datetime import datetime
+import os
+from flask_mail import Mail
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, instance_relative_config=True)
+app.config.from_object('config')  # load ./config.py
+app.config.from_pyfile('config.py')  # load ./instance/config.py
 app.secret_key = b'misibo'  # os.urandom(16)
+app.mail = Mail(app)
 
 
 # def close_session():
@@ -46,7 +51,10 @@ app.secret_key = b'misibo'  # os.urandom(16)
 #     else:
 #         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
+<<<<<<< HEAD
 from . import auth, group, event
+=======
+>>>>>>> e274cf988119a9bbad0dbaa266c0ced32a8fb2df
 app.register_blueprint(auth.bp)
 app.register_blueprint(group.bp)
 app.register_blueprint(event.bp)
@@ -60,14 +68,15 @@ def index():
 @app.route('/account/', methods=['GET', 'POST'])
 @auth.login_required
 def account():
-    user = flask.g.user
+    user: User = flask.g.user
     form = EditUserForm(obj=user)
+
     if form.validate_on_submit():
         user.username = form.username.data
         user.first_name = form.first_name.data
-        user.email = form.email.data
         user.family_name = form.family_name.data
         db_session.commit()
+
         flask.flash('Profil erfolgreich angepasst.')
 
     return flask.render_template('user/edit.html', form=form)

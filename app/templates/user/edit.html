@@ -6,11 +6,12 @@
 {% block content %}
 <form class="uk-form-stacked" method="POST">
     {{ render_field(form.username, class='uk-input') }}
-    {{ render_field(form.email, class='uk-input') }}
+    {{ render_field(form.email, class='uk-input', readonly=True) }}
     {{ render_field(form.first_name, class='uk-input') }}
     {{ render_field(form.family_name, class='uk-input') }}
     {{ form.csrf_token }}
     <input type="submit" class="uk-button uk-button-default" value="Speichern">
 </form>
+<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.change_email') }}">E-Mail ändern</a>
 <a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.change_password') }}">Passwort ändern</a>
 {% endblock %}

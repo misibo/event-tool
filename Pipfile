@@ -12,6 +12,7 @@ flake8 = "*"
 flask = "*"
 flask-sqlalchemy = "*"
 flask-wtf = "*"
+flask-mail = "*"
 sqlalchemy = "*"
 
 [requires]

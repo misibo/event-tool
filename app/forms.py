@@ -48,16 +48,23 @@ class EditUserForm(FlaskForm):
             raise ValidationError('Benutzername existiert bereits.')
 
 
+class ChangeEmailForm(FlaskForm):
+    old_email = EmailField('Alte E-Mail', [DataRequired(), Email()])
+    new_email = EmailField('Neue E-Mail', [DataRequired(), Email()])
+
+
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField('Altes Passwort', [DataRequired()])
     new_password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])
-    confirm_new_password = PasswordField('Neues Passwort bestätigen', [DataRequired(), Length(min=8)])
+    confirm_new_password = PasswordField(
+        'Neues Passwort bestätigen', [DataRequired(), Length(min=8)])
 
     def validate_old_password(self, field):
         user = db_session.query(User).filter_by(
             id=flask.session['user_id']).first()
         password_hash = hashlib.pbkdf2_hmac(
-            'sha256', self.old_password.data.encode('UTF-8'), user.password_salt.encode('UTF-8'), 1000)
+            'sha256', self.old_password.data.encode('UTF-8'),
+            user.password_salt.encode('UTF-8'), 1000)
         if password_hash != user.password_hash:
             raise ValidationError('Altes Passwort ist falsch.')
 
@@ -68,6 +75,43 @@ class ChangePasswordForm(FlaskForm):
         if self.new_password.data != self.confirm_new_password.data:
             self.confirm_new_password.errors.append(
                 'Bestätigung stimmt nicht mit neuem Passwort überrein.')
+            return False
+
+        return True
+
+
+class ResetPasswordForm(FlaskForm):
+    username = StringField('Benutzername', [DataRequired(), Length(max=100)])
+    email = EmailField('Email', [DataRequired(), Email()])
+
+    def validate(self):
+        if not super(ResetPasswordForm, self).validate():
+            return False
+
+        username_exists = db_session.query(User).filter_by(
+            username=self.username.data).first() is not None
+        email_exists = db_session.query(User).filter_by(
+            email=self.email.data).first() is not None
+
+        if not username_exists or not email_exists:
+            self.email.errors.append(
+                'Es existiert kein Account mit diesem Namen und dieser E-Mail-Adresse.')
+            return False
+
+        return True
+
+
+class ConfirmPasswordResetForm(FlaskForm):
+    password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])
+    password_confirm = PasswordField('Passwort bestätigen', [DataRequired(), Length(min=8)])
+
+    def validate(self):
+        if not super(ConfirmPasswordResetForm, self).validate():
+            return False
+
+        if self.password.data != self.password_confirm.data:
+            self.password_confirm.errors.append(
+                'Eingabe stimmt nicht mit überrein.')
             return False
 
         return True

@@ -35,13 +35,21 @@ class Invitation(Base):
 class User(Base):
     __tablename__ = 'User'
     id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False)
+    username = Column(String, nullable=False, unique=True)
+
     email = Column(String, nullable=False)
+
     first_name = Column(String, nullable=False)
     family_name = Column(String, nullable=False)
 
     password_salt = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
+    password_reset_token = Column(String)
+    password_reset_insertion_time_utc = Column(DateTime)
+
+    email_change_request = Column(String)
+    email_change_token = Column(String)
+    email_change_insertion_time_utc = Column(DateTime)
 
     # can create events and assign an admin
     create_events_permissions = Column(Boolean)
@@ -57,6 +65,23 @@ class User(Base):
 
     def __repr__(self):
         return f'User(first_name={self.first_name}, family_name={self.family_name})'
+
+
+class PendingUser(Base):
+    __tablename__ = 'PendingUser'
+    id = Column(Integer, primary_key=True)
+    confirm_token = Column(String, nullable=False)
+    username = Column(String, nullable=False)
+
+    email = Column(String, nullable=False)
+
+    first_name = Column(String, nullable=False)
+    family_name = Column(String, nullable=False)
+
+    password_salt = Column(String, nullable=False)
+    password_hash = Column(String, nullable=False)
+
+    insertion_time_utc = Column(DateTime, nullable=False)
 
 
 class Event(Base):

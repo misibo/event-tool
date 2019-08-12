@@ -1,0 +1,9 @@
+Hallo {{user.first_name}},
+
+Du hast die E-Mail-Adresse im Profil des Accounts "{{user.username}}" geändert.
+Öffne folgenden Link im Browser, um die neue E-Mail-Adresse zu bestätigen:
+
+{{confirm_url}}
+
+Liebe Grüsse,
+Dein Team
