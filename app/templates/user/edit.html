@@ -12,6 +12,6 @@
     {{ form.csrf_token }}
     <input type="submit" class="uk-button uk-button-default" value="Speichern">
 </form>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.change_email') }}">E-Mail ändern</a>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('auth.change_password') }}">Passwort ändern</a>
+<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_email') }}">E-Mail ändern</a>
+<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_password') }}">Passwort ändern</a>
 {% endblock %}

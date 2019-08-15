@@ -1,127 +1,119 @@
-from sqlalchemy import create_engine, event
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Boolean
-from sqlalchemy.orm import relationship, sessionmaker, scoped_session
-from sqlalchemy.ext.declarative import declarative_base
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
 from datetime import datetime
 
-engine = create_engine('sqlite:///db.sqlite3', echo=True)
-Base = declarative_base()
+db = SQLAlchemy()
 
-GroupMembers = Table(
-    'GroupMembers', Base.metadata,
-    Column('user_id', ForeignKey('User.id'), primary_key=True),
-    Column('group_id', ForeignKey('Group.id'), primary_key=True),
+GroupMembers = db.Table(
+    'GroupMembers',
+    db.Column('user_id', db.ForeignKey('User.id'), primary_key=True),
+    db.Column('group_id', db.ForeignKey('Group.id'), primary_key=True),
 )
 
 
-GroupEventRelations = Table(
-    'GroupEventRelations', Base.metadata,
-    Column('group_id', ForeignKey('Group.id'), primary_key=True),
-    Column('event_id', ForeignKey('Event.id'), primary_key=True),
+GroupEventRelations = db.Table(
+    'GroupEventRelations',
+    db.Column('group_id', db.ForeignKey('Group.id'), primary_key=True),
+    db.Column('event_id', db.ForeignKey('Event.id'), primary_key=True),
 )
 
 
-class Invitation(Base):
+class Invitation(db.Model):
     __tablename__ = 'Invitation'
-    event_id = Column(Integer, ForeignKey('Event.id'), primary_key=True)
-    user_id = Column(Integer, ForeignKey('User.id'), primary_key=True)
-    token = Column(String)
-    accepted = Column(Boolean)
+    event_id = db.Column(db.Integer, db.ForeignKey('Event.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
+    token = db.Column(db.String)
+    accepted = db.Column(db.Boolean)
 
-    event = relationship('Event', back_populates='invitations')
-    user = relationship('User', back_populates='invitations')
+    event = db.relationship('Event', back_populates='invitations')
+    user = db.relationship('User', back_populates='invitations')
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'User'
-    id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, nullable=False, unique=True)
 
-    email = Column(String, nullable=False)
+    email = db.Column(db.String, nullable=False)
 
-    first_name = Column(String, nullable=False)
-    family_name = Column(String, nullable=False)
+    first_name = db.Column(db.String, nullable=False)
+    family_name = db.Column(db.String, nullable=False)
 
-    password_salt = Column(String, nullable=False)
-    password_hash = Column(String, nullable=False)
-    password_reset_token = Column(String)
-    password_reset_insertion_time_utc = Column(DateTime)
+    password_salt = db.Column(db.String, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
+    password_reset_token = db.Column(db.String)
+    password_reset_insertion_time_utc = db.Column(db.DateTime)
 
-    email_change_request = Column(String)
-    email_change_token = Column(String)
-    email_change_insertion_time_utc = Column(DateTime)
+    email_change_request = db.Column(db.String)
+    email_change_token = db.Column(db.String)
+    email_change_insertion_time_utc = db.Column(db.DateTime)
 
     # can create events and assign an admin
-    create_events_permissions = Column(Boolean)
+    create_events_permissions = db.Column(db.Boolean)
 
     # can create groups and assign an admin
-    create_groups_permissions = Column(Boolean)
+    create_groups_permissions = db.Column(db.Boolean)
 
-    groups = relationship('Group', secondary=GroupMembers,
-                          back_populates='users')
-    invitations = relationship('Invitation', back_populates='user')
-    administrated_events = relationship('Event', back_populates='admin')
-    administrated_groups = relationship('Group', back_populates='admin')
+    groups = db.relationship('Group', secondary=GroupMembers, back_populates='users')
+    invitations = db.relationship('Invitation', back_populates='user')
+    administrated_events = db.relationship('Event', back_populates='admin')
+    administrated_groups = db.relationship('Group', back_populates='admin')
 
     def __repr__(self):
         return f'User(first_name={self.first_name}, family_name={self.family_name})'
 
 
-class PendingUser(Base):
+class PendingUser(db.Model):
     __tablename__ = 'PendingUser'
-    id = Column(Integer, primary_key=True)
-    confirm_token = Column(String, nullable=False)
-    username = Column(String, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    confirm_token = db.Column(db.String, nullable=False)
+    username = db.Column(db.String, nullable=False)
 
-    email = Column(String, nullable=False)
+    email = db.Column(db.String, nullable=False)
 
-    first_name = Column(String, nullable=False)
-    family_name = Column(String, nullable=False)
+    first_name = db.Column(db.String, nullable=False)
+    family_name = db.Column(db.String, nullable=False)
 
-    password_salt = Column(String, nullable=False)
-    password_hash = Column(String, nullable=False)
+    password_salt = db.Column(db.String, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
 
-    insertion_time_utc = Column(DateTime, nullable=False)
+    insertion_time_utc = db.Column(db.DateTime, nullable=False)
 
 
-class Event(Base):
+class Event(db.Model):
     __tablename__ = 'Event'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    description = Column(String)
-    location = Column(String)
-    start = Column(DateTime)
-    end = Column(DateTime)
-    equipment = Column(String)
-    cost = Column(Integer)
-    modified = Column(DateTime)
-    send_invitations = Column(Boolean)
-    deadline = Column(DateTime)
-    created_at = Column(DateTime)
-    admin_id = Column(Integer, ForeignKey(User.id))
-    admin = relationship(User, back_populates='administrated_events')
-    groups = relationship(
-        'Group', secondary=GroupEventRelations, back_populates='events')
-    invitations = relationship('Invitation', back_populates='event')
-    # updates = relationship(
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    description = db.Column(db.String)
+    location = db.Column(db.String)
+    start = db.Column(db.DateTime)
+    end = db.Column(db.DateTime)
+    equipment = db.Column(db.String)
+    cost = db.Column(db.Integer)
+    modified = db.Column(db.DateTime)
+    send_invitations = db.Column(db.Boolean)
+    deadline = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime)
+    admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    admin = db.relationship(User, back_populates='administrated_events')
+    groups = db.relationship('Group', secondary=GroupEventRelations, back_populates='events')
+    invitations = db.relationship('Invitation', back_populates='event')
+    # updates = db.relationship(
     #     'EventUpdate', order_by='EventUpdate.created_at', back_populates='event')
 
 
-class Group(Base):
+class Group(db.Model):
     __tablename__ = 'Group'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    description = Column(String)
-    modified = Column(DateTime)
-    admin_id = Column(Integer, ForeignKey(User.id))
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    description = db.Column(db.String)
+    modified = db.Column(db.DateTime)
+    admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
     # a group admin can add and remove users from a group
-    admin = relationship(User, back_populates='administrated_groups')
-
-    users = relationship('User', secondary=GroupMembers,
-                         back_populates='groups')
-    events = relationship(
-        'Event', secondary=GroupEventRelations, back_populates='groups')
+    admin = db.relationship('User', back_populates='administrated_groups')
+    users = db.relationship('User', secondary=GroupMembers, back_populates='groups')
+    events = db.relationship('Event', secondary=GroupEventRelations, back_populates='groups')
 
 
 @event.listens_for(Event, 'before_insert')
@@ -130,17 +122,3 @@ class Group(Base):
 @event.listens_for(Group, 'before_update')
 def receive_before_modified(mapper, connection, target):
     target.modified = datetime.now()
-
-
-# class EventUpdate(Base):
-#     __tablename__ = 'EventUpdate'
-#     id = Column(Integer, primary_key=True)
-#     message = Column(String)
-#     event_id = Column(Integer, ForeignKey(Event.id))
-#     created_at = Column(DateTime)
-
-#     event = relationship(Event, back_populates='updates')
-
-
-Base.metadata.create_all(engine)
-db_session = scoped_session(sessionmaker(bind=engine))

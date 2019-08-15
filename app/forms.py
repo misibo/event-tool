@@ -1,13 +1,13 @@
+import flask
+import hashlib
 from flask_wtf import FlaskForm
-from wtforms import ValidationError, StringField, PasswordField, SelectMultipleField, TextAreaField
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
+from wtforms import ValidationError, StringField, PasswordField, TextAreaField
 from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.widgets import html_params, HTMLString
-from markupsafe import Markup
 from wtforms.validators import Optional, DataRequired, Length, Email, NumberRange, Required
-from .models import User, db_session
-import hashlib
-import flask
+from .models import User, db
 
 
 class LoginForm(FlaskForm):
@@ -18,7 +18,7 @@ class LoginForm(FlaskForm):
     def validate(self):
         if not super(LoginForm, self).validate():
             return False
-        user = db_session.query(User).filter_by(
+        user = User.query.filter_by(
             username=self.username.data).first()
         if user is None:
             self.password.errors.append(
@@ -41,9 +41,9 @@ class EditUserForm(FlaskForm):
     family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
 
     def validate_username(self, field):
-        user = db_session.query(User).filter_by(
+        user = User.query.filter_by(
             id=flask.session['user_id']).first()
-        if field.data != user.username and db_session.query(User) \
+        if field.data != user.username and User.query \
                 .filter_by(username=field.data).first() is not None:
             raise ValidationError('Benutzername existiert bereits.')
 
@@ -55,12 +55,13 @@ class ChangeEmailForm(FlaskForm):
 
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField('Altes Passwort', [DataRequired()])
-    new_password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])
+    new_password = PasswordField(
+        'Neues Passwort', [DataRequired(), Length(min=8)])
     confirm_new_password = PasswordField(
         'Neues Passwort bestätigen', [DataRequired(), Length(min=8)])
 
     def validate_old_password(self, field):
-        user = db_session.query(User).filter_by(
+        user = User.query.filter_by(
             id=flask.session['user_id']).first()
         password_hash = hashlib.pbkdf2_hmac(
             'sha256', self.old_password.data.encode('UTF-8'),
@@ -88,9 +89,9 @@ class ResetPasswordForm(FlaskForm):
         if not super(ResetPasswordForm, self).validate():
             return False
 
-        username_exists = db_session.query(User).filter_by(
+        username_exists = User.query.filter_by(
             username=self.username.data).first() is not None
-        email_exists = db_session.query(User).filter_by(
+        email_exists = User.query.filter_by(
             email=self.email.data).first() is not None
 
         if not username_exists or not email_exists:
@@ -103,7 +104,8 @@ class ResetPasswordForm(FlaskForm):
 
 class ConfirmPasswordResetForm(FlaskForm):
     password = PasswordField('Neues Passwort', [DataRequired(), Length(min=8)])
-    password_confirm = PasswordField('Passwort bestätigen', [DataRequired(), Length(min=8)])
+    password_confirm = PasswordField(
+        'Passwort bestätigen', [DataRequired(), Length(min=8)])
 
     def validate(self):
         if not super(ConfirmPasswordResetForm, self).validate():
@@ -127,13 +129,14 @@ class RegisterForm(FlaskForm):
 
     def validate_username(self, field):
         username = field.data
-        user = db_session.query(User).filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
-from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
 # class MultiCheckboxField(SelectMultipleField):
+
+
 class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     class CheckboxListWidget(object):
@@ -158,6 +161,7 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
+
 
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])

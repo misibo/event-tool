@@ -1,5 +1,5 @@
 from flask import Blueprint, abort, redirect, render_template, flash, url_for
-from .models import Group, db_session
+from .models import Group, db
 from .forms import GroupEditForm
 from werkzeug.exceptions import NotFound
 
@@ -9,7 +9,7 @@ bp = Blueprint("group", __name__, url_prefix="/group",
 
 @bp.route('/', methods=['GET'])
 def list():
-    groups = db_session.query(Group).all()
+    groups = Group.query.all()
     return render_template('index.html', groups=groups)
 
 
@@ -19,7 +19,7 @@ def edit(id):
     if id is None:
         group = Group()
     else:
-        group = db_session.query(Group).filter_by(id=id).first()
+        group = Group.query.filter_by(id=id).first()
         if group is None:
             abort(NotFound)
 
@@ -28,8 +28,8 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(group)
         if id is None:
-            db_session.add(group)
-        db_session.commit()
+            db.session.add(group)
+        db.session.commit()
         flash(f'Gruppe "{group.name}" wurde erfolgreich gespeichert.')
         return redirect(url_for('group.list'))
 
@@ -38,11 +38,11 @@ def edit(id):
 
 @bp.route('/delete/<int:id>', methods=['GET'])
 def delete(id):
-    group = db_session.query(Group).filter_by(id=id).first()
+    group = Group.query.filter_by(id=id).first()
     if group is None:
         abort(NotFound)
     else:
-        db_session.delete(group)
-        db_session.commit()
+        db.session.delete(group)
+        db.session.commit()
         flash(f'Gruppe "{group.name}" wurde erfolgreich gelöscht.')
         return redirect(url_for('group.list'))
