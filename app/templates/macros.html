@@ -37,18 +37,18 @@
   </ul>
 {% endmacro %}
 
-{% macro render_sort(label, name, value) %}
+{% macro render_sort(label, name, sort) %}
   <div uk-form-custom>
-      <select name="{{ name }}" value="{{ value }}" onchange="this.form.submit()">
-        <option {% if not value %}selected{% endif %} value="">Entfernen</option>
-        <option {% if value == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
-        <option {% if value == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
+      <select name="{{ name }}" onchange="this.form.submit()">
+        <option {% if not sort[name] %}selected{% endif %} value="">Entfernen</option>
+        <option {% if sort[name] == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
+        <option {% if sort[name] == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
       </select>
       <div>
         {{ label }}
-        {% if value == 'asc' %}
+        {% if sort[name] == 'asc' %}
           <span uk-icon="icon: arrow-up"></span>
-        {% elif value == 'desc' %}
+        {% elif sort[name] == 'desc' %}
           <span uk-icon="icon: arrow-down"></span>
         {% endif %}
       </div>

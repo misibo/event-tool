@@ -8,23 +8,23 @@
 {% block content %}
     <div class="uk-flex uk-flex-between uk-flex-middle">
         <h2>Gruppen</h2>
-        <a href="{{ url_for('group.edit') }}" class="uk-button uk-button-default">Hinzufügen</a>
-        {{ render_pagination(groups, 'group.list', data) }}
+        <a href="{{ url_for('group.create') }}" class="uk-button uk-button-default">Hinzufügen</a>
+        {{ render_pagination(pagination, 'group.list', sort) }}
     </div>
-    {% if groups %}
+    {% if pagination.items %}
     <form id="form" method="GET">
-        <input name="page" value="{{ groups.page }}" hidden>
+        <input name="page" value="{{ pagination.page }}" hidden>
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>
-                <th>{{ render_sort('Name', 'name', data['name']) }}</th>
+                <th>{{ render_sort('Name', 'name', sort) }}</th>
                 <th>Beschreibung</th>
-                <th>{{ render_sort('Geändert', 'modified', data['modified']) }}</th>
+                <th>{{ render_sort('Geändert', 'modified', sort) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
         <tbody>
-            {% for group in groups.items %}
+            {% for group in pagination.items %}
             <tr>
                 <td>{{ group.name }}</td>
                 <td>{{ group.description }}</td>

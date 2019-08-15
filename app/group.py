@@ -2,75 +2,46 @@ from flask import Blueprint, abort, redirect, render_template, flash, url_for, c
 from .models import Group, db
 from .forms import GroupEditForm
 from werkzeug.exceptions import NotFound
-# from .views import ListView
+from .views import ListView, CreateView, EditView, DeleteView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
 
-def dict_replace(dict1, dict2):
-    for key, val in dict2.items():
-        if key in dict1:
-            dict1[key] = val
-    return dict1
+class GroupListView(ListView):
+    sorts = ['name', 'modified']
+    model = Group
+    template = 'group/index.html'
 
 
-# class GroupListView(ListView):
-#     sorts = ['name', 'modified']
-#     model = Group
-#     template = 'group/index.html'
+bp.add_url_rule('/', view_func=GroupListView.as_view('list'), methods=['GET'])
 
 
-# bp.add_url_rule('/', view_func=GroupListView.as_view('list'), methods=['GET'])
+class GroupCreateView(CreateView):
+    form = GroupEditForm
+    model = Group
+    template = 'group/edit.html'
+    redirect = 'group.list'
 
 
-@bp.route('/', methods=['GET'])
-def list():
-    data = dict_replace(dict.fromkeys(['name', 'modified']), request.args.to_dict())
-    query = Group.query
-    if data['name']:
-        if data['name'] == 'asc':
-            query = query.order_by(getattr(Group, 'name').asc())
-        elif data['name'] == 'desc':
-            query = query.order_by(getattr(Group, 'name').desc())
-    if data['modified']:
-        if data['modified'] == 'asc':
-            query = query.order_by(getattr(Group, 'modified').asc())
-        elif data['modified'] == 'desc':
-            query = query.order_by(getattr(Group, 'modified').desc())
-    groups = query.paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
-    return render_template('group/index.html', groups=groups, data=data)
+bp.add_url_rule(
+    '/create', view_func=GroupCreateView.as_view('create'), methods=['GET', 'POST'])
 
 
-@bp.route('/create', methods=['GET', 'POST'], defaults={'id': None})
-@bp.route('/edit/<int:id>', methods=['GET', 'POST'])
-def edit(id):
-    if id is None:
-        group = Group()
-    else:
-        group = Group.query.filter_by(id=id).first()
-        if group is None:
-            abort(NotFound)
-
-    form = GroupEditForm(obj=group)
-
-    if form.validate_on_submit():
-        form.populate_obj(group)
-        if id is None:
-            db.session.add(group)
-        db.session.commit()
-        flash(f'Gruppe "{group.name}" wurde erfolgreich gespeichert.')
-        return redirect(url_for('group.list'))
-
-    return render_template('group/edit.html', form=form)
+class GroupEditView(EditView):
+    form = GroupEditForm
+    model = Group
+    template = 'group/edit.html'
+    redirect = 'group.list'
 
 
-@bp.route('/delete/<int:id>', methods=['GET'])
-def delete(id):
-    group = Group.query.filter_by(id=id).first()
-    if group is None:
-        abort(NotFound)
-    else:
-        db.session.delete(group)
-        db.session.commit()
-        flash(f'Gruppe "{group.name}" wurde erfolgreich gelöscht.')
-        return redirect(url_for('group.list'))
+bp.add_url_rule('/edit/<int:id>', view_func=GroupEditView.as_view('edit'),
+                methods=['GET', 'POST'])
+
+
+class GroupDeleteView(DeleteView):
+    model = Group
+    redirect = 'group.list'
+
+
+bp.add_url_rule(
+    '/delete/<int:id>', view_func=GroupDeleteView.as_view('delete'), methods=['GET'])
