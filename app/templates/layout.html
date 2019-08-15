@@ -26,7 +26,9 @@
                         {% else %}
                         <div class="uk-navbar-item">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</div>
                         <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('account') }}">Account</a></li>
+                            <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
+                            <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
+                            <li class="uk-active"><a href="{{ url_for('account') }}">Persönliche Daten</a></li>
                             <li class="uk-active"><a href="{{ url_for('auth.logout') }}">Abmelden</a></li>
                         </ul>
                         {% endif %}
