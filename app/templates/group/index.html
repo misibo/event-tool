@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_sort %}
 
 {% block title %}
     Gruppen
@@ -8,21 +9,26 @@
     <div class="uk-flex uk-flex-between uk-flex-middle">
         <h2>Gruppen</h2>
         <a href="{{ url_for('group.edit') }}" class="uk-button uk-button-default">Hinzufügen</a>
+        {{ render_pagination(groups, 'group.list', data) }}
     </div>
     {% if groups %}
+    <form id="form" method="GET">
+        <input name="page" value="{{ groups.page }}" hidden>
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>
-                <th>Name</th>
+                <th>{{ render_sort('Name', 'name', data['name']) }}</th>
                 <th>Beschreibung</th>
+                <th>{{ render_sort('Geändert', 'modified', data['modified']) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
         <tbody>
-            {% for group in groups %}
+            {% for group in groups.items %}
             <tr>
                 <td>{{ group.name }}</td>
                 <td>{{ group.description }}</td>
+                <td>{{ group.modified.strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
                     <a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a>
                     <a class="uk-margin-small-left" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a>
@@ -31,6 +37,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </form>
     {% else %}
     <div class="uk-text-center uk-margin">
         <h3 class="uk-text-muted">Keine Gruppen gefunden</h3>

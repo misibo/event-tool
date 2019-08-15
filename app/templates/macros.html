@@ -6,27 +6,51 @@
         {% if field.errors %}
         <div class="uk-alert-danger" uk-alert>
             <a class="uk-alert-close" uk-close></a>
-            {% for error in field.errors %}
-            <p>{{ error }}</p>
-            {% endfor %}
+            {%- for error in field.errors %}
+              <p>{{ error }}</p>
+            {%- endfor %}
         </div>
         {% endif %}
     </div>
 </div>
 {% endmacro %}
 
-<!-- {% macro render_pagination(pagination, endpoint) %}
-  <div class=pagination>
+{% macro render_pagination(pagination, endpoint, params) %}
+  <ul class="uk-pagination">
+  {% if pagination.has_prev %}
+    <li><a href="{{ url_for(endpoint, page=pagination.prev_num, **params) }}"><span uk-pagination-previous></span></a></li>
+  {% endif %}
   {%- for page in pagination.iter_pages() %}
     {% if page %}
       {% if page != pagination.page %}
-        <a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+        <li><a href="{{ url_for(endpoint, page=page, **params) }}">{{ page }}</a></li>
       {% else %}
-        <strong>{{ page }}</strong>
+        <li class="uk-active"><span>{{ page }}</span></li>
       {% endif %}
     {% else %}
-      <span class=ellipsis>…</span>
+      <li class="uk-disabled"><span>...</span></li>
     {% endif %}
   {%- endfor %}
+  {% if pagination.has_next %}
+    <li><a href="{{ url_for(endpoint, page=pagination.next_num, **params) }}"><span uk-pagination-next></span></a></li>
+  {% endif %}
+  </ul>
+{% endmacro %}
+
+{% macro render_sort(label, name, value) %}
+  <div uk-form-custom>
+      <select name="{{ name }}" value="{{ value }}" onchange="this.form.submit()">
+        <option {% if not value %}selected{% endif %} value="">Entfernen</option>
+        <option {% if value == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
+        <option {% if value == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
+      </select>
+      <div>
+        {{ label }}
+        {% if value == 'asc' %}
+          <span uk-icon="icon: arrow-up"></span>
+        {% elif value == 'desc' %}
+          <span uk-icon="icon: arrow-down"></span>
+        {% endif %}
+      </div>
   </div>
-{% endmacro %} -->
+{% endmacro %}
