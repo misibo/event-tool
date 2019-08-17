@@ -106,6 +106,7 @@ class Group(db.Model):
     __tablename__ = 'Group'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    logo = db.Column(db.String)
     description = db.Column(db.String)
     modified = db.Column(db.DateTime)
     admin_id = db.Column(db.Integer, db.ForeignKey(User.id))

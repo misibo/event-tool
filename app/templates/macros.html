@@ -1,19 +1,50 @@
+{% macro render_field_errors(field) %}
+{% if field.errors %}
+<div class="uk-alert-danger" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    {%- for error in field.errors %}
+      <p>{{ error }}</p>
+    {%- endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
 {% macro render_field(field) %}
 <div class="uk-margin">
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
         {{ field(**kwargs)|safe }}
-        {% if field.errors %}
-        <div class="uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            {%- for error in field.errors %}
-              <p>{{ error }}</p>
-            {%- endfor %}
-        </div>
-        {% endif %}
+        {{ render_field_errors(field) }}
     </div>
 </div>
 {% endmacro %}
+
+{% macro render_file_field(field) %}
+<div class="uk-margin" uk-margin>
+  <div uk-form-custom="target: true">
+    {{ field(**kwargs)|safe }}
+      <input class="uk-input uk-form-width-medium" type="text" placeholder="Select file" disabled>
+  </div>
+  <button class="uk-button uk-button-default"><span uk-icon="icon: image"></span></button>
+</div>
+{% endmacro %}
+
+{% macro render_image_field(field) %}
+<div class="uk-margin">
+    {{ field.label(class_='uk-form-label') }}
+    <div class="uk-form-controls">
+        {% if field.data %}
+        <div data-src="{{ url_for('static', filename=field.data) }}" uk-img class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
+
+        </div>
+        {% endif %}
+        {{ render_file_field(field) }}
+        {{ render_field_errors(field) }}
+    </div>
+</div>
+{% endmacro %}
+
+url_for('static', filename='path/to/file')
 
 {% macro render_pagination(pagination, endpoint, params) %}
   <ul class="uk-pagination">

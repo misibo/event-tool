@@ -1,13 +1,15 @@
-import flask
+from flask import g, session
 import hashlib
 from flask_wtf import FlaskForm
-from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+from werkzeug.utils import secure_filename
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from wtforms import ValidationError, StringField, PasswordField, TextAreaField
 from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.widgets import html_params, HTMLString
 from wtforms.validators import Optional, DataRequired, Length, Email, NumberRange, Required
-from .models import User, db
+from .models import Group, User, db
 
 
 class LoginForm(FlaskForm):
@@ -42,7 +44,7 @@ class EditUserForm(FlaskForm):
 
     def validate_username(self, field):
         user = User.query.filter_by(
-            id=flask.session['user_id']).first()
+            id=session['user_id']).first()
         if field.data != user.username and User.query \
                 .filter_by(username=field.data).first() is not None:
             raise ValidationError('Benutzername existiert bereits.')
@@ -134,9 +136,6 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Benutzername bereits benutzt.')
 
 
-# class MultiCheckboxField(SelectMultipleField):
-
-
 class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     class CheckboxListWidget(object):
@@ -162,21 +161,47 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
+import os
+
 
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Beschreibung', [Length(max=1000)])
+    logo = FileField('Logo', validators=[FileAllowed(['png', 'jpg'])])
+    admin = QuerySelectField(
+        'Admin',
+        # [Required()],
+        get_label=lambda user: f'{user.first_name} {user.family_name}',
+        # default=g.user,
+        query_factory=lambda: User.query.all(),
+        allow_blank=True
+    )
+
+    def populate_obj(self, group):
+        group.name = self.name.data
+        group.description = self.description.data
+        group.admin = self.admin.data
+        if self.logo.data and self.logo.data != group.logo:
+            f = self.logo.data
+            filename = secure_filename(f.filename)
+            # TODO how to determine base path of flask app?
+            f.save(os.path.join('app', 'static', 'group', filename))
+            group.logo = os.path.join('group', filename)
 
 
 class EventEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Info', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
-    # https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
     start = DateTimeField('Start', format='%d.%m.%y %H:%M')
     end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipement = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = DateTimeField('Deadline', format='%d.%m.%y %H:%M')
-    groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
+    groups = QueryMultiCheckboxField(
+        'Gruppen',
+        [Required()],
+        get_label='name',
+        query_factory=lambda: Group.query.all()
+    )
     # groups = MultiCheckboxField('Gruppen', [DataRequired()])

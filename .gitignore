@@ -108,3 +108,8 @@ venv.bak/
 
 # vscode
 .vscode
+
+# app
+app/static/group/
+app/static/event/
+app/static/user/

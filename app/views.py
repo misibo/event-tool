@@ -5,8 +5,8 @@ from .models import db
 
 class ListView(View):
 
-    filters = []
     sorts = []
+    filters = []
     model = None
     template = None
 
@@ -43,31 +43,7 @@ class ListView(View):
         return render_template(self.template, pagination=pagination, sort=self.get_sort_url_params())
 
 
-class CreateView(View):
-
-    form = None
-    model = None
-    template = None
-    redirect = 'index'
-
-    def dispatch_request(self):
-
-        model = self.model()
-        form = self.form(obj=model)
-
-        if form.validate_on_submit():
-
-            form.populate_obj(model)
-            db.session.add(model)
-            db.session.commit()
-            flash('Erstellen erfolgreich.')
-
-            return redirect(url_for(self.redirect))
-
-        return render_template(self.template, form=form)
-
-
-class EditView(View):
+class CreateEditView(View):
 
     form = None
     model = None
@@ -76,11 +52,17 @@ class EditView(View):
 
     def dispatch_request(self, id):
 
-        model = self.model.query.get_or_404(id)
+        if id is None:
+            model = self.model()
+        else:
+            model = self.model.query.get_or_404(id)
+
         form = self.form(obj=model)
 
         if form.validate_on_submit():
             form.populate_obj(model)
+            if id is None:
+                db.session.add(model)
             db.session.commit()
             flash('Speichern erfolgreich.')
             return redirect(url_for(self.redirect))
@@ -103,10 +85,11 @@ class DeleteView(View):
         return redirect(url_for(self.redirect))
 
 
-# def register_manager(bp, name, model, list_template, form_template, form, sorts, filters):
+# def register_manager(bp, name, model, list_template, form_template, form, sorts, filters, redirect):
 
 #     class ModelListView(ListView):
 #         sorts = sorts
+#         filters = filters
 #         model = model
 #         template = list_template
 
