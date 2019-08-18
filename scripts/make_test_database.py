@@ -1,7 +1,8 @@
-from app.models import db_session, User, Group, Event
+from app.models import db_session, User, Group, Event, Invitation
 from datetime import datetime, timedelta
 import random
 import textwrap
+from app.invitation import list_missing_invitations
 import pytz
 
 tz = pytz.timezone('Europe/Zurich')
@@ -13,7 +14,8 @@ def create_user(first_name, family_name):
     import hashlib
 
     username = f'{first_name.lower()}'
-    email = f'{first_name.lower()}.{family_name.lower()}@localhost.com'
+    # email = f'{first_name.lower()}.{family_name.lower()}@localhost.com'
+    email = 'sqrt93.smtp@gmail.com'
     password = f'{first_name.lower()}-1234'
 
     salt = str(uuid.uuid4())
@@ -240,9 +242,12 @@ for user in users[:-2]:
     group1 = groups[random.randint(0, len(groups) - 1)]
     group2 = groups[random.randint(0, len(groups) - 1)]
     user.groups.append(group1)
-    if group1 != group2:
+    if group1 != group2 and random.uniform(0.0, 1.0) > 0.8:
         user.groups.append(group2)
 
 db_session.commit()
 
-print(groups[0].admin, groups[0].admin_id)
+# Pre-populate invitations
+for invitation in list_missing_invitations():
+    db_session.add(invitation)
+db_session.commit()

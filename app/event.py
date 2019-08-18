@@ -35,6 +35,9 @@ def edit(id):
             db_session.add(event)
         db_session.commit()
         flash(f'Event "{event.name}" wurde erfolgreich gespeichert.')
+        if event.send_invitations:
+            from . import send_invitations
+            send_invitations()
         return redirect(url_for('event.list'))
 
     return render_template('event/edit.html', form=form)

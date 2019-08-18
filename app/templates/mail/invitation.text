@@ -1,0 +1,15 @@
+Hallo {{invitation.user.first_name}},
+
+{{invitation.event.admin.first_name}} hat dich zum Anlass "{{invitation.event.name}}" eingeladen:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{{invitation.event.description}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Treffpunkt: {{invitation.event.location}}
+Wann: {{pretty_format_date(invitation.event.start)}}
+Ausrüstung: {{invitation.event.equipment}}
+Kosten: {{invitation.event.cost}} Fr.
+
+Öffne folgenden Link im Browser, um die Einladung anzunehmen: {{token_url}}.
+Noch nicht sicher? Kein Problem, du kannst dich ja trotzdem vorläufig anmelden.
+Es ist jederzeit möglich, dich denselben den Link wieder abzumelden, bis am {{pretty_format_date(invitation.event.deadline)}}.

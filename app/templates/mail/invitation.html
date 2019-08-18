@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Einladung zum Anlass - {{invitation.event.name}}</title>
+</head>
+<body>
+    <p>
+        Hallo {{invitation.user.first_name}},
+    </p>
+    <p>
+        {{invitation.event.admin.first_name}} hat dich zu folgenden Anlass eingeladen:
+    </p>
+    <p>
+        <b>{{invitation.event.name}}</b><br>
+        <i>{{invitation.event.description}}</i>
+    </p>
+    <p>
+        <b>Treffpunkt: </b> {{invitation.event.location}}<br>
+        <b>Wann: </b> {{pretty_format_date(invitation.event.start)}}<br>
+        <b>Ausrüstung: </b> {{invitation.event.equipment}}<br>
+        <b>Kosten: </b> {{invitation.event.cost}} Fr.<br>
+    </p>
+    <p>
+        Öffne folgenden Link im Browser, um die Einladung anzunehmen: {{token_url}}<br>
+        Noch nicht sicher? Kein Problem, du kannst dich ja trotzdem vorläufig anmelden.
+        Es ist jederzeit möglich, dich über denselben Link wieder abzumelden, bis am {{pretty_format_date(invitation.event.deadline)}}.
+    </p>
+</body>
+</html>
