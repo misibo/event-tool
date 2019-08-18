@@ -13,6 +13,7 @@ from .forms import (
     RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm,
     ConfirmPasswordResetForm, ChangeEmailForm)
 from . import mailing
+import pytz
 
 
 bp = Blueprint("auth", __name__, url_prefix="/auth", template_folder='templates/auth')
@@ -26,7 +27,7 @@ def close_session():
 
 def create_session(user_id):
     close_session()
-    created_at = datetime.utcnow()
+    created_at = pytz.utc.localize(datetime.utcnow())
     session['user_id'] = user_id
     session['timestamp'] = f'{created_at:%Y-%m-%d %H:%M:%S}'
 
@@ -70,9 +71,8 @@ def login_required(view):
 @bp.before_app_request
 def load_logged_in_user():
     if is_session_active():
-        timestamp = datetime.strptime(
-            session['timestamp'], '%Y-%m-%d %H:%M:%S')
-        if not (timestamp <= datetime.utcnow() < timestamp + timedelta(hours=2)):
+        timestamp = pytz.utc.localize(datetime.strptime(session['timestamp'], '%Y-%m-%d %H:%M:%S'))
+        if not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(hours=2)):
             g.user = None
         g.user = db_session.query(User).filter_by(
             id=session['user_id']).first()
@@ -104,7 +104,7 @@ def register():
             email=form.email.data,
             password_salt=salt,
             password_hash=password_hash,
-            insertion_time_utc=datetime.utcnow(),
+            insertion_time_utc=pytz.utc.localize(datetime.utcnow()),
         )
         db_session.add(user)
         db_session.commit()
@@ -164,7 +164,7 @@ def confirm():
         if existing_user is not None:
             flash(('Der Account wurde bereits aktiviert.'), 'info')
             return redirect(url_for('auth.login'))
-        elif not(temp.insertion_time_utc <= datetime.utcnow() < expiry_date):
+        elif not(temp.insertion_time_utc <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
             flash((
                 'Die Aktivierung ist fehlgeschlagen, '
                 'weil der Link in der E-Mail abgelaufen ist. '
@@ -238,7 +238,7 @@ def reset_password():
         user: User = db_session.query(User).filter_by(username=username, email=email).first()
 
         user.password_reset_token = token
-        user.password_reset_insertion_time_utc = datetime.utcnow()
+        user.password_reset_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
         db_session.commit()
 
         confirm_url = request.url_root + url_for('auth.confirm_password_reset', token=token)[1:]
@@ -283,7 +283,7 @@ def confirm_password_reset():
         insertion_time = user.password_reset_insertion_time_utc
         expiry_date = user.password_reset_insertion_time_utc + timedelta(hours=2)
 
-        if not(insertion_time <= datetime.utcnow() < expiry_date):
+        if not(insertion_time <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
             flash((
                 'Das Passwort kann nicht zurückgesetzt werden, weil der Link abgelaufen ist, '
                 'und deshalb nicht mehr verwendet werden kann. '
@@ -321,7 +321,7 @@ def change_email():
         token = os.urandom(16).hex()
 
         user.email_change_request = form.new_email.data
-        user.email_change_insertion_time_utc = datetime.utcnow()
+        user.email_change_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
         user.email_change_token = token
         db_session.commit()
 
@@ -366,7 +366,7 @@ def confirm_email():
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
 
-        if not(insertion_time <= datetime.utcnow() < expiry_date):
+        if not(insertion_time <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')

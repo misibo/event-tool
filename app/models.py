@@ -1,8 +1,32 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Boolean
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
+from flask import current_app
 from datetime import datetime
+import pytz
+
+
+class UtcDateTime(TypeDecorator):
+    """Convert local time to UTC, before storing value to database.
+    """
+
+    impl = DateTime(timezone=False)
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            if not isinstance(value, datetime):
+                raise TypeError('expected datetime.datetime, not ' + repr(value))
+            elif value.tzinfo is None:
+                raise ValueError('naive datetime is disallowed')
+            return value.astimezone(pytz.utc)
+
+    def process_result_value(self, value, dialect):
+        if value is not None and value.tzinfo is None:
+            value = pytz.utc.localize(value)
+        return value
+
 
 engine = create_engine('sqlite:///db.sqlite3', echo=True)
 Base = declarative_base()
@@ -45,11 +69,11 @@ class User(Base):
     password_salt = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
     password_reset_token = Column(String)
-    password_reset_insertion_time_utc = Column(DateTime)
+    password_reset_insertion_time_utc = Column(UtcDateTime)
 
     email_change_request = Column(String)
     email_change_token = Column(String)
-    email_change_insertion_time_utc = Column(DateTime)
+    email_change_insertion_time_utc = Column(UtcDateTime)
 
     # can create events and assign an admin
     create_events_permissions = Column(Boolean)
@@ -81,7 +105,7 @@ class PendingUser(Base):
     password_salt = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
 
-    insertion_time_utc = Column(DateTime, nullable=False)
+    insertion_time_utc = Column(UtcDateTime, nullable=False)
 
 
 class Event(Base):
@@ -90,14 +114,14 @@ class Event(Base):
     name = Column(String)
     description = Column(String)
     location = Column(String)
-    start = Column(DateTime)
-    end = Column(DateTime)
+    start = Column(UtcDateTime)
+    end = Column(UtcDateTime)
     equipment = Column(String)
     cost = Column(Integer)
-    modified = Column(DateTime)
+    modified = Column(UtcDateTime)
     send_invitations = Column(Boolean)
-    deadline = Column(DateTime)
-    created_at = Column(DateTime)
+    deadline = Column(UtcDateTime)
+    created_at = Column(UtcDateTime)
     admin_id = Column(Integer, ForeignKey(User.id))
     admin = relationship(User, back_populates='administrated_events')
     groups = relationship(
@@ -112,7 +136,7 @@ class Group(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     description = Column(String)
-    modified = Column(DateTime)
+    modified = Column(UtcDateTime)
     admin_id = Column(Integer, ForeignKey(User.id))
 
     # a group admin can add and remove users from a group
@@ -129,7 +153,7 @@ class Group(Base):
 @event.listens_for(Group, 'before_insert')
 @event.listens_for(Group, 'before_update')
 def receive_before_modified(mapper, connection, target):
-    target.modified = datetime.now()
+    target.modified = pytz.utc.localize(datetime.utcnow())
 
 
 # class EventUpdate(Base):
@@ -137,7 +161,7 @@ def receive_before_modified(mapper, connection, target):
 #     id = Column(Integer, primary_key=True)
 #     message = Column(String)
 #     event_id = Column(Integer, ForeignKey(Event.id))
-#     created_at = Column(DateTime)
+#     created_at = Column(UtcDateTime)
 
 #     event = relationship(Event, back_populates='updates')
 

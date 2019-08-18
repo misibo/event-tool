@@ -1,7 +1,8 @@
-from flask import Blueprint, abort, redirect, render_template, flash, url_for
+from flask import Blueprint, abort, redirect, render_template, flash, url_for, session
 from .models import Event, Group, db_session
 from .forms import EventEditForm
 from werkzeug.exceptions import NotFound
+import pytz
 
 bp = Blueprint("event", __name__, url_prefix="/event")
 
@@ -9,7 +10,7 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 @bp.route('/', methods=['GET'])
 def list():
     events = db_session.query(Event).all()
-    return render_template('event/index.html', events=events)
+    return render_template('event/index.html', events=events, tz=pytz.timezone('Europe/Zurich'))
 
 
 @bp.route('/create', methods=['GET', 'POST'], defaults={'id': None})
