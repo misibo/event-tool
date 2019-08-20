@@ -24,9 +24,12 @@ class LocalDateTimeField(DateTimeField):
 
         :param value: The python object containing the value to process.
         """
-        if value.tzinfo is None:
-            raise ValueError('naive datetime is disallowed')
-        self.data = value.astimezone(self.tz)
+        if value is None:
+            self.data = value
+        else:
+            if value.tzinfo is None:
+                raise ValueError('naive datetime is disallowed')
+            self.data = value.astimezone(self.tz)
 
     def process_formdata(self, valuelist):
         """
@@ -206,7 +209,6 @@ class EventEditForm(FlaskForm):
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline', format='%d.%m.%y %H:%M')
     groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
-    send_invitations = BooleanField('Einladungen versenden')
     # groups = MultiCheckboxField('Gruppen', [DataRequired()])
 
 
