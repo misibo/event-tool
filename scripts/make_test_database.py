@@ -2,6 +2,9 @@ from app.models import db_session, User, Group, Event
 from datetime import datetime, timedelta
 import random
 import textwrap
+import pytz
+
+tz = pytz.timezone('Europe/Zurich')
 random.seed(42)
 
 
@@ -39,11 +42,11 @@ def create_event(name, description, location, start, end, equipment, cost, deadl
         name=name,
         description=description,
         location=location,
-        start=start,
-        end=end,
+        start=tz.localize(start),
+        end=tz.localize(end),
         equipment=equipment,
         cost=cost,
-        deadline=deadline,
+        deadline=tz.localize(deadline),
         send_invitations=send_invitations,
     )
     event.admin = admin

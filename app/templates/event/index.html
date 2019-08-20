@@ -25,8 +25,8 @@
             <tr>
                 <td>{{ event.name }}</td>
                 <td class="uk-text-truncate">{{ event.description }}</td>
-                <td>{{ event.start.strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ event.end.strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
                     <a href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a>
                     <a class="uk-margin-small-left" href="{{ url_for('event.delete', id=event.id) }}" uk-icon="trash"></a>

@@ -8,6 +8,36 @@ from wtforms.validators import Optional, DataRequired, Length, Email, NumberRang
 from .models import User, db_session
 import hashlib
 import flask
+import pytz
+
+
+class LocalDateTimeField(DateTimeField):
+    tz = pytz.timezone('Europe/Zurich')
+
+    def process_data(self, value):
+        """
+        Process the Python data applied to this field and store the result.
+
+        This will be called during form construction by the form's `kwargs` or
+        `obj` argument.
+
+        :param value: The python object containing the value to process.
+        """
+        if value.tzinfo is None:
+            raise ValueError('naive datetime is disallowed')
+        self.data = value.astimezone(self.tz)
+
+    def process_formdata(self, valuelist):
+        """
+        Process data received over the wire from a form.
+
+        This will be called during form construction with data supplied
+        through the `formdata` argument.
+
+        :param valuelist: A list of strings to process.
+        """
+        super(LocalDateTimeField, self).process_formdata(valuelist)
+        self.data = self.tz.localize(self.data)
 
 
 class LoginForm(FlaskForm):
@@ -169,10 +199,10 @@ class EventEditForm(FlaskForm):
     description = TextAreaField('Info', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
     # https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
-    start = DateTimeField('Start', format='%d.%m.%y %H:%M')
-    end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
+    start = LocalDateTimeField('Start', format='%d.%m.%y %H:%M')
+    end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipement = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
-    deadline = DateTimeField('Deadline', format='%d.%m.%y %H:%M')
+    deadline = LocalDateTimeField('Deadline', format='%d.%m.%y %H:%M')
     groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
     # groups = MultiCheckboxField('Gruppen', [DataRequired()])
