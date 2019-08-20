@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort %}
+{% from 'macros.html' import render_pagination, render_sort, render_search %}
 
 {% block title %}
     Events
@@ -12,10 +12,7 @@
             <h2>Events</h2>
         </div>
         <div class="uk-width-expand">
-            <div class="uk-search uk-search-default uk-width-medium">
-                <button uk-search-icon></button>
-                <input class="uk-search-input" type="search" placeholder="Search ..." name="search">
-            </div>
+            {{ render_search(args) }}
         </div>
         <div>
             <a href="{{ url_for('event.create') }}" class="uk-button uk-button-default">Hinzufügen</a>

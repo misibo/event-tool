@@ -1,6 +1,6 @@
 from flask import current_app, flash, render_template, request, redirect, url_for
 from flask.views import View
-# from sqlalchemy import or_
+from sqlalchemy import or_
 from .models import db
 
 
@@ -49,7 +49,6 @@ class ListView(View):
 
     def sort(self, query):
         args = {}
-
         for key in self.sorts:
             args_key = f'sort.{key}'
             value = request.args.get(args_key)
@@ -66,7 +65,6 @@ class ListView(View):
     # TODO test filter (with enum)
     def filter(self, query):
         args = {}
-
         for key in self.filters.keys():
             args_key = f'filter.{key}'
             value = request.args.get(args_key)
@@ -75,15 +73,15 @@ class ListView(View):
                 query = query.filter(getattr(self.model, key) == value)
         return query, args
 
-    # TODO search returns nothing
     def search(self, query):
         args = {}
         search = request.args.get('search')
         if search:
             args['search'] = search
+            searches = []
             for column in self.searchable:
-                query = query.filter(
-                    getattr(self.model, column).ilike(f'%{search}%'))
+                searches.append(getattr(self.model, column).contains(search))
+            query = query.filter(or_(*searches))
         return query, args
 
     def dispatch_request(self):
