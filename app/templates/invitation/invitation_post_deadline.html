@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block title %}Einladung - {{invitation.name}}{% endblock %}
+
+{% block content %}
+<p>
+    Die Anmeldefrist ist abgelaufen, die Angaben können nicht mehr geändert werden.
+</p>
+<p>
+    <b>Angemeldet: </b>
+    {% if invitation.accepted %}
+    Ja
+    {% else %}
+    Nein
+    {% endif %}
+    <br>
+    <b>Anzahl Freunde: </b>{{invitation.num_friends}}<br>
+    <b>Anzahl Fahrplätze: </b>{{invitation.num_car_seats}}<br>
+</p>
+{% endblock %}

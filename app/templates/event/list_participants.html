@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Events
+{% endblock %}
+
+{% block content %}
+    <div class="uk-flex uk-flex-between uk-flex-middle">
+        <h2>Teilnehmerliste - {{event.name}} </h2>
+    </div>
+    <div>
+        <b>Anzahl Teilnehmer: </b>{{ num_participants + num_friends }}<br>
+        <b>Anzahl Fahrplätze: </b>{{ num_car_seats }}<br>
+    </div>
+    <table class="uk-table uk-table-striped">
+        <thead>
+            <tr>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Rückmeldung</th>
+                <th>Externe Freunde</th>
+                <th>Fahrplätze</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invitation in invitations %}
+            <tr>
+                <td>{{ invitation.user.first_name }}</td>
+                <td>{{ invitation.user.family_name }}</td>
+                <td>
+                    {% if invitation.accepted is none %}
+                        <label uk-icon="question"></label>
+                    {% elif invitation.accepted  %}
+                        <label uk-icon="check"></label>
+                    {% else %}
+                        <label uk-icon="close"></label>
+                    {% endif %}
+                </td>
+                <td>{{ invitation.num_friends }}</td>
+                <td>{{ invitation.num_car_seats }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

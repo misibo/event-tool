@@ -16,7 +16,8 @@
                 <th>Name</th>
                 <th>Beschreibung</th>
                 <th>Start</th>
-                <th>Ende</th>
+<!--                <th>Ende</th>-->
+                <th>Einladungen</th>
                 <th>Aktion</th>
             </tr>
         </thead>
@@ -28,7 +29,8 @@
                 <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
-                    <a href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a>
+                    <a href="{{ url_for('event.list_participants', event_id=event.id) }}" uk-icon="users"></a>
+                    <a class="uk-margin-small-left" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a>
                     <a class="uk-margin-small-left" href="{{ url_for('event.delete', id=event.id) }}" uk-icon="trash"></a>
                 </td>
             </tr>

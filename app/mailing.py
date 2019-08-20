@@ -1,5 +1,6 @@
 from flask import current_app
 from flask_mail import Message
+import smtplib
 
 
 def send_single_mail(recipient, subject, text, html=None):
@@ -7,19 +8,21 @@ def send_single_mail(recipient, subject, text, html=None):
     assert isinstance(subject, str), subject
     assert isinstance(text, str), text
 
+    sender = current_app.config['HOST_MAIL_ADDRESS']
     msg = Message(
         subject,
-        sender=current_app.config['HOST_MAIL_ADDRESS'],
+        sender=sender,
         recipients=[recipient])
 
     msg.body = text
     if html is not None:
         msg.html = html
 
+    current_app.logger.info(f'Send email to {recipient}, subject="{subject}", sender={sender}')
     try:
         current_app.mail.send(msg)
-    except Exception:
-        current_app.logger.exception(f'Could not delivery email to {recipient}')
+    except smtplib.SMTPException:
+        current_app.logger.exception(f'Could not send email')
         return False
     else:
         return True

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, UniqueConstraint
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Table, Boolean
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session
@@ -31,29 +31,48 @@ class UtcDateTime(TypeDecorator):
 engine = create_engine('sqlite:///db.sqlite3', echo=True)
 Base = declarative_base()
 
-GroupMembers = Table(
-    'GroupMembers', Base.metadata,
-    Column('user_id', ForeignKey('User.id'), primary_key=True),
-    Column('group_id', ForeignKey('Group.id'), primary_key=True),
-)
+
+def auto_repr(obj, attrs):
+    arglist = ', '.join(f'{k}={getattr(obj, k)}' for k in attrs)
+    return f'{type(obj).__name__}({arglist})'
 
 
-GroupEventRelations = Table(
-    'GroupEventRelations', Base.metadata,
-    Column('group_id', ForeignKey('Group.id'), primary_key=True),
-    Column('event_id', ForeignKey('Event.id'), primary_key=True),
-)
+class GroupMembers(Base):
+    __tablename__ = 'GroupMembers'
+    user_id = Column(ForeignKey('User.id'), primary_key=True)
+    group_id = Column(ForeignKey('Group.id'), primary_key=True)
+
+
+class GroupEventRelations(Base):
+    __tablename__ = 'GroupEventRelations'
+    group_id = Column(ForeignKey('Group.id'), primary_key=True)
+    event_id = Column(ForeignKey('Event.id'), primary_key=True)
 
 
 class Invitation(Base):
     __tablename__ = 'Invitation'
-    event_id = Column(Integer, ForeignKey('Event.id'), primary_key=True)
-    user_id = Column(Integer, ForeignKey('User.id'), primary_key=True)
-    token = Column(String)
-    accepted = Column(Boolean)
+    __table_args__ = (
+        UniqueConstraint('event_id', 'user_id'),  # avoid sending multiple invitations to same user
+    )
 
-    event = relationship('Event', back_populates='invitations')
-    user = relationship('User', back_populates='invitations')
+    id = Column(Integer, primary_key=True, nullable=False)
+    event_id = Column(Integer, ForeignKey('Event.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('User.id'), nullable=False)
+    token = Column(String, nullable=False)
+    send_email_attempt_utc = Column(UtcDateTime)
+    send_email_success_utc = Column(UtcDateTime)
+    accepted = Column(Boolean)  # None => NAN, false => rejected, true => accepted
+    num_friends = Column(Integer, default=0)
+    num_car_seats = Column(Integer, default=0)
+
+    event: "Event" = relationship('Event', back_populates='invitations')
+    user: "User" = relationship('User', back_populates='invitations')
+
+    def __repr__(self):
+        return auto_repr(self, ['id', 'event', 'user', 'accepted', 'num_friends', 'num_car_seats'])
+
+    def __str__(self):
+        return repr(self)
 
 
 class User(Base):
@@ -81,14 +100,17 @@ class User(Base):
     # can create groups and assign an admin
     create_groups_permissions = Column(Boolean)
 
-    groups = relationship('Group', secondary=GroupMembers,
+    groups = relationship('Group', secondary=GroupMembers.__table__,
                           back_populates='users')
     invitations = relationship('Invitation', back_populates='user')
     administrated_events = relationship('Event', back_populates='admin')
     administrated_groups = relationship('Group', back_populates='admin')
 
     def __repr__(self):
-        return f'User(first_name={self.first_name}, family_name={self.family_name})'
+        return auto_repr(self, ['id', 'username', 'email', 'first_name', 'family_name'])
+
+    def __str__(self):
+        return repr(self)
 
 
 class PendingUser(Base):
@@ -107,6 +129,12 @@ class PendingUser(Base):
 
     insertion_time_utc = Column(UtcDateTime, nullable=False)
 
+    def __repr__(self):
+        return auto_repr(self, ['id', 'username', 'email'])
+
+    def __str__(self):
+        return repr(self)
+
 
 class Event(Base):
     __tablename__ = 'Event'
@@ -123,12 +151,19 @@ class Event(Base):
     deadline = Column(UtcDateTime)
     created_at = Column(UtcDateTime)
     admin_id = Column(Integer, ForeignKey(User.id))
+
     admin = relationship(User, back_populates='administrated_events')
     groups = relationship(
-        'Group', secondary=GroupEventRelations, back_populates='events')
+        'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = relationship('Invitation', back_populates='event')
     # updates = relationship(
     #     'EventUpdate', order_by='EventUpdate.created_at', back_populates='event')
+
+    def __repr__(self):
+        return auto_repr(self, ['id', 'name', 'location', 'start'])
+
+    def __str__(self):
+        return repr(self)
 
 
 class Group(Base):
@@ -142,10 +177,16 @@ class Group(Base):
     # a group admin can add and remove users from a group
     admin = relationship(User, back_populates='administrated_groups')
 
-    users = relationship('User', secondary=GroupMembers,
+    users = relationship('User', secondary=GroupMembers.__table__,
                          back_populates='groups')
     events = relationship(
-        'Event', secondary=GroupEventRelations, back_populates='groups')
+        'Event', secondary=GroupEventRelations.__table__, back_populates='groups')
+
+    def __repr__(self):
+        return auto_repr(self, ['id', 'name'])
+
+    def __str__(self):
+        return repr(self)
 
 
 @event.listens_for(Event, 'before_insert')

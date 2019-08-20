@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import ValidationError, StringField, PasswordField, SelectMultipleField, TextAreaField
+from wtforms import ValidationError, StringField, PasswordField, SelectMultipleField, TextAreaField, BooleanField
 from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.widgets import html_params, HTMLString
@@ -9,6 +9,7 @@ from .models import User, db_session
 import hashlib
 import flask
 import pytz
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
 
 class LocalDateTimeField(DateTimeField):
@@ -23,9 +24,12 @@ class LocalDateTimeField(DateTimeField):
 
         :param value: The python object containing the value to process.
         """
-        if value.tzinfo is None:
-            raise ValueError('naive datetime is disallowed')
-        self.data = value.astimezone(self.tz)
+        if value is None:
+            self.data = value
+        else:
+            if value.tzinfo is None:
+                raise ValueError('naive datetime is disallowed')
+            self.data = value.astimezone(self.tz)
 
     def process_formdata(self, valuelist):
         """
@@ -161,7 +165,6 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
-from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
 # class MultiCheckboxField(SelectMultipleField):
 class QueryMultiCheckboxField(QuerySelectMultipleField):
@@ -189,6 +192,7 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
+
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Beschreibung', [Length(max=1000)])
@@ -206,3 +210,33 @@ class EventEditForm(FlaskForm):
     deadline = LocalDateTimeField('Deadline', format='%d.%m.%y %H:%M')
     groups = QueryMultiCheckboxField('Gruppen', [Required()], get_label='name')
     # groups = MultiCheckboxField('Gruppen', [DataRequired()])
+
+
+class EditInvitationForm(FlaskForm):
+    accepted = BooleanField("Einladung akzeptieren")
+    num_friends = IntegerField("Anzahl Freunde")
+    num_car_seats = IntegerField("Anzahl Fahrplätze")
+
+    def validate_num_friends(self, field):
+        if field.data is not None and field.data < 0:
+            raise ValidationError('Anzahl Freunde muss grösser oder gleich 0 sein.')
+
+    def validate_num_car_seats (self, field):
+        if field.data is not None and field.data < 0:
+            raise ValidationError('Anzahl Fahrplätze muss grösser oder gleich 0 sein.')
+
+    def validate(self):
+        if not super(EditInvitationForm, self).validate():
+            return False
+
+        error = False
+        if self.accepted.data is not True:
+            if self.num_friends.data not in (None, 0):
+                self.num_friends.errors.append(
+                    'Du kannst keine Freunde einladen, wenn du dich nicht anmeldest.')
+                error = True
+            if self.num_car_seats.data not in (None, 0):
+                self.num_car_seats.errors.append(
+                    'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
+                error = True
+        return not error
