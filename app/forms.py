@@ -1,15 +1,16 @@
-from flask import g, session
 import hashlib
+import os
+from flask import session
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
-from wtforms import ValidationError, StringField, PasswordField, TextAreaField
-from wtforms.fields.html5 import EmailField, DateTimeField, IntegerField
+from wtforms import PasswordField, StringField, TextAreaField, ValidationError
+from wtforms.fields.html5 import DateTimeField, EmailField, IntegerField
 from wtforms.widgets.core import CheckboxInput
 from wtforms.widgets import html_params, HTMLString
-from wtforms.validators import Optional, DataRequired, Length, Email, NumberRange, Required
-from .models import Group, User, db
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Required
+from .models import db, Group, User
 
 
 class LoginForm(FlaskForm):
@@ -64,7 +65,7 @@ class ChangePasswordForm(FlaskForm):
 
     def validate_old_password(self, field):
         user = User.query.filter_by(
-            id=flask.session['user_id']).first()
+            id=session['user_id']).first()
         password_hash = hashlib.pbkdf2_hmac(
             'sha256', self.old_password.data.encode('UTF-8'),
             user.password_salt.encode('UTF-8'), 1000)
@@ -161,7 +162,15 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
 
-import os
+
+# process file if uploaded via form
+def process_file_upload(form, model, attr, directory):
+    f = getattr(form, attr).data
+    if f and f != getattr(model, attr):
+        filename = secure_filename(f.filename)
+        # TODO how to determine base path of flask app?
+        f.save(os.path.join('app', 'static', directory, filename))
+        setattr(model, attr, os.path.join(directory, filename))
 
 
 class GroupEditForm(FlaskForm):
@@ -174,19 +183,15 @@ class GroupEditForm(FlaskForm):
         get_label=lambda user: f'{user.first_name} {user.family_name}',
         # default=g.user,
         query_factory=lambda: User.query.all(),
-        allow_blank=True
+        allow_blank=True,
+        blank_text='- Auswählen -'
     )
 
     def populate_obj(self, group):
         group.name = self.name.data
         group.description = self.description.data
         group.admin = self.admin.data
-        if self.logo.data and self.logo.data != group.logo:
-            f = self.logo.data
-            filename = secure_filename(f.filename)
-            # TODO how to determine base path of flask app?
-            f.save(os.path.join('app', 'static', 'group', filename))
-            group.logo = os.path.join('group', filename)
+        process_file_upload(self, group, 'logo', 'group')
 
 
 class EventEditForm(FlaskForm):
@@ -195,13 +200,25 @@ class EventEditForm(FlaskForm):
     location = StringField('Standort', [DataRequired(), Length(max=100)])
     start = DateTimeField('Start', format='%d.%m.%y %H:%M')
     end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
-    equipement = TextAreaField('Ausrüstung', [Optional()])
+    equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
-    deadline = DateTimeField('Deadline', format='%d.%m.%y %H:%M')
+    deadline = DateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
+    image = FileField('Image', validators=[FileAllowed(['png', 'jpg'])])
     groups = QueryMultiCheckboxField(
         'Gruppen',
         [Required()],
         get_label='name',
         query_factory=lambda: Group.query.all()
     )
-    # groups = MultiCheckboxField('Gruppen', [DataRequired()])
+
+    def populate_obj(self, event):
+        event.name = self.name.data
+        event.description = self.description.data
+        event.location = self.location.data
+        event.start = self.start.data
+        event.end = self.end.data
+        event.equipment = self.equipment.data
+        event.cost = self.cost.data
+        event.deadline = self.deadline.data
+        event.groups = self.groups.data
+        process_file_upload(self, event, 'image', 'event')

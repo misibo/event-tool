@@ -1,6 +1,4 @@
-import os
-from flask import Blueprint, url_for
-from werkzeug.utils import secure_filename
+from flask import Blueprint
 from .models import Group
 from .forms import GroupEditForm
 from .views import ListView, CreateEditView, DeleteView

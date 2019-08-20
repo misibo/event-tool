@@ -1,46 +1,108 @@
 from flask import current_app, flash, render_template, request, redirect, url_for
 from flask.views import View
+# from sqlalchemy import or_
 from .models import db
 
 
 class ListView(View):
 
     sorts = []
-    filters = []
+    filters = {}
+    searchable = []
     model = None
     template = None
 
-    def sort_from_url(self, query):
+    # def dict_expand(dict):
 
-        params = request.args
+    #     def recursion(dict, keys, value):
+    #         key = keys.pop(0)
+    #         if key not in dict:
+    #             dict[key] = {}
+    #         if len(keys) >= 1:
+    #             dict[key] = recursion(dict[key], keys, value)
+    #         else:
+    #             dict[key] = value
+    #         return dict
 
-        for column in self.sorts:
-            if column in params:
-                if params.get(column) == 'asc':
-                    params = query.order_by(getattr(self.model, column).asc())
-                elif params.get(column) == 'desc':
-                    query = query.order_by(getattr(self.model, column).desc())
+    #     res = {}
 
-        return query
+    #     for key, value in dict.items():
+    #         keys = key.split('.')
+    #         res = recursion(res, keys, value)
 
-    def dict_replace(self, dict1, dict2):
-        for key, val in dict2.items():
-            if key in dict1:
-                dict1[key] = val
-        return dict1
+    #     return res
 
-    def get_sort_url_params(self):
-        return self.dict_replace(dict.fromkeys(self.sorts), request.args.to_dict())
+    # def dict_flatten(d, path=''):
+    #     res = {}
+    #     for key, value in d.items():
+    #         if type(value) is dict:
+    #             res = {**res, **dict_flatten(value, f'{path}{key}.')}
+    #         else:
+    #             res[path+key] = value
+    #     return res
 
-    def filter_from_url(query):
-        return query
+    # def dict_replace(self, dict1, dict2):
+    #     for key, val in dict2.items():
+    #         if key in dict1:
+    #             dict1[key] = val
+    #     return dict1
+
+    def sort(self, query):
+        args = {}
+
+        for key in self.sorts:
+            args_key = f'sort.{key}'
+            value = request.args.get(args_key)
+            if value:
+                attr = getattr(self.model, key)
+                if value == 'asc':
+                    query = query.order_by(attr.asc())
+                elif value == 'desc':
+                    query = query.order_by(attr.desc())
+                args[args_key] = value
+
+        return query, args
+
+    # TODO test filter (with enum)
+    def filter(self, query):
+        args = {}
+
+        for key in self.filters.keys():
+            args_key = f'filter.{key}'
+            value = request.args.get(args_key)
+            if value and value in self.filters[key]():
+                args[args_key] = value
+                query = query.filter(getattr(self.model, key) == value)
+        return query, args
+
+    # TODO search returns nothing
+    def search(self, query):
+        args = {}
+        search = request.args.get('search')
+        if search:
+            args['search'] = search
+            for column in self.searchable:
+                query = query.filter(
+                    getattr(self.model, column).ilike(f'%{search}%'))
+        return query, args
 
     def dispatch_request(self):
+
         query = self.model.query
-        query = self.sort_from_url(query)
+
+        query, sort_args = self.sort(query)
+        query, filter_args = self.filter(query)
+        query, search_args = self.search(query)
+
         pagination = query.paginate(
-            per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
-        return render_template(self.template, pagination=pagination, sort=self.get_sort_url_params())
+            per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE']
+        )
+
+        return render_template(
+            self.template,
+            pagination=pagination,
+            args={**sort_args, **filter_args, **search_args}
+        )
 
 
 class CreateEditView(View):
@@ -83,40 +145,3 @@ class DeleteView(View):
         flash('Löschen erfolgreich.')
 
         return redirect(url_for(self.redirect))
-
-
-# def register_manager(bp, name, model, list_template, form_template, form, sorts, filters, redirect):
-
-#     class ModelListView(ListView):
-#         sorts = sorts
-#         filters = filters
-#         model = model
-#         template = list_template
-
-#     bp.add_url_rule(
-#         '/', view_func=ModelListView.as_view('list'), methods=['GET'])
-
-#     class ModelCreateView(CreateView):
-#         form = form
-#         model = model
-#         template = form_template
-#         redirect = redirect
-
-#     bp.add_url_rule(
-#         '/create', view_func=ModelCreateView.as_view('create'), methods=['GET', 'POST'])
-
-#     class ModelEditView(EditView):
-#         form = form
-#         model = model
-#         template = form_template
-#         redirect = redirect
-
-#     bp.add_url_rule('/edit/<int:id>', view_func=ModelEditView.as_view('edit'),
-#                     methods=['GET', 'POST'])
-
-#     class ModelDeleteView(DeleteView):
-#         model = model
-#         redirect = redirect
-
-#     bp.add_url_rule(
-#         '/delete/<int:id>', view_func=ModelDeleteView.as_view('delete'), methods=['GET'])

@@ -20,12 +20,12 @@
 {% endmacro %}
 
 {% macro render_file_field(field) %}
-<div class="uk-margin" uk-margin>
-  <div uk-form-custom="target: true">
-    {{ field(**kwargs)|safe }}
-      <input class="uk-input uk-form-width-medium" type="text" placeholder="Select file" disabled>
+<div class="uk-margin">
+  <div class="uk-inline uk-width-1-1" uk-form-custom="target: true">
+      {{ field(**kwargs)|safe }}
+      <input class="uk-input" type="text" placeholder="Datei auswählen" disabled>
+      <span class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: folder"></span>
   </div>
-  <button class="uk-button uk-button-default"><span uk-icon="icon: image"></span></button>
 </div>
 {% endmacro %}
 
@@ -44,42 +44,42 @@
 </div>
 {% endmacro %}
 
-url_for('static', filename='path/to/file')
-
-{% macro render_pagination(pagination, endpoint, params) %}
-  <ul class="uk-pagination">
-  {% if pagination.has_prev %}
-    <li><a href="{{ url_for(endpoint, page=pagination.prev_num, **params) }}"><span uk-pagination-previous></span></a></li>
-  {% endif %}
-  {%- for page in pagination.iter_pages() %}
-    {% if page %}
-      {% if page != pagination.page %}
-        <li><a href="{{ url_for(endpoint, page=page, **params) }}">{{ page }}</a></li>
-      {% else %}
-        <li class="uk-active"><span>{{ page }}</span></li>
-      {% endif %}
-    {% else %}
-      <li class="uk-disabled"><span>...</span></li>
+{% macro render_pagination(pagination, endpoint, params, position='center') %}
+  {% if pagination.pages > 1 %}
+    <ul class="uk-pagination uk-flex-{{position}}">
+    {% if pagination.has_prev %}
+      <li><a href="{{ url_for(endpoint, page=pagination.prev_num, **params) }}"><span uk-pagination-previous></span></a></li>
     {% endif %}
-  {%- endfor %}
-  {% if pagination.has_next %}
-    <li><a href="{{ url_for(endpoint, page=pagination.next_num, **params) }}"><span uk-pagination-next></span></a></li>
+    {%- for page in pagination.iter_pages() %}
+      {% if page %}
+        {% if page != pagination.page %}
+          <li><a href="{{ url_for(endpoint, page=page, **params) }}">{{ page }}</a></li>
+        {% else %}
+          <li class="uk-active"><span>{{ page }}</span></li>
+        {% endif %}
+      {% else %}
+        <li class="uk-disabled"><span>...</span></li>
+      {% endif %}
+    {%- endfor %}
+    {% if pagination.has_next %}
+      <li><a href="{{ url_for(endpoint, page=pagination.next_num, **params) }}"><span uk-pagination-next></span></a></li>
+    {% endif %}
+    </ul>
   {% endif %}
-  </ul>
 {% endmacro %}
 
-{% macro render_sort(label, name, sort) %}
+{% macro render_sort(label, name, args) %}
   <div uk-form-custom>
-      <select name="{{ name }}" onchange="this.form.submit()">
-        <option {% if not sort[name] %}selected{% endif %} value="">Entfernen</option>
-        <option {% if sort[name] == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
-        <option {% if sort[name] == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
+      <select name="sort.{{ name }}" onchange="this.form.submit()">
+        <option {% if not args['sort.'+name] %}selected{% endif %} value="">Entfernen</option>
+        <option {% if args['sort.'+name] == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
+        <option {% if args['sort.'+name] == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
       </select>
       <div>
         {{ label }}
-        {% if sort[name] == 'asc' %}
+        {% if args['sort.'+name] == 'asc' %}
           <span uk-icon="icon: arrow-up"></span>
-        {% elif sort[name] == 'desc' %}
+        {% elif args['sort.'+name] == 'desc' %}
           <span uk-icon="icon: arrow-down"></span>
         {% endif %}
       </div>

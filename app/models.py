@@ -19,7 +19,9 @@ GroupEventRelations = db.Table(
 
 
 class Invitation(db.Model):
+
     __tablename__ = 'Invitation'
+
     event_id = db.Column(db.Integer, db.ForeignKey('Event.id'), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
     token = db.Column(db.String)
@@ -30,20 +32,33 @@ class Invitation(db.Model):
 
 
 class User(db.Model):
+
     __tablename__ = 'User'
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
 
-    email = db.Column(db.String, nullable=False)
-
+    # personal info
     first_name = db.Column(db.String, nullable=False)
     family_name = db.Column(db.String, nullable=False)
+    birthday = db.Column(db.Date)
 
+    # contact info
+    email = db.Column(db.String, nullable=False)
+    mobil_phone = db.Column(db.String)
+
+    # adress
+    street = db.Column(db.String)
+    postal_code = db.Column(db.String)
+    city = db.Column(db.String)
+
+    # password management
     password_salt = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     password_reset_token = db.Column(db.String)
     password_reset_insertion_time_utc = db.Column(db.DateTime)
 
+    # email management
     email_change_request = db.Column(db.String)
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(db.DateTime)
@@ -54,6 +69,7 @@ class User(db.Model):
     # can create groups and assign an admin
     create_groups_permissions = db.Column(db.Boolean)
 
+    # relations
     groups = db.relationship('Group', secondary=GroupMembers, back_populates='users')
     invitations = db.relationship('Invitation', back_populates='user')
     administrated_events = db.relationship('Event', back_populates='admin')
@@ -91,6 +107,7 @@ class Event(db.Model):
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
     modified = db.Column(db.DateTime)
+    image = db.Column(db.String)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime)
@@ -106,8 +123,10 @@ class Group(db.Model):
     __tablename__ = 'Group'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    logo = db.Column(db.String)
     description = db.Column(db.String)
+    age = db.Column(db.String)
+    logo = db.Column(db.String)
+    flyer = db.Column(db.String)
     modified = db.Column(db.DateTime)
     admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
