@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, g, render_template
+from flask import Blueprint, flash, g, render_template, redirect, url_for
 
 from .forms import EditUserForm
 from .models import User, db
@@ -12,6 +12,11 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 def dashboard():
     user: User = g.user
     return render_template('user/index.html', user=user)
+
+
+@bp.route('/index', methods=['GET', 'POST'])
+def index():
+    return redirect(url_for('dashboard.account'))
 
 
 @bp.route('/account', methods=['GET', 'POST'])
@@ -28,4 +33,4 @@ def account():
 
         flash('Profil erfolgreich angepasst.')
 
-    return render_template('user/account.html', form=form)
+    return render_template('user/edit.html', form=form)
