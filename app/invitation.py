@@ -1,5 +1,5 @@
 from flask import Blueprint, redirect, render_template, flash, url_for, request
-from .models import db_session, Invitation, User, Event
+from .models import db, Invitation, User, Event
 from .forms import EditInvitationForm
 from datetime import datetime
 import pytz
@@ -12,11 +12,11 @@ def list_missing_invitations():
     """Create model instances for missing invitations, but does not submit them to database.
     """
     import os
-    result = db_session.execute("""
+    result = db.execute("""
         with MissingInvitations as (
             with EligibleInvitations as (
                 select distinct
-                    GroupEventRelations.event_id as event_id, 
+                    GroupEventRelations.event_id as event_id,
                     GroupMembers.user_id
                 from GroupEventRelations
                 inner join GroupMembers on GroupMembers.group_id = GroupEventRelations.group_id
@@ -36,8 +36,8 @@ def list_missing_invitations():
     invitations = []
     for user_id, event_id in result:
         token = os.urandom(16).hex()
-        user = db_session.query(User).filter_by(id=user_id).first()
-        event = db_session.query(Event).filter_by(id=event_id).first()
+        user = User.query.filter_by(id=user_id).first()
+        event = Event.query.filter_by(id=event_id).first()
         invitations.append(Invitation(user=user, event=event, token=token))
     return invitations
 
@@ -46,7 +46,7 @@ def list_missing_invitations():
 def edit(id):
     token = request.args.get('token', 'invalid')
 
-    invitation = db_session.query(Invitation).filter_by(id=id).first()
+    invitation = Invitation.query.filter_by(id=id).first()
 
     if invitation is None or invitation.token != token:
         flash('Die Einladung ist nicht gültig.', 'error')
@@ -59,7 +59,7 @@ def edit(id):
 
             if form.validate_on_submit():
                 form.populate_obj(invitation)
-                db_session.commit()
+                db.commit()
 
                 if invitation.accepted:
                     flash(f'Du hast dich und {invitation.num_friends} weitere Freunde erfolgreich angemeldet.', 'info')

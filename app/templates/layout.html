@@ -20,8 +20,8 @@
                     <div class="uk-navbar-right">
                         {% if g.user == None %}
                         <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('auth.login') }}">Anmelden</a></li>
-                            <li class="uk-active"><a href="{{ url_for('auth.register') }}">Registrieren</a></li>
+                            <li class="uk-active"><a href="{{ url_for('security.login') }}">Anmelden</a></li>
+                            <li class="uk-active"><a href="{{ url_for('security.register') }}">Registrieren</a></li>
                         </ul>
                         {% else %}
                         <div class="uk-navbar-item">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</div>

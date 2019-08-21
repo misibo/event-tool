@@ -1,29 +1,36 @@
-import flask
-from flask import request, url_for, render_template, current_app
-from .forms import EditUserForm
-from .models import db_session, User, Invitation, Event, Group
-from . import auth
-from . import mailing
-from .utils import pretty_format_date
-from datetime import datetime
-import os
-from flask_mail import Mail
-import sqlalchemy.event
-import textwrap
-from . import auth, group, event, invitation
 import pytz
+from flask import current_app, Flask, render_template, request, url_for
+from .utils import pretty_format_date
+from flask_mail import Mail
+from . import mailing
+from datetime import datetime
+from .models import db
+from . import security, user, group, event, invitation
 
-app = flask.Flask(__name__, instance_relative_config=True)
+app = Flask(__name__, instance_relative_config=True)
+
+# load conig
 app.config.from_object('config')  # load ./config.py
-app.config.from_pyfile('config.py')  # load ./instance/config.py
-app.secret_key = b'misibo'  # os.urandom(16)
+app.config.from_pyfile('config.py')  # load ../instance/config.py
+
+# initizalize database
+db.init_app(app)
+
+# create tables
+with app.app_context():
+    db.create_all()
+
+# set mailer
 app.mail = Mail(app)
-app.register_blueprint(auth.bp)
+
+app.add_template_global(pretty_format_date, 'pretty_format_date')
+
+# register blueprints
+app.register_blueprint(security.bp)
+app.register_blueprint(user.bp)
 app.register_blueprint(group.bp)
 app.register_blueprint(event.bp)
 app.register_blueprint(invitation.bp)
-
-app.add_template_global(pretty_format_date, 'pretty_format_date')
 
 
 def send_invitations():
@@ -48,30 +55,12 @@ def send_invitations():
         if success:
             inv.send_email_success_utc = pytz.utc.localize(datetime.utcnow())
 
-        db_session.add(inv)
+        db.add(inv)
 
         # commit invitations to database individually,
         # in order to not affect subsequent invitations if something goes wrong
-        db_session.commit()
-
+        db.commit()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return flask.render_template('home.html')
-
-
-@app.route('/account/', methods=['GET', 'POST'])
-@auth.login_required
-def account():
-    user: User = flask.g.user
-    form = EditUserForm(obj=user)
-
-    if form.validate_on_submit():
-        user.username = form.username.data
-        user.first_name = form.first_name.data
-        user.family_name = form.family_name.data
-        db_session.commit()
-
-        flask.flash('Profil erfolgreich angepasst.')
-
-    return flask.render_template('user/edit.html', form=form)
+    return render_template('home.html')

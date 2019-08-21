@@ -1,14 +1,12 @@
-
+import os
 import functools
 import uuid
 import hashlib
-import os
 from datetime import datetime, timedelta
 from flask import (
-    Blueprint, g, session, render_template, url_for, redirect, flash, request, escape,
+    Blueprint, g, session, render_template, url_for, redirect, flash, request,
     current_app)
-from flask_mail import Message
-from .models import PendingUser, User, db_session
+from .models import PendingUser, User, db
 from .forms import (
     RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm,
     ConfirmPasswordResetForm, ChangeEmailForm)
@@ -16,7 +14,7 @@ from . import mailing
 import pytz
 
 
-bp = Blueprint("auth", __name__, url_prefix="/auth", template_folder='templates/auth')
+bp = Blueprint("security", __name__)
 
 
 def close_session():
@@ -36,32 +34,12 @@ def is_session_active():
     return all(key in session for key in {'user_id', 'timestamp'})
 
 
-# def with_checked_session(callback):
-#     app.logger.warning(flask.session)
-#     if is_session_active():
-#         timestamp = datetime.datetime.strptime(
-#             flask.session['timestamp'], '%Y-%m-%d %H:%M:%S')
-#         if not (timestamp <= datetime.datetime.utcnow() < \
-#                 timestamp + datetime.timedelta(hours=2)):
-#             # timestamp has expired
-#             return flask.redirect(flask.url_for('login', redirect=flask.request.url))
-
-#         user = db_session.query(User).filter_by(
-#             id=flask.session['user_id']).first()
-#         if user is None:
-#             # user has been deleted
-#             return flask.redirect(flask.url_for('login', redirect=flask.request.url))
-
-#         return callback(user)
-#     else:
-#         return flask.redirect(flask.url_for('login', redirect=flask.request.url))
-
 def login_required(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('security.login'))
 
         return view(**kwargs)
 
@@ -74,8 +52,11 @@ def load_logged_in_user():
         timestamp = pytz.utc.localize(datetime.strptime(session['timestamp'], '%Y-%m-%d %H:%M:%S'))
         if not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(hours=2)):
             g.user = None
-        else:
-            g.user = db_session.query(User).filter_by(id=session['user_id']).first()
+        g.user = User.query.filter_by(
+            id=session['user_id']).first()
+        # if user is None:
+        #     # user has been deleted
+        #     return flask.redirect(flask.url_for('login', redirect=flask.request.url))
     else:
         g.user = None
 
@@ -103,10 +84,11 @@ def register():
             password_hash=password_hash,
             insertion_time_utc=pytz.utc.localize(datetime.utcnow()),
         )
-        db_session.add(user)
-        db_session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-        confirm_url = request.url_root + url_for('auth.confirm', token=token)[1:]
+        confirm_url = request.url_root + \
+            url_for('security.confirm', token=token)[1:]
         current_app.logger.info(f'{user.email} can confirmed by {confirm_url}')
 
         success = mailing.send_single_mail(
@@ -134,7 +116,7 @@ def register():
 
         # TODO: Implement page to explain what the user has to do now
 
-    return render_template('register.html', form=form)
+    return render_template('security/register.html', form=form)
 
 
 @bp.route('/confirm', methods=['GET', 'POST'])
@@ -143,7 +125,7 @@ def confirm():
 
     token = str(request.args.get('token', 'invalid'))
 
-    temp: PendingUser = db_session.query(PendingUser).filter_by(
+    temp: PendingUser = PendingUser.query.filter_by(
         confirm_token=token).first()
 
     if temp is None:
@@ -152,22 +134,23 @@ def confirm():
             'weil der Link in der E-Mail ungültig ist. '
             'Bitte registriere dich neu, um eine neue E-Mail zu erhalten.'),
             'error')
-        return redirect(url_for('auth.register'))
+        return redirect(url_for('security.register'))
     else:
         # check for existing users
-        existing_user = db_session.query(User).filter_by(username=temp.username).first()
+        existing_user = User.query.filter_by(
+            username=temp.username).first()
         expiry_date = temp.insertion_time_utc + timedelta(days=1)
 
         if existing_user is not None:
             flash(('Der Account wurde bereits aktiviert.'), 'info')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('security.login'))
         elif not(temp.insertion_time_utc <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
             flash((
                 'Die Aktivierung ist fehlgeschlagen, '
                 'weil der Link in der E-Mail abgelaufen ist. '
                 'Bitte registriere dich neu, um eine neue E-Mail zu erhalten.'),
                 'error')
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('security.register'))
         else:
             # create real user
             user = User(
@@ -178,11 +161,12 @@ def confirm():
                 password_salt=temp.password_salt,
                 password_hash=temp.password_hash,
             )
-            db_session.add(user)
-            db_session.commit()
+            db.session.add(user)
+            db.session.commit()
 
-            flash('E-Mail-Adresse erfolgreich bestätigt. Du kannst dich jetzt anmelden.', 'info')
-            return redirect(url_for('auth.login'))
+            flash(
+                'E-Mail-Adresse erfolgreich bestätigt. Du kannst dich jetzt anmelden.', 'info')
+            return redirect(url_for('security.login'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -191,13 +175,13 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = db_session.query(User).filter_by(
+        user = User.query.filter_by(
             username=form.username.data).first()
         create_session(user.id)
         flash('Du hast dich erfolgreich angemeldet.')
         return redirect(url_for('account'))
 
-    return render_template('login.html', form=form)
+    return render_template('security/login.html', form=form)
 
 
 @bp.route('/password', methods=['GET', 'POST'])
@@ -206,13 +190,13 @@ def change_password():
     form = ChangePasswordForm()
 
     if form.validate_on_submit():
-        user = db_session.query(User).filter_by(
+        user = User.query.filter_by(
             id=session['user_id']).first()
         password_hash = hashlib.pbkdf2_hmac(
             'sha256', form.new_password.data.encode('UTF-8'),
             user.password_salt.encode('UTF-8'), 1000)
         user.password_hash = password_hash
-        db_session.commit()
+        db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
         return redirect(url_for('account'))
@@ -232,20 +216,25 @@ def reset_password():
         username = form.username.data
         email = form.email.data
 
-        user: User = db_session.query(User).filter_by(username=username, email=email).first()
+        user: User = User.query.filter_by(
+            username=username, email=email).first()
 
         user.password_reset_token = token
         user.password_reset_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
-        db_session.commit()
+        db.session.commit()
 
-        confirm_url = request.url_root + url_for('auth.confirm_password_reset', token=token)[1:]
-        current_app.logger.info(f'The password of {username} is reset by {confirm_url}')
+        confirm_url = request.url_root + \
+            url_for('security.confirm_password_reset', token=token)[1:]
+        current_app.logger.info(
+            f'The password of {username} is reset by {confirm_url}')
 
         success = mailing.send_single_mail(
             recipient=email,
             subject='Passwort zurücksetzen',
-            text=render_template('mail/reset_password.text', user=user, confirm_url=confirm_url),
-            html=render_template('mail/reset_password.html', user=user, confirm_url=confirm_url),
+            text=render_template('mail/reset_password.text',
+                                 user=user, confirm_url=confirm_url),
+            html=render_template('mail/reset_password.html',
+                                 user=user, confirm_url=confirm_url),
         )
 
         if not success:
@@ -259,7 +248,7 @@ def reset_password():
                 'um das Passwort zurückzusetzen.'),
                 'info')
 
-    return render_template('auth/reset_password.html', form=form)
+    return render_template('security/reset_password.html', form=form)
 
 
 @bp.route('/confirm_password_reset', methods=['GET', 'POST'])
@@ -268,24 +257,26 @@ def confirm_password_reset():
 
     token = request.args.get('token', 'invalid')
 
-    user: User = db_session.query(User).filter_by(password_reset_token=token).first()
+    user: User = User.query.filter_by(
+        password_reset_token=token).first()
 
     if user is None:
         flash((
             'Das Passwort kann nicht zurückgesetzt werden, '
             'weil der Link bereits verwendet wurde, oder ungültig ist. '
             'Bitte fordere erneut eine E-Mail an.'), 'error')
-        return redirect(url_for('auth.reset_password'))
+        return redirect(url_for('security.reset_password'))
     else:
         insertion_time = user.password_reset_insertion_time_utc
-        expiry_date = user.password_reset_insertion_time_utc + timedelta(hours=2)
+        expiry_date = user.password_reset_insertion_time_utc + \
+            timedelta(hours=2)
 
         if not(insertion_time <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
             flash((
                 'Das Passwort kann nicht zurückgesetzt werden, weil der Link abgelaufen ist, '
                 'und deshalb nicht mehr verwendet werden kann. '
                 'Bitte fordere erneut eine E-Mail an.'), 'error')
-            return redirect(url_for('auth.reset_password'))
+            return redirect(url_for('security.reset_password'))
         else:
             form = ConfirmPasswordResetForm()
 
@@ -297,14 +288,14 @@ def confirm_password_reset():
                     user.password_salt.encode('UTF-8'), 1000)
                 user.password_reset_token = None
                 user.password_reset_insertion_time_utc = None
-                db_session.commit()
+                db.session.commit()
 
                 flash((
                     'Das Passwort wurde erfolgreich geändert. '
                     'Melde dich jetzt mit dem neuen Passwort an.'), 'info')
-                return redirect(url_for('auth.login'))
+                return redirect(url_for('security.login'))
             else:
-                return render_template('auth/confirm_password_reset.html', form=form)
+                return render_template('security/confirm_password_reset.html', form=form)
 
 
 @bp.route('/change_email', methods=['GET', 'POST'])
@@ -320,17 +311,21 @@ def change_email():
         user.email_change_request = form.new_email.data
         user.email_change_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
         user.email_change_token = token
-        db_session.commit()
+        db.session.commit()
 
-        confirm_url = request.url_root + url_for('auth.confirm_email', token=token)[1:]
+        confirm_url = request.url_root + \
+            url_for('security.confirm_email', token=token)[1:]
 
-        current_app.logger.info(f'New email address is activated by {confirm_url}')
+        current_app.logger.info(
+            f'New email address is activated by {confirm_url}')
 
         success = mailing.send_single_mail(
             recipient=user.email_change_request,
             subject='E-Mail-Adresse ändern',
-            text=render_template('mail/change_email.text', user=user, confirm_url=confirm_url),
-            html=render_template('mail/change_email.html', user=user, confirm_url=confirm_url),
+            text=render_template('mail/change_email.text',
+                                 user=user, confirm_url=confirm_url),
+            html=render_template('mail/change_email.html',
+                                 user=user, confirm_url=confirm_url),
         )
 
         if not success:
@@ -352,7 +347,8 @@ def change_email():
 def confirm_email():
     token = str(request.args.get('token', 'invalid'))
 
-    user: User = db_session.query(User).filter_by(email_change_token=token).first()
+    user: User = User.query.filter_by(
+        email_change_token=token).first()
 
     if user is None:
         flash((
@@ -373,11 +369,11 @@ def confirm_email():
             user.email_change_insertion_time_utc = None
             user.email_change_request = None
             user.email_change_token = None
-            db_session.commit()
+            db.session.commit()
 
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
-                 'info')
+                'info')
             return redirect(url_for('account'))
 
 

@@ -1,49 +1,17 @@
-from flask import Blueprint, abort, redirect, render_template, flash, url_for, session
-from .models import Event, Group, db_session
+from flask import Blueprint, abort, redirect, render_template, url_for
+from .models import db, Event
 from .forms import EventEditForm
-from . import auth
+from .views import ListView, CreateEditView, DeleteView
+from . import security
 from werkzeug.exceptions import NotFound
-import pytz
 
-bp = Blueprint("event", __name__, url_prefix="/events")
-
-
-@bp.route('/', methods=['GET'])
-@auth.login_required
-def list():
-    events = db_session.query(Event).all()
-    return render_template('event/index.html', events=events, tz=pytz.timezone('Europe/Zurich'))
-
-
-@bp.route('/create', methods=['GET', 'POST'], defaults={'id': None})
-@bp.route('/<int:id>/edit', methods=['GET', 'POST'])
-@auth.login_required
-def edit(id):
-    if id is None:
-        event = Event()
-    else:
-        event = db_session.query(Event).filter_by(id=id).first()
-        if event is None:
-            abort(NotFound)
-
-    form = EventEditForm(obj=event)
-    form.groups.query = db_session.query(Group).all()
-
-    if form.validate_on_submit():
-        form.populate_obj(event)
-        if id is None:
-            db_session.add(event)
-        db_session.commit()
-        flash(f'Event "{event.name}" wurde erfolgreich gespeichert.')
-        return redirect(url_for('event.list'))
-
-    return render_template('event/edit.html', form=form)
+bp = Blueprint("event", __name__, url_prefix="/event")
 
 
 @bp.route('/<int:event_id>/participants', methods=['GET'])
-@auth.login_required
+@security.login_required
 def list_participants(event_id):
-    event = db_session.query(Event).filter_by(id=event_id).first()
+    event = Event.query.filter_by(id=event_id).first()
     if event is None:
         abort(NotFound)
     elif event.send_invitations:
@@ -80,28 +48,58 @@ def list_participants(event_id):
 
 
 @bp.route('/<int:event_id>/send_invitations', methods=['POST'])
-@auth.login_required
+@security.login_required
 def send_invitations(event_id):
-    event = db_session.query(Event).filter_by(id=event_id).first()
+    event = Event.query.filter_by(id=event_id).first()
     if event is None:
         abort(NotFound)
     else:
         event.send_invitations = True
-        db_session.commit()
+        db.commit()
 
         from . import send_invitations
         send_invitations()
         return redirect(url_for('event.list_participants', event_id=event_id))
 
 
-@bp.route('/<int:id>/delete', methods=['GET'])
-@auth.login_required
-def delete(id):
-    event = db_session.query(Event).filter_by(id=id).first()
-    if event is None:
-        abort(NotFound)
-    else:
-        db_session.delete(event)
-        db_session.commit()
-        flash(f'Event "{event.name}" wurde erfolgreich gelöscht.')
-        return redirect(url_for('event.list'))
+class EventListView(ListView):
+    sorts = ['name', 'start', 'deadline', 'modified']
+    searchable = ['name', 'description', 'location', 'equipment']
+    model = Event
+    template = 'event/index.html'
+
+
+class EventCreateEditView(CreateEditView):
+
+    form = EventEditForm
+    model = Event
+    template = 'event/edit.html'
+    redirect = 'event.list'
+
+
+class EventDeleteView(DeleteView):
+    model = Event
+    redirect = 'event.list'
+
+
+bp.add_url_rule(
+    '/',
+    view_func=EventListView.as_view('list'),
+    methods=['GET']
+)
+bp.add_url_rule(
+    '/create',
+    defaults={'id': None},
+    view_func=EventCreateEditView.as_view('create'),
+    methods=['GET', 'POST']
+)
+bp.add_url_rule(
+    '/edit/<int:id>',
+    view_func=EventCreateEditView.as_view('edit'),
+    methods=['GET', 'POST']
+)
+bp.add_url_rule(
+    '/delete/<int:id>',
+    view_func=EventDeleteView.as_view('delete'),
+    methods=['GET']
+)
