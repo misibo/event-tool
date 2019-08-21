@@ -8,6 +8,7 @@ bp = Blueprint("group", __name__, url_prefix="/group")
 
 class GroupListView(ListView):
     sorts = ['name', 'modified']
+    searchable = ['name', 'description']
     model = Group
     template = 'group/index.html'
 

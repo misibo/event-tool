@@ -1,25 +1,31 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort %}
+{% from 'macros.html' import render_pagination, render_sort, render_search %}
 
 {% block title %}
     Gruppen
 {% endblock %}
 
 {% block content %}
-    <div class="uk-flex uk-flex-between uk-flex-middle">
-        <h2>Gruppen</h2>
-        <a href="{{ url_for('group.create') }}" class="uk-button uk-button-default">Hinzufügen</a>
-        {{ render_pagination(pagination, 'group.list', sort) }}
-    </div>
+<form id="form" method="GET">
+        <div class="uk-margin" uk-grid>
+            <div>
+                <h2>Gruppen</h2>
+            </div>
+            <div class="uk-width-expand">
+                {{ render_search(args) }}
+            </div>
+            <div>
+                <a href="{{ url_for('group.create') }}" class="uk-button uk-button-default">Hinzufügen</a>
+            </div>
+        </div>
     {% if pagination.items %}
-    <form id="form" method="GET">
         <input name="page" value="{{ pagination.page }}" hidden>
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>
-                <th>{{ render_sort('Name', 'name', sort) }}</th>
+                <th>{{ render_sort('Name', 'name', args) }}</th>
                 <th>Beschreibung</th>
-                <th>{{ render_sort('Geändert', 'modified', sort) }}</th>
+                <th>{{ render_sort('Geändert', 'modified', args) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
@@ -37,10 +43,11 @@
             {% endfor %}
         </tbody>
     </table>
-    </form>
+    {{ render_pagination(pagination, 'group.list', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">
         <h3 class="uk-text-muted">Keine Gruppen gefunden</h3>
     </div>
     {% endif %}
+</form>
 {% endblock %}
