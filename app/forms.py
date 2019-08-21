@@ -253,11 +253,11 @@ class EventEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     description = TextAreaField('Info', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
-    start = DateTimeField('Start', format='%d.%m.%y %H:%M')
-    end = DateTimeField('Ende', format='%d.%m.%y %H:%M')
+    start = LocalDateTimeField('Start', format='%d.%m.%y %H:%M')
+    end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
-    deadline = DateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
+    deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
     image = FileField('Image', validators=[FileAllowed(['png', 'jpg'])])
     groups = QueryMultiCheckboxField(
         'Gruppen',

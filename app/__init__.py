@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import os
 import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for
@@ -60,11 +61,12 @@ def send_invitations():
         if success:
             inv.send_email_success_utc = pytz.utc.localize(datetime.utcnow())
 
-        db.add(inv)
+        db.session.add(inv)
 
         # commit invitations to database individually,
         # in order to not affect subsequent invitations if something goes wrong
-        db.commit()
+        db.session.commit()
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

@@ -64,7 +64,7 @@ def send_invitations(event_id):
         abort(NotFound)
     else:
         event.send_invitations = True
-        db.commit()
+        db.session.commit()
 
         from . import send_invitations
         send_invitations()

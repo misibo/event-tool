@@ -11,8 +11,9 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template,
 from . import mailing
 from .forms import (ChangeEmailForm, ChangePasswordForm,
                     ConfirmPasswordResetForm, LoginForm, RegisterForm,
-                    ResetPasswordForm)
-from .models import PendingUser, User, db
+                    ResetPasswordForm, ConfirmRegistrationForm)
+from .models import User, db
+from itsdangerous import BadSignature
 
 bp = Blueprint("security", __name__)
 
@@ -76,7 +77,7 @@ def register():
             'timestamp': f'{datetime.utcnow():%Y-%m-%d %H:%M:%S}',
         })
 
-        confirm_url = request.url_root + url_for('auth.confirm', token=token)[1:]
+        confirm_url = request.url_root + url_for('security.confirm', token=token)[1:]
         current_app.logger.info(f'{form.email.data,} can confirmed by {confirm_url}')
 
         success = mailing.send_single_mail(
@@ -128,7 +129,7 @@ def confirm():
 
         if existing_user is not None:
             flash('Der Account wurde bereits aktiviert.', 'info')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('security.login'))
         elif not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(days=1)):
             flash((
                 'Die Aktivierung ist fehlgeschlagen, '
@@ -140,7 +141,7 @@ def confirm():
             form = ConfirmRegistrationForm(username=payload['username'])
 
             if not form.validate_on_submit():
-                return render_template('auth/confirm_registration.html', form=form)
+                return render_template('security/confirm_registration.html', form=form)
             else:
                 password_salt = os.urandom(8).hex()
                 password_hash = hashlib.pbkdf2_hmac(
@@ -172,7 +173,7 @@ def login():
             username=form.username.data).first()
         create_session(user.id)
         flash('Du hast dich erfolgreich angemeldet.')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
 
     return render_template('security/login.html', form=form)
 
@@ -192,7 +193,7 @@ def change_password():
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
 
     return render_template('user/password.html', form=form)
 
@@ -347,7 +348,7 @@ def confirm_email():
         flash((
             'Das E-Mail-Adresse konnte nicht geändert werden, '
             'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
     else:
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
@@ -356,7 +357,7 @@ def confirm_email():
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')
-            return redirect(url_for('account'))
+            return redirect(url_for('user.edit'))
         else:
             user.email = user.email_change_request
             user.email_change_insertion_time_utc = None
@@ -367,7 +368,7 @@ def confirm_email():
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
                 'info')
-            return redirect(url_for('account'))
+            return redirect(url_for('user.edit'))
 
 
 @bp.route('/logout')
