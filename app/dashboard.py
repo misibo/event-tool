@@ -16,7 +16,7 @@ def dashboard():
 
 @bp.route('/account', methods=['GET', 'POST'])
 @login_required
-def edit():
+def account():
     user: User = g.user
     form = EditUserForm(obj=user)
 

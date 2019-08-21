@@ -173,7 +173,7 @@ def login():
             username=form.username.data).first()
         create_session(user.id)
         flash('Du hast dich erfolgreich angemeldet.')
-        return redirect(url_for('user.edit'))
+        return redirect(url_for('dashboard.account'))
 
     return render_template('security/login.html', form=form)
 
@@ -193,7 +193,7 @@ def change_password():
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
-        return redirect(url_for('user.edit'))
+        return redirect(url_for('dashboard.account'))
 
     return render_template('user/password.html', form=form)
 
@@ -348,7 +348,7 @@ def confirm_email():
         flash((
             'Das E-Mail-Adresse konnte nicht geändert werden, '
             'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
-        return redirect(url_for('user.edit'))
+        return redirect(url_for('dashboard.account'))
     else:
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
@@ -357,7 +357,7 @@ def confirm_email():
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')
-            return redirect(url_for('user.edit'))
+            return redirect(url_for('dashboard.account'))
         else:
             user.email = user.email_change_request
             user.email_change_insertion_time_utc = None
@@ -368,7 +368,7 @@ def confirm_email():
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
                 'info')
-            return redirect(url_for('user.edit'))
+            return redirect(url_for('dashboard.account'))
 
 
 @bp.route('/logout')
