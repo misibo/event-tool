@@ -9,7 +9,7 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
-def edit():
+def dashboard():
     user: User = g.user
     return render_template('user/index.html', user=user)
 

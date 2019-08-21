@@ -4,7 +4,7 @@ import pytz
 from flask import Flask, current_app, render_template, request, url_for
 from flask_mail import Mail
 
-from . import event, group, invitation, mailing, security, user
+from . import event, group, invitation, mailing, security, user, dashboard
 from .models import db
 from .utils import pretty_format_date
 
@@ -28,6 +28,7 @@ app.add_template_global(pretty_format_date, 'pretty_format_date')
 
 # register blueprints
 app.register_blueprint(security.bp)
+app.register_blueprint(dashboard.bp)
 app.register_blueprint(user.bp)
 app.register_blueprint(group.bp)
 app.register_blueprint(event.bp)
