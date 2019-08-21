@@ -1,16 +1,21 @@
 import hashlib
-import pytz
 import os
+
+import pytz
 from flask import session
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
-from wtforms import BooleanField, PasswordField, StringField, TextAreaField, ValidationError
-from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
+from wtforms import (BooleanField, PasswordField, StringField, TextAreaField,
+                     ValidationError)
+from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
+                                           QuerySelectMultipleField)
 from wtforms.fields.html5 import DateTimeField, EmailField, IntegerField
+from wtforms.validators import (DataRequired, Email, Length, NumberRange,
+                                Optional, Required)
+from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
-from wtforms.widgets import html_params, HTMLString
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Required
+
 from .models import Group, User
 
 

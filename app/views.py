@@ -1,6 +1,8 @@
-from flask import current_app, flash, render_template, request, redirect, url_for
+from flask import (current_app, flash, redirect, render_template, request,
+                   url_for)
 from flask.views import View
 from sqlalchemy import or_
+
 from .models import db
 
 

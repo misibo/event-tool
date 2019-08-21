@@ -1,18 +1,18 @@
-import os
 import functools
-import uuid
 import hashlib
+import os
+import uuid
 from datetime import datetime, timedelta
-from flask import (
-    Blueprint, g, session, render_template, url_for, redirect, flash, request,
-    current_app)
-from .models import PendingUser, User, db
-from .forms import (
-    RegisterForm, LoginForm, ChangePasswordForm, ResetPasswordForm,
-    ConfirmPasswordResetForm, ChangeEmailForm)
-from . import mailing
-import pytz
 
+import pytz
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, session, url_for)
+
+from . import mailing
+from .forms import (ChangeEmailForm, ChangePasswordForm,
+                    ConfirmPasswordResetForm, LoginForm, RegisterForm,
+                    ResetPasswordForm)
+from .models import PendingUser, User, db
 
 bp = Blueprint("security", __name__)
 

@@ -1,8 +1,9 @@
+from datetime import datetime
+
 import pytz
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
-from datetime import datetime
 
 db = SQLAlchemy()
 

@@ -1,11 +1,12 @@
-import pytz
-from flask import current_app, Flask, render_template, request, url_for
-from .utils import pretty_format_date
-from flask_mail import Mail
-from . import mailing
 from datetime import datetime
+
+import pytz
+from flask import Flask, current_app, render_template, request, url_for
+from flask_mail import Mail
+
+from . import event, group, invitation, mailing, security, user
 from .models import db
-from . import security, user, group, event, invitation
+from .utils import pretty_format_date
 
 app = Flask(__name__, instance_relative_config=True)
 

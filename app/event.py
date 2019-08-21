@@ -1,9 +1,10 @@
 from flask import Blueprint, abort, redirect, render_template, url_for
-from .models import db, Event
-from .forms import EventEditForm
-from .views import ListView, CreateEditView, DeleteView
-from . import security
 from werkzeug.exceptions import NotFound
+
+from . import security
+from .forms import EventEditForm
+from .models import Event, db
+from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("event", __name__, url_prefix="/event")
 

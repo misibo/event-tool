@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, flash, g
+from flask import Blueprint, flash, g, render_template
+
 from .forms import EditUserForm
-from .security import login_required
 from .models import User, db
+from .security import login_required
 
 bp = Blueprint("user", __name__, url_prefix="/user")
 

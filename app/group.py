@@ -1,7 +1,8 @@
 from flask import Blueprint
-from .models import Group
+
 from .forms import GroupEditForm
-from .views import ListView, CreateEditView, DeleteView
+from .models import Group
+from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 

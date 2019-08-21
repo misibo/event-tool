@@ -1,6 +1,7 @@
+import smtplib
+
 from flask import current_app
 from flask_mail import Message
-import smtplib
 
 
 def send_single_mail(recipient, subject, text, html=None):

@@ -1,5 +1,6 @@
+from datetime import datetime
+
 import pytz
-from datetime import datetime, timedelta
 
 mytz = pytz.timezone('Europe/Zurich')
 
