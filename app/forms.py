@@ -166,7 +166,6 @@ class RegisterForm(FlaskForm):
     email = EmailField('Email', [DataRequired(), Email()])
     first_name = StringField('Vorname', [DataRequired(), Length(max=100)])
     family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
-    password = PasswordField('Passwort', [DataRequired(), Length(min=8)])
 
     def validate_username(self, field):
         username = field.data
@@ -175,6 +174,24 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Benutzername bereits benutzt.')
 
 
+class ConfirmRegistrationForm(FlaskForm):
+    username = StringField('Benutzername')  # read-only, needed for password-managers
+    password = PasswordField('Passwort', [DataRequired(), Length(min=8)])
+    password_confirm = PasswordField('Passwort bestätigen', [DataRequired(), Length(min=8)])
+
+    def validate(self):
+        if not super(ConfirmRegistrationForm, self).validate():
+            return False
+
+        if self.password.data != self.password_confirm.data:
+            self.password_confirm.errors.append(
+                'Eingabe stimmt nicht mit überrein.')
+            return False
+
+        return True
+
+
+# class MultiCheckboxField(SelectMultipleField):
 class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     class CheckboxListWidget(object):

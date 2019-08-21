@@ -100,12 +100,12 @@ class User(db.Model):
     password_salt = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     password_reset_token = db.Column(db.String)
-    password_reset_insertion_time_utc = db.Column(db.DateTime)
+    password_reset_insertion_time_utc = db.Column(UtcDateTime)
 
     # email management
     email_change_request = db.Column(db.String)
     email_change_token = db.Column(db.String)
-    email_change_insertion_time_utc = db.Column(db.DateTime)
+    email_change_insertion_time_utc = db.Column(UtcDateTime)
 
     # can create events and assign an admin
     create_events_permissions = db.Column(db.Boolean)
@@ -127,44 +127,21 @@ class User(db.Model):
         return repr(self)
 
 
-class PendingUser(db.Model):
-    __tablename__ = 'PendingUser'
-    id = db.Column(db.Integer, primary_key=True)
-    confirm_token = db.Column(db.String, nullable=False)
-    username = db.Column(db.String, nullable=False)
-
-    email = db.Column(db.String, nullable=False)
-
-    first_name = db.Column(db.String, nullable=False)
-    family_name = db.Column(db.String, nullable=False)
-
-    password_salt = db.Column(db.String, nullable=False)
-    password_hash = db.Column(db.String, nullable=False)
-
-    insertion_time_utc = db.Column(UtcDateTime, nullable=False)
-
-    def __repr__(self):
-        return auto_repr(self, ['id', 'username', 'email'])
-
-    def __str__(self):
-        return repr(self)
-
-
 class Event(db.Model):
     __tablename__ = 'Event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     description = db.Column(db.String)
     location = db.Column(db.String)
-    start = db.Column(db.DateTime)
-    end = db.Column(db.DateTime)
+    start = db.Column(UtcDateTime)
+    end = db.Column(UtcDateTime)
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
-    modified = db.Column(db.DateTime)
+    modified = db.Column(UtcDateTime)
     image = db.Column(db.String)
     send_invitations = db.Column(db.Boolean)
-    deadline = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime)
+    deadline = db.Column(UtcDateTime)
+    created_at = db.Column(UtcDateTime)
     admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
     admin = db.relationship(User, back_populates='administrated_events')
     groups = db.relationship(
@@ -186,7 +163,7 @@ class Group(db.Model):
     age = db.Column(db.String)
     logo = db.Column(db.String)
     flyer = db.Column(db.String)
-    modified = db.Column(db.DateTime)
+    modified = db.Column(UtcDateTime)
     admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
     # a group admin can add and remove users from a group

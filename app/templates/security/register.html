@@ -5,9 +5,7 @@
 
 {% block form %}
 <form class="uk-form-stacked" method="POST">
-    <!--username field must be followed by password field, otherwise password managers don't work!-->
     {{ render_field(form.username, class='uk-input') }}
-    {{ render_field(form.password, class='uk-input') }}
 
     {{ render_field(form.email, class='uk-input') }}
     {{ render_field(form.first_name, class='uk-input') }}

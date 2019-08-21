@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz
+import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for
 from flask_mail import Mail
 
@@ -12,7 +13,9 @@ app = Flask(__name__, instance_relative_config=True)
 
 # load conig
 app.config.from_object('config')  # load ./config.py
-app.config.from_pyfile('config.py')  # load ../instance/config.py
+app.config.from_pyfile('config.py')  # load ./instance/config.py
+app.secret_key = os.urandom(16)  # os.urandom(16)
+app.secure_serializer = itsdangerous.URLSafeSerializer(os.urandom(16))
 
 # initizalize database
 db.init_app(app)
