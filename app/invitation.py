@@ -13,7 +13,7 @@ def list_missing_invitations():
     """Create model instances for missing invitations, but does not submit them to database.
     """
     import os
-    result = db.execute("""
+    result = db.engine.execute("""
         with MissingInvitations as (
             with EligibleInvitations as (
                 select distinct
@@ -60,7 +60,7 @@ def edit(id):
 
             if form.validate_on_submit():
                 form.populate_obj(invitation)
-                db.commit()
+                db.session.commit()
 
                 if invitation.accepted:
                     flash(f'Du hast dich und {invitation.num_friends} weitere Freunde erfolgreich angemeldet.', 'info')

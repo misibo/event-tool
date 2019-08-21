@@ -6,6 +6,14 @@ from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("user", __name__, url_prefix="/user")
 
+
+@bp.route('/edit', methods=['GET', 'POST'])
+@login_required
+def edit():
+    user: User = g.user
+    form = EditUserForm(obj=user)
+
+
 @bp.route('/<int:id>/view')
 def view(id):
     return render_template('user/view.html')

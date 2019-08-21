@@ -4,6 +4,7 @@ from flask.views import View
 from sqlalchemy import or_
 
 from .models import db
+import pytz
 
 
 class ListView(View):
@@ -101,6 +102,7 @@ class ListView(View):
         return render_template(
             self.template,
             pagination=pagination,
+            tz=pytz.timezone('Europe/Zurich'),
             args={**sort_args, **filter_args, **search_args}
         )
 

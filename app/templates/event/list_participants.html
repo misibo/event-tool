@@ -12,6 +12,9 @@
         <b>Anzahl Teilnehmer: </b>{{ num_participants + num_friends }}<br>
         <b>Anzahl Fahrplätze: </b>{{ num_car_seats }}<br>
     </div>
+    <form class="uk-form-stacked" action="{{ url_for('event.send_invitations', event_id=event.id) }}" method="POST">
+        <button class="uk-button uk-button-default uk-margin-top">Einladungen versenden</button>
+    </form>
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>

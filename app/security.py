@@ -11,8 +11,9 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template,
 from . import mailing
 from .forms import (ChangeEmailForm, ChangePasswordForm,
                     ConfirmPasswordResetForm, LoginForm, RegisterForm,
-                    ResetPasswordForm)
-from .models import PendingUser, User, db
+                    ResetPasswordForm, ConfirmRegistrationForm)
+from .models import User, db
+from itsdangerous import BadSignature
 
 bp = Blueprint("security", __name__)
 
@@ -68,38 +69,26 @@ def register():
     form = RegisterForm()
 
     if form.validate_on_submit():
-        salt = str(uuid.uuid4())
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256', form.password.data.encode('UTF-8'), salt.encode('UTF-8'), 1000)
+        token = current_app.secure_serializer.dumps({
+            'username': form.username.data,
+            'first_name': form.first_name.data,
+            'family_name': form.family_name.data,
+            'email': form.email.data,
+            'timestamp': f'{datetime.utcnow():%Y-%m-%d %H:%M:%S}',
+        })
 
-        token = os.urandom(16).hex()
-
-        user = PendingUser(
-            confirm_token=token,
-            username=form.username.data,
-            first_name=form.first_name.data,
-            family_name=form.family_name.data,
-            email=form.email.data,
-            password_salt=salt,
-            password_hash=password_hash,
-            insertion_time_utc=pytz.utc.localize(datetime.utcnow()),
-        )
-        db.session.add(user)
-        db.session.commit()
-
-        confirm_url = request.url_root + \
-            url_for('security.confirm', token=token)[1:]
-        current_app.logger.info(f'{user.email} can confirmed by {confirm_url}')
+        confirm_url = request.url_root + url_for('security.confirm', token=token)[1:]
+        current_app.logger.info(f'{form.email.data,} can confirmed by {confirm_url}')
 
         success = mailing.send_single_mail(
-            recipient=user.email,
+            recipient=form.email.data,
             subject="Registrierung",
             text=render_template(
                 'mail/confirm_registration.text',
-                user=user, confirm_url=confirm_url),
+                user=form.first_name.data, confirm_url=confirm_url),
             html=render_template(
                 'mail/confirm_registration.html',
-                user=user, confirm_url=confirm_url),
+                user=form.first_name.data, confirm_url=confirm_url),
         )
 
         if not success:
@@ -123,12 +112,11 @@ def register():
 def confirm():
     close_session()
 
-    token = str(request.args.get('token', 'invalid'))
+    token = request.args.get('token', 'invalid')
 
-    temp: PendingUser = PendingUser.query.filter_by(
-        confirm_token=token).first()
-
-    if temp is None:
+    try:
+        payload = current_app.secure_serializer.loads(token)
+    except BadSignature:
         flash((
             'Die Aktivierung ist fehlgeschlagen, '
             'weil der Link in der E-Mail ungültig ist. '
@@ -136,15 +124,13 @@ def confirm():
             'error')
         return redirect(url_for('security.register'))
     else:
-        # check for existing users
-        existing_user = User.query.filter_by(
-            username=temp.username).first()
-        expiry_date = temp.insertion_time_utc + timedelta(days=1)
+        existing_user = User.query.filter_by(username=payload['username']).first()
+        timestamp = pytz.utc.localize(datetime.strptime(payload['timestamp'], '%Y-%m-%d %H:%M:%S'))
 
         if existing_user is not None:
-            flash(('Der Account wurde bereits aktiviert.'), 'info')
+            flash('Der Account wurde bereits aktiviert.', 'info')
             return redirect(url_for('security.login'))
-        elif not(temp.insertion_time_utc <= pytz.utc.localize(datetime.utcnow()) < expiry_date):
+        elif not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(days=1)):
             flash((
                 'Die Aktivierung ist fehlgeschlagen, '
                 'weil der Link in der E-Mail abgelaufen ist. '
@@ -152,21 +138,29 @@ def confirm():
                 'error')
             return redirect(url_for('security.register'))
         else:
-            # create real user
-            user = User(
-                username=temp.username,
-                email=temp.email,
-                first_name=temp.first_name,
-                family_name=temp.family_name,
-                password_salt=temp.password_salt,
-                password_hash=temp.password_hash,
-            )
-            db.session.add(user)
-            db.session.commit()
+            form = ConfirmRegistrationForm(username=payload['username'])
 
-            flash(
-                'E-Mail-Adresse erfolgreich bestätigt. Du kannst dich jetzt anmelden.', 'info')
-            return redirect(url_for('security.login'))
+            if not form.validate_on_submit():
+                return render_template('security/confirm_registration.html', form=form)
+            else:
+                password_salt = os.urandom(8).hex()
+                password_hash = hashlib.pbkdf2_hmac(
+                    'sha256', form.password.data.encode('UTF-8'), password_salt.encode('UTF-8'), 1000)
+
+                # create real user
+                user = User(
+                    username=payload['username'],
+                    email=payload['email'],
+                    first_name=payload['first_name'],
+                    family_name=payload['family_name'],
+                    password_salt=password_salt,
+                    password_hash=password_hash,
+                )
+                db.session.add(user)
+                db.session.commit()
+
+                flash('E-Mail-Adresse erfolgreich bestätigt. Du kannst dich jetzt anmelden.', 'info')
+                return redirect(url_for('auth.login'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -179,7 +173,7 @@ def login():
             username=form.username.data).first()
         create_session(user.id)
         flash('Du hast dich erfolgreich angemeldet.')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
 
     return render_template('security/login.html', form=form)
 
@@ -199,7 +193,7 @@ def change_password():
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
 
     return render_template('user/password.html', form=form)
 
@@ -354,7 +348,7 @@ def confirm_email():
         flash((
             'Das E-Mail-Adresse konnte nicht geändert werden, '
             'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
-        return redirect(url_for('account'))
+        return redirect(url_for('user.edit'))
     else:
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
@@ -363,7 +357,7 @@ def confirm_email():
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')
-            return redirect(url_for('account'))
+            return redirect(url_for('user.edit'))
         else:
             user.email = user.email_change_request
             user.email_change_insertion_time_utc = None
@@ -374,7 +368,7 @@ def confirm_email():
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
                 'info')
-            return redirect(url_for('account'))
+            return redirect(url_for('user.edit'))
 
 
 @bp.route('/logout')
