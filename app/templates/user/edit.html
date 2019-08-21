@@ -1,17 +1,1 @@
-{% extends 'form.html' %}
-{% from 'macros.html' import render_field %}
-
-{% block title %}Profil bearbeiten{% endblock %}
-
-{% block content %}
-<form class="uk-form-stacked" method="POST">
-    {{ render_field(form.username, class='uk-input') }}
-    {{ render_field(form.email, class='uk-input', readonly=True) }}
-    {{ render_field(form.first_name, class='uk-input') }}
-    {{ render_field(form.family_name, class='uk-input') }}
-    {{ form.csrf_token }}
-    <input type="submit" class="uk-button uk-button-default" value="Speichern">
-</form>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_email') }}">E-Mail ändern</a>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_password') }}">Passwort ändern</a>
-{% endblock %}
+user edit view

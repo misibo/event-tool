@@ -28,8 +28,9 @@
                         <ul class="uk-navbar-nav">
                             <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
                             <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
-                            <li class="uk-active"><a href="{{ url_for('account') }}">Persönliche Daten</a></li>
-                            <li class="uk-active"><a href="{{ url_for('auth.logout') }}">Abmelden</a></li>
+                            <li class="uk-active"><a href="{{ url_for('user.list') }}">Benutzer</a></li>
+                            <li class="uk-active"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                            <li class="uk-active"><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
                         </ul>
                         {% endif %}
                     </div>

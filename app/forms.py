@@ -290,3 +290,7 @@ class EditInvitationForm(FlaskForm):
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
         return not error
+
+
+class UserEditForm(FlaskForm):
+    test = StringField()

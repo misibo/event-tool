@@ -1,10 +1,14 @@
-from flask import Blueprint
+from flask import Blueprint, render_template
 
 from .forms import GroupEditForm
 from .models import Group
 from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
+
+@bp.route('/<int:id>/view')
+def view(id):
+    return render_template('group/view.html')
 
 
 class GroupListView(ListView):

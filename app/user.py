@@ -1,23 +1,52 @@
-from flask import Blueprint, flash, g, render_template
+from flask import Blueprint, render_template
 
-from .forms import EditUserForm
-from .models import User, db
-from .security import login_required
+from .forms import UserEditForm
+from .models import User
+from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("user", __name__, url_prefix="/user")
 
-@bp.route('/edit', methods=['GET', 'POST'])
-@login_required
-def edit():
-    user: User = g.user
-    form = EditUserForm(obj=user)
+@bp.route('/<int:id>/view')
+def view(id):
+    return render_template('user/view.html')
 
-    if form.validate_on_submit():
-        user.username = form.username.data
-        user.first_name = form.first_name.data
-        user.family_name = form.family_name.data
-        db.session.commit()
 
-        flash('Profil erfolgreich angepasst.')
+class UserListView(ListView):
+    model = User
+    template = 'user/index.html'
 
-    return render_template('user/edit.html', form=form)
+
+class UserCreateEditView(CreateEditView):
+
+    form = UserEditForm
+    model = User
+    template = 'user/edit.html'
+    redirect = 'user.list'
+
+
+class UserDeleteView(DeleteView):
+    model = User
+    redirect = 'user.list'
+
+
+bp.add_url_rule(
+    '/',
+    view_func=UserListView.as_view('list'),
+    methods=['GET']
+)
+bp.add_url_rule(
+    '/create',
+    defaults={'id': None},
+    view_func=UserCreateEditView.as_view('create'),
+    methods=['GET', 'POST']
+)
+bp.add_url_rule(
+    '/edit/<int:id>',
+    view_func=UserCreateEditView.as_view('edit'),
+    methods=['GET', 'POST']
+)
+bp.add_url_rule(
+    '/delete/<int:id>',
+    view_func=UserDeleteView.as_view('delete'),
+    methods=['GET']
+)

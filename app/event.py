@@ -9,6 +9,10 @@ from .views import CreateEditView, DeleteView, ListView
 bp = Blueprint("event", __name__, url_prefix="/event")
 
 
+@bp.route('/<int:id>/view')
+def view(id):
+    return render_template('event/view.html')
+
 @bp.route('/<int:event_id>/participants', methods=['GET'])
 @security.login_required
 def list_participants(event_id):
