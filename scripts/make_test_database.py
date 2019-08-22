@@ -1,5 +1,5 @@
 from app import app
-from app.models import db, User, Group, Event, Invitation
+from app.models import db, User, Group, Event, Invitation, GroupMemberRole
 from datetime import datetime, timedelta
 import random
 import textwrap
@@ -10,7 +10,7 @@ tz = pytz.timezone('Europe/Zurich')
 random.seed(42)
 
 
-def create_user(first_name, family_name):
+def create_user(first_name, family_name, permission=User.Permission.Standard):
     import uuid
     import hashlib
 
@@ -29,6 +29,7 @@ def create_user(first_name, family_name):
         email=email,
         password_salt=salt,
         password_hash=password_hash,
+        permission=permission,
     )
     db.session.add(user)
     return user
@@ -61,14 +62,14 @@ def create_event(name, description, location, start, end, equipment, cost, deadl
 
 with app.app_context():
     users = [
-        create_user('Melissa', 'Foley'),
-        create_user('Stephanie', 'Dunlap'),
+        create_user('Melissa', 'Foley', permission=User.Permission.SuperAdmin),
+        create_user('Stephanie', 'Dunlap', permission=User.Permission.Admin),
         create_user('Nicole', 'Parsons'),
         create_user('Michelle', 'Todd'),
         create_user('Heather', 'Bruce'),
-        create_user('Jennifer', 'Roberson'),
+        create_user('Jennifer', 'Roberson', permission=User.Permission.Admin),
         create_user('Amanda', 'Jennings'),
-        create_user('Amy', 'Villarreal'),
+        create_user('Amy', 'Villarreal', permission=User.Permission.Admin),
         create_user('Jessica', 'Benson'),
         create_user('Sarah', 'Keller'),
         create_user('Anisa', 'Rodriguez'),
@@ -240,12 +241,20 @@ with app.app_context():
         ),
     ]
 
-    for user in users[:-2]:
-        group1 = groups[random.randint(0, len(groups) - 1)]
-        group2 = groups[random.randint(0, len(groups) - 1)]
-        user.groups.append(group1)
-        if group1 != group2 and random.uniform(0.0, 1.0) > 0.8:
-            user.groups.append(group2)
+    for i, user in enumerate(users):
+        if i < len(groups):
+            role = GroupMemberRole(user=user, group=groups[i], type=GroupMemberRole.Type.Leader)
+            db.session.add(role)
+
+        g1, g2 = random.sample(set(range(len(groups))) - {i}, 2)
+
+        if random.uniform(0, 1) > 0.3:
+            role = GroupMemberRole(user=user, group=groups[g1], type=GroupMemberRole.Type.Member)
+            db.session.add(role)
+
+        if random.uniform(0, 1) > 0.3:
+            role = GroupMemberRole(user=user, group=groups[g2], type=GroupMemberRole.Type.Spectator)
+            db.session.add(role)
 
     db.session.commit()
 

@@ -113,3 +113,6 @@ venv.bak/
 app/static/group/
 app/static/event/
 app/static/user/
+
+
+.idea/

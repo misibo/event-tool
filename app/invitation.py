@@ -18,9 +18,9 @@ def list_missing_invitations():
             with EligibleInvitations as (
                 select distinct
                     GroupEventRelations.event_id as event_id,
-                    GroupMembers.user_id
+                    GroupMemberRole.user_id
                 from GroupEventRelations
-                inner join GroupMembers on GroupMembers.group_id = GroupEventRelations.group_id
+                inner join GroupMemberRole on GroupMemberRole.group_id = GroupEventRelations.group_id
             )
             select event_id, user_id from EligibleInvitations
             except

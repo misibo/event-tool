@@ -4,6 +4,7 @@ import pytz
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
+import enum
 
 db = SQLAlchemy()
 
@@ -34,10 +35,19 @@ def auto_repr(obj, attrs):
     return f'{type(obj).__name__}({arglist})'
 
 
-class GroupMembers(db.Model):
-    __tablename__ = 'GroupMembers'
+class GroupMemberRole(db.Model):
+    class Type(enum.Enum):
+        Spectator = 10
+        Member = 20
+        Leader = 30
+
+    __tablename__ = 'GroupMemberRole'
     user_id = db.Column(db.ForeignKey('User.id'), primary_key=True)
     group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
+
+    type = db.Column(db.Enum(Type), default=Type.Spectator, nullable=False)
+    user = db.relationship('User', back_populates='roles')
+    group = db.relationship('Group', back_populates='roles')
 
 
 class GroupEventRelations(db.Model):
@@ -76,6 +86,10 @@ class Invitation(db.Model):
 
 
 class User(db.Model):
+    class Permission(enum.Enum):
+        Standard = 10
+        Admin = 20
+        SuperAdmin = 30
 
     __tablename__ = 'User'
 
@@ -107,15 +121,10 @@ class User(db.Model):
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(UtcDateTime)
 
-    # can create events and assign an admin
-    create_events_permissions = db.Column(db.Boolean)
-
-    # can create groups and assign an admin
-    create_groups_permissions = db.Column(db.Boolean)
+    permission = db.Column(db.Enum(Permission), default=Permission.Standard, nullable=False)
 
     # relations
-    groups = db.relationship(
-        'Group', secondary=GroupMembers.__table__, back_populates='users')
+    roles = db.relationship('GroupMemberRole', back_populates='user')
     invitations = db.relationship('Invitation', back_populates='user')
     administrated_events = db.relationship('Event', back_populates='admin')
     administrated_groups = db.relationship('Group', back_populates='admin')
@@ -168,8 +177,7 @@ class Group(db.Model):
 
     # a group admin can add and remove users from a group
     admin = db.relationship('User', back_populates='administrated_groups')
-    users = db.relationship(
-        'User', secondary=GroupMembers.__table__, back_populates='groups')
+    roles = db.relationship('GroupMemberRole', back_populates='group')
     events = db.relationship(
         'Event', secondary=GroupEventRelations.__table__, back_populates='groups')
 
