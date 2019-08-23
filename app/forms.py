@@ -1,8 +1,7 @@
-import hashlib
 import os
 
 import pytz
-from flask import session
+from flask import g
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
@@ -65,9 +64,7 @@ class LoginForm(FlaskForm):
             self.password.errors.append(
                 'Benutzername oder Passwort ist falsch.')
             return False
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256', self.password.data.encode('UTF-8'), user.password_salt.encode('UTF-8'), 1000)
-        if password_hash != user.password_hash:
+        if not user.validate_password(self.password.data):
             self.password.errors.append(
                 'Benutzername oder Passwort ist falsch.')
             return False
@@ -82,9 +79,7 @@ class EditUserForm(FlaskForm):
     family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
 
     def validate_username(self, field):
-        user = User.query.filter_by(
-            id=session['user_id']).first()
-        if field.data != user.username and User.query \
+        if field.data != g.user.username and User.query \
                 .filter_by(username=field.data).first() is not None:
             raise ValidationError('Benutzername existiert bereits.')
 
@@ -102,12 +97,7 @@ class ChangePasswordForm(FlaskForm):
         'Neues Passwort bestätigen', [DataRequired(), Length(min=8)])
 
     def validate_old_password(self, field):
-        user = User.query.filter_by(
-            id=session['user_id']).first()
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256', self.old_password.data.encode('UTF-8'),
-            user.password_salt.encode('UTF-8'), 1000)
-        if password_hash != user.password_hash:
+        if not g.user.validate_password(field.data):
             raise ValidationError('Altes Passwort ist falsch.')
 
     def validate(self):

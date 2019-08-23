@@ -1,10 +1,12 @@
+import enum
+import hashlib
+import os
 from datetime import datetime
 
 import pytz
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
-import enum
 
 db = SQLAlchemy()
 
@@ -128,6 +130,33 @@ class User(db.Model):
     invitations = db.relationship('Invitation', back_populates='user')
     administrated_events = db.relationship('Event', back_populates='admin')
     administrated_groups = db.relationship('Group', back_populates='admin')
+
+    def get_permission_choices(self):
+        return {
+            User.Permission.USER: 'Standard',
+            User.Permission.ADMIN: 'Admin',
+            User.Permission.SUPER_ADMIN: 'Super Admin',
+        }
+
+    def get_permission_label(self, role):
+        return self.get_role_labels()[role]
+
+    def hash_password(self, password):
+        if not self.password_salt:
+            self.password_salt = os.urandom(8).hex()
+        hash = hashlib.pbkdf2_hmac(
+            'sha256',
+            password.encode('UTF-8'),
+            self.password_salt.encode('UTF-8'),
+            1000
+        )
+        return hash
+
+    def set_password(self, password):
+        self.password_hash = self.hash_password(password)
+
+    def validate_password(self, password):
+        return self.hash_password(password) == self.password_hash
 
     def __repr__(self):
         return auto_repr(self, ['id', 'username', 'email', 'first_name', 'family_name'])

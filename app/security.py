@@ -1,19 +1,17 @@
 import functools
-import hashlib
 import os
-import uuid
 from datetime import datetime, timedelta
 
 import pytz
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    request, session, url_for)
+from itsdangerous import BadSignature
 
 from . import mailing
 from .forms import (ChangeEmailForm, ChangePasswordForm,
-                    ConfirmPasswordResetForm, LoginForm, RegisterForm,
-                    ResetPasswordForm, ConfirmRegistrationForm)
+                    ConfirmPasswordResetForm, ConfirmRegistrationForm,
+                    LoginForm, RegisterForm, ResetPasswordForm)
 from .models import User, db
-from itsdangerous import BadSignature
 
 bp = Blueprint("security", __name__)
 
@@ -143,24 +141,19 @@ def confirm():
             if not form.validate_on_submit():
                 return render_template('security/confirm_registration.html', form=form)
             else:
-                password_salt = os.urandom(8).hex()
-                password_hash = hashlib.pbkdf2_hmac(
-                    'sha256', form.password.data.encode('UTF-8'), password_salt.encode('UTF-8'), 1000)
-
                 # create real user
                 user = User(
                     username=payload['username'],
                     email=payload['email'],
                     first_name=payload['first_name'],
-                    family_name=payload['family_name'],
-                    password_salt=password_salt,
-                    password_hash=password_hash,
+                    family_name=payload['family_name']
                 )
+                user.set_password(form.password.data)
                 db.session.add(user)
                 db.session.commit()
 
                 flash('E-Mail-Adresse erfolgreich bestätigt. Du kannst dich jetzt anmelden.', 'info')
-                return redirect(url_for('auth.login'))
+                return redirect(url_for('security.login'))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -184,12 +177,7 @@ def change_password():
     form = ChangePasswordForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(
-            id=session['user_id']).first()
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256', form.new_password.data.encode('UTF-8'),
-            user.password_salt.encode('UTF-8'), 1000)
-        user.password_hash = password_hash
+        g.user.set_password(form.new_password.data)
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
@@ -277,9 +265,7 @@ def confirm_password_reset():
             if form.validate_on_submit():
                 assert token == user.password_reset_token
 
-                user.password_hash = hashlib.pbkdf2_hmac(
-                    'sha256', form.password.data.encode('UTF-8'),
-                    user.password_salt.encode('UTF-8'), 1000)
+                user.set_password(form.password.data)
                 user.password_reset_token = None
                 user.password_reset_insertion_time_utc = None
                 db.session.commit()
