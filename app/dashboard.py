@@ -33,4 +33,4 @@ def account():
 
         flash('Profil erfolgreich angepasst.')
 
-    return render_template('user/edit.html', form=form)
+    return render_template('dashboard/account.html', form=form)

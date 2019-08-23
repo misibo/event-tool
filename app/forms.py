@@ -1,21 +1,26 @@
 import os
+from datetime import datetime
 
 import pytz
-from flask import g
+from flask import flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
-from wtforms import (BooleanField, PasswordField, StringField, TextAreaField,
-                     ValidationError)
+from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
+                     StringField, TextAreaField, ValidationError)
 from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
-from wtforms.fields.html5 import DateTimeField, EmailField, IntegerField
+from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
+                                  TelField)
 from wtforms.validators import (DataRequired, Email, Length, NumberRange,
                                 Optional, Required)
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
+from . import mailing
 from .models import Group, User
+
+# from .security import change_email_request_handler
 
 
 class LocalDateTimeField(DateTimeField):
@@ -164,6 +169,97 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Benutzername bereits benutzt.')
 
 
+
+def change_email_request_handler(user, new_email):
+    token = os.urandom(16).hex()
+
+    user.email_change_request = new_email
+    user.email_change_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
+    user.email_change_token = token
+
+    confirm_url = request.url_root + \
+        url_for('security.confirm_email', token=token)[1:]
+
+    # current_app.logger.info(
+    #     f'New email address is activated by {confirm_url}')
+
+    success = mailing.send_single_mail(
+        recipient=user.email_change_request,
+        subject='E-Mail-Adresse ändern',
+        text=render_template('mail/change_email.text',
+                                user=user, confirm_url=confirm_url),
+        html=render_template('mail/change_email.html',
+                                user=user, confirm_url=confirm_url),
+    )
+
+    if not success:
+        flash((
+            'Beim Versenden des Bestätigungs-Link '
+            'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
+            'Möglicherweise enthält die Adresse ein Tippfehler.'),
+            'error')
+    else:
+        flash((
+            'Es wurde eine Mail mit einem Bestätigungs-Link '
+            'an die neue E-Mail-Addresse verschickt.'),
+            'info')
+
+
+class UserEditForm(FlaskForm):
+
+    id = HiddenField()
+
+    username = StringField('Benutzername', [DataRequired()])
+    email = EmailField('Email', [DataRequired(), Email()])
+    first_name = StringField('Vorname', [DataRequired()])
+    family_name = StringField('Nachname', [DataRequired()])
+
+    image = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
+    birthday = DateField('Geburtstag', [Optional()])
+    mobile_phone = TelField('Handynummer', [Optional()])
+    street = StringField('Strasse', [Optional()])
+    postal_code = IntegerField('PLZ', [Optional(), NumberRange(min=1000, max=9658)])
+    city = StringField('Ort', [Optional()])
+    new_password = PasswordField('Neues Passwort')
+    new_password_confirm = PasswordField('Passwort bestätigen')
+
+    def validate_username(self, field):
+        user = User.query.\
+                filter(User.id != self.id.data).\
+                filter(User.username == field.data).\
+                first()
+        if user is not None:
+            raise ValidationError('Benutzername bereits benutzt.')
+
+    def validate(self):
+        if not super(UserEditForm, self).validate():
+            return False
+
+        if self.new_password.data and self.new_password.data != self.new_password_confirm.data:
+            self.new_password_confirm.errors.append(
+                'Passwörter stimmen nicht überein.')
+            return False
+
+        return True
+
+    def populate_obj(self, user):
+        user.username = self.username.data
+        user.first_name = self.first_name.data
+        user.family_name = self.family_name.data
+
+        if user.email != self.email.data:
+            change_email_request_handler(user, self.email.data)
+
+        user.birthday = self.birthday.data
+        user.mobile_phone = self.mobile_phone.data
+
+        user.street = self.street.data
+        user.postal_code = self.postal_code.data
+        user.city = self.city.data
+
+        process_file_upload(self, user, 'image', 'user')
+
+
 class ConfirmRegistrationForm(FlaskForm):
     username = StringField('Benutzername')  # read-only, needed for password-managers
     password = PasswordField('Passwort', [DataRequired(), Length(min=8)])
@@ -297,7 +393,3 @@ class EditInvitationForm(FlaskForm):
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
         return not error
-
-
-class UserEditForm(FlaskForm):
-    test = StringField()
