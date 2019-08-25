@@ -3,7 +3,7 @@ from flask import (current_app, flash, redirect, render_template, request,
 from flask.views import View
 from sqlalchemy import or_
 
-from .models import db
+from .models import db, User
 import pytz
 
 
@@ -65,15 +65,14 @@ class ListView(View):
 
         return query, args
 
-    # TODO test filter (with enum)
     def filter(self, query):
         args = {}
         for key in self.filters.keys():
             args_key = f'filter.{key}'
             value = request.args.get(args_key)
-            if value and value in self.filters[key]():
+            if value and value in self.filters[key]:
                 args[args_key] = value
-                query = query.filter(getattr(self.model, key) == value)
+                query = query.filter_by(**{key: self.filters[key][value]})
         return query, args
 
     def search(self, query):
@@ -103,7 +102,8 @@ class ListView(View):
             self.template,
             pagination=pagination,
             tz=pytz.timezone('Europe/Zurich'),
-            args={**sort_args, **filter_args, **search_args}
+            args={**sort_args, **filter_args, **search_args},
+            Model=self.model
         )
 
 

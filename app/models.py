@@ -105,7 +105,7 @@ class User(db.Model):
 
     # contact info
     email = db.Column(db.String, nullable=False)
-    mobil_phone = db.Column(db.String)
+    mobile_phone = db.Column(db.String)
 
     # adress
     street = db.Column(db.String)
@@ -123,7 +123,8 @@ class User(db.Model):
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(UtcDateTime)
 
-    permission = db.Column(db.Enum(Permission), default=Permission.Standard, nullable=False)
+    permission = db.Column(db.Enum(Permission),
+                           default=Permission.Standard, nullable=False)
 
     # relations
     roles = db.relationship('GroupMemberRole', back_populates='user')
@@ -131,15 +132,17 @@ class User(db.Model):
     administrated_events = db.relationship('Event', back_populates='admin')
     administrated_groups = db.relationship('Group', back_populates='admin')
 
-    def get_permission_choices(self):
+    @staticmethod
+    def get_permission_labels():
         return {
-            User.Permission.USER: 'Standard',
-            User.Permission.ADMIN: 'Admin',
-            User.Permission.SUPER_ADMIN: 'Super Admin',
+            User.Permission.Standard: 'Standard',
+            User.Permission.Admin: 'Admin',
+            User.Permission.SuperAdmin: 'Super Admin',
         }
 
-    def get_permission_label(self, role):
-        return self.get_role_labels()[role]
+    def get_permission_label(self):
+        labels = self.get_permission_labels()
+        return labels[self.permission]
 
     def hash_password(self, password):
         if not self.password_salt:
