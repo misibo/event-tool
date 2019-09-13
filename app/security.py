@@ -10,7 +10,7 @@ from itsdangerous import BadSignature
 from . import mailing
 from .forms import (ChangeEmailForm, ChangePasswordForm,
                     ConfirmPasswordResetForm, ConfirmRegistrationForm,
-                    LoginForm, RegisterForm, ResetPasswordForm, change_email_request_handler)
+                    LoginForm, RegisterForm, ResetPasswordForm)
 from .models import User, db
 
 bp = Blueprint("security", __name__)
@@ -281,11 +281,42 @@ def confirm_password_reset():
 @bp.route('/change_email', methods=['GET', 'POST'])
 @login_required
 def change_email():
-
-    form = ChangeEmailForm(old_email=g.user.email)
+    user = g.user
+    form = ChangeEmailForm(old_email=user.email)
 
     if form.validate_on_submit():
-        change_email_request_handler(g.user, form.new_email.data)
+        token = os.urandom(16).hex()
+
+        user.email_change_request = new_email
+        user.email_change_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
+        user.email_change_token = token
+
+        confirm_url = request.url_root + \
+            url_for('security.confirm_email', token=token)[1:]
+
+        # current_app.logger.info(
+        #     f'New email address is activated by {confirm_url}')
+
+        success = mailing.send_single_mail(
+            recipient=user.email_change_request,
+            subject='E-Mail-Adresse ändern',
+            text=render_template('mail/change_email.text',
+                                    user=user, confirm_url=confirm_url),
+            html=render_template('mail/change_email.html',
+                                    user=user, confirm_url=confirm_url),
+        )
+
+        if not success:
+            flash((
+                'Beim Versenden des Bestätigungs-Link '
+                'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
+                'Möglicherweise enthält die Adresse ein Tippfehler.'),
+                'error')
+        else:
+            flash((
+                'Es wurde eine Mail mit einem Bestätigungs-Link '
+                'an die neue E-Mail-Addresse verschickt.'),
+                'info')
         db.session.commit()
 
     return render_template('user/email.html', form=form)

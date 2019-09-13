@@ -1,6 +1,6 @@
 from flask import Blueprint, flash, g, render_template, redirect, url_for
 
-from .forms import EditUserForm
+from .forms import AccountForm
 from .models import User, db
 from .security import login_required
 
@@ -23,12 +23,10 @@ def index():
 @login_required
 def account():
     user: User = g.user
-    form = EditUserForm(obj=user)
+    form = AccountForm(obj=user)
 
     if form.validate_on_submit():
-        user.username = form.username.data
-        user.first_name = form.first_name.data
-        user.family_name = form.family_name.data
+        form.populate_obj(user)
         db.session.commit()
 
         flash('Profil erfolgreich angepasst.')

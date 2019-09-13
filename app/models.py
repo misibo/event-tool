@@ -102,6 +102,7 @@ class User(db.Model):
     first_name = db.Column(db.String, nullable=False)
     family_name = db.Column(db.String, nullable=False)
     birthday = db.Column(db.Date)
+    image = db.Column(db.String)
 
     # contact info
     email = db.Column(db.String, nullable=False)
