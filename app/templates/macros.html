@@ -36,7 +36,6 @@
         {% if field.data %}
         <div data-src="{{ url_for('static', filename=field.data) }}" uk-img
             class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
-
         </div>
         {% endif %}
         {{ render_file_field(field) }}
@@ -102,6 +101,7 @@
         {% endfor %}
     </select>
     <div>
+        <!-- TODO: shows the string version of enum instead of the label -->
         {{ label }}
         {% if selected %}
         :{{selected}}

@@ -218,6 +218,8 @@ class UserEditForm(AccountForm):
         user.email = self.email.data
         user.set_password(self.new_password.data)
         user.birthday = self.birthday.data
+        # TODO: how to assign new permission?
+        # user.permission = User.Permission(self.permission.data)
         user.mobile_phone = self.mobile_phone.data
         user.street = self.street.data
         user.postal_code = self.postal_code.data
