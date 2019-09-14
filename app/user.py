@@ -13,12 +13,14 @@ def view(id):
 
 
 class UserListView(ListView):
+    sorts = ['username', 'first_name', 'family_name', 'email']
+    filters = {'permission': User.Permission.__members__}
+    searchable = ['username', 'first_name', 'family_name', 'email']
     model = User
     template = 'user/index.html'
 
 
 class UserCreateEditView(CreateEditView):
-
     form = UserEditForm
     model = User
     template = 'user/edit.html'

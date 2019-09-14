@@ -1,1 +1,57 @@
-user index view
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_sort, render_filter, render_search %}
+
+{% block title %}
+Benutzer
+{% endblock %}
+
+{% block content %}
+<form id="form" method="GET">
+    <div class="uk-margin" uk-grid>
+        <div>
+            <h2>Benutzer</h2>
+        </div>
+        <div class="uk-width-expand">
+            {{ render_search(args) }}
+        </div>
+        <div>
+            <a href="{{ url_for('user.create') }}" class="uk-button uk-button-default">Hinzufügen</a>
+        </div>
+    </div>
+    {% if pagination.items %}
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <table class="uk-table uk-table-striped">
+        <thead>
+            <tr>
+                <th>{{ render_sort('Benutzername', 'username', args) }}</th>
+                <th>{{ render_sort('Vorname', 'first_name', args) }}</th>
+                <th>{{ render_sort('Nachname', 'family_name', args) }}</th>
+                <th>{{ render_sort('Mail', 'email', args) }}</th>
+                <th>{{ render_filter('Berechtigung', 'permission', Model.get_permission_labels(), args) }}</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in pagination.items %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.family_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.get_permission_label() }}</td>
+                <td>
+                    <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
+                    <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'user.list', args) }}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Benutzer gefunden</h3>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

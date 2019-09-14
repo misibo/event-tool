@@ -282,30 +282,28 @@ def confirm_password_reset():
 @login_required
 def change_email():
     user = g.user
-
     form = ChangeEmailForm(old_email=user.email)
 
     if form.validate_on_submit():
         token = os.urandom(16).hex()
 
-        user.email_change_request = form.new_email.data
+        user.email_change_request = new_email
         user.email_change_insertion_time_utc = pytz.utc.localize(datetime.utcnow())
         user.email_change_token = token
-        db.session.commit()
 
         confirm_url = request.url_root + \
             url_for('security.confirm_email', token=token)[1:]
 
-        current_app.logger.info(
-            f'New email address is activated by {confirm_url}')
+        # current_app.logger.info(
+        #     f'New email address is activated by {confirm_url}')
 
         success = mailing.send_single_mail(
             recipient=user.email_change_request,
             subject='E-Mail-Adresse ändern',
             text=render_template('mail/change_email.text',
-                                 user=user, confirm_url=confirm_url),
+                                    user=user, confirm_url=confirm_url),
             html=render_template('mail/change_email.html',
-                                 user=user, confirm_url=confirm_url),
+                                    user=user, confirm_url=confirm_url),
         )
 
         if not success:
@@ -319,6 +317,7 @@ def change_email():
                 'Es wurde eine Mail mit einem Bestätigungs-Link '
                 'an die neue E-Mail-Addresse verschickt.'),
                 'info')
+        db.session.commit()
 
     return render_template('user/email.html', form=form)
 

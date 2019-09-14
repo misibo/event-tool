@@ -1,20 +1,23 @@
 import os
+from datetime import datetime
 
 import pytz
-from flask import g
+from flask import flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
-from wtforms import (BooleanField, PasswordField, StringField, TextAreaField,
-                     ValidationError)
+from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
+                     SelectField, StringField, TextAreaField, ValidationError)
 from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
-from wtforms.fields.html5 import DateTimeField, EmailField, IntegerField
+from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
+                                  TelField)
 from wtforms.validators import (DataRequired, Email, Length, NumberRange,
                                 Optional, Required)
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
+from . import mailing
 from .models import Group, User
 
 
@@ -70,18 +73,6 @@ class LoginForm(FlaskForm):
             return False
 
         return True
-
-
-class EditUserForm(FlaskForm):
-    username = StringField('Benutzername', [DataRequired(), Length(max=100)])
-    email = EmailField('Email', [DataRequired(), Email()])
-    first_name = StringField('Vorname', [DataRequired(), Length(max=100)])
-    family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
-
-    def validate_username(self, field):
-        if field.data != g.user.username and User.query \
-                .filter_by(username=field.data).first() is not None:
-            raise ValidationError('Benutzername existiert bereits.')
 
 
 class ChangeEmailForm(FlaskForm):
@@ -158,10 +149,82 @@ class RegisterForm(FlaskForm):
     family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
 
     def validate_username(self, field):
-        username = field.data
-        user = User.query.filter_by(username=username).first()
+        user = User.query.\
+            filter_by(User.username == field.data).\
+            first()
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
+
+
+class AccountForm(RegisterForm):
+
+    image = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
+    birthday = DateField('Geburtstag', [Optional()], format='%d.%m.%y')
+    mobile_phone = TelField('Handynummer', [Optional()])
+    street = StringField('Strasse', [Optional()])
+    postal_code = IntegerField('PLZ', [Optional(), NumberRange(min=1000, max=9658)])
+    city = StringField('Ort', [Optional()])
+
+    def validate_username(self, field):
+        user = User.query.\
+            filter(User.id != g.user.id).\
+            filter(User.username == field.data).\
+            first()
+        if user is not None:
+            raise ValidationError('Benutzername bereits benutzt.')
+
+    def populate_obj(self, user):
+        user.username = self.username.data
+        user.first_name = self.first_name.data
+        user.family_name = self.family_name.data
+        user.birthday = self.birthday.data
+        user.mobile_phone = self.mobile_phone.data
+        user.street = self.street.data
+        user.postal_code = self.postal_code.data
+        user.city = self.city.data
+        process_file_upload(self, user, 'image', 'user')
+
+
+class UserEditForm(AccountForm):
+
+    id = HiddenField()
+    permission = SelectField('Rolle', choices=[(enum.name, label) for enum, label in User.get_permission_labels().items()])
+    new_password = PasswordField('Neues Passwort', [Optional(), Length(min=8)])
+    new_password_confirm = PasswordField('Passwort bestätigen')
+
+    def validate_username(self, field):
+        user = User.query.\
+                filter(User.id != self.id.data).\
+                filter(User.username == field.data).\
+                first()
+        if user is not None:
+            raise ValidationError('Benutzername bereits benutzt.')
+
+    def validate(self):
+        if not super(UserEditForm, self).validate():
+            return False
+
+        if self.new_password.data and self.new_password.data != self.new_password_confirm.data:
+            self.new_password_confirm.errors.append(
+                'Passwörter stimmen nicht überein.')
+            return False
+
+        return True
+
+    def populate_obj(self, user):
+        user.username = self.username.data
+        user.first_name = self.first_name.data
+        user.family_name = self.family_name.data
+        user.email = self.email.data
+        user.set_password(self.new_password.data)
+        user.birthday = self.birthday.data
+        # TODO: how to assign new permission?
+        # user.permission = User.Permission(self.permission.data)
+        user.mobile_phone = self.mobile_phone.data
+        user.street = self.street.data
+        user.postal_code = self.postal_code.data
+        user.city = self.city.data
+        process_file_upload(self, user, 'image', 'user')
 
 
 class ConfirmRegistrationForm(FlaskForm):
@@ -297,7 +360,3 @@ class EditInvitationForm(FlaskForm):
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
         return not error
-
-
-class UserEditForm(FlaskForm):
-    test = StringField()

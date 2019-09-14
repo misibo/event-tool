@@ -1,17 +1,61 @@
-{% extends 'form.html' %}
-{% from 'macros.html' import render_field %}
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field, render_image_field %}
 
 {% block title %}Profil bearbeiten{% endblock %}
 
 {% block content %}
-<form class="uk-form-stacked" method="POST">
-    {{ render_field(form.username, class='uk-input') }}
-    {{ render_field(form.email, class='uk-input', readonly=True) }}
-    {{ render_field(form.first_name, class='uk-input') }}
-    {{ render_field(form.family_name, class='uk-input') }}
+<form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
+
+    <div class="uk-card">
+        <div class="uk-card-header uk-flex uk-flex-between">
+            <h3>Benutzer bearbeiten</h3>
+            <div>
+                <a class="uk-button uk-button-text uk-margin-right" href="{{ url_for('user.list') }}">Zurück</a>
+                <input class="uk-button uk-button-default" type="submit" value="Speichern">
+            </div>
+        </div>
+        <div class="uk-card-body">
+            <div uk-grid>
+                <div class="uk-width-1-3@m">
+                    {{ render_image_field(form.image) }}
+                    {{ render_field(form.username, class='uk-input') }}
+                    {{ render_field(form.email, class='uk-input') }}
+                    {{ render_field(form.new_password, class='uk-input') }}
+                    {{ render_field(form.new_password_confirm, class='uk-input') }}
+                    <!-- TODO: does not show the correct current permission -->
+                    {{ render_field(form.permission, class='uk-select') }}
+                </div>
+                <div class="uk-width-2-3@m">
+                    <div class="uk-grid-small uk-child-width-1-2@m" uk-grid>
+                        <div>
+                            {{ render_field(form.first_name, class='uk-input') }}
+                        </div>
+                        <div>
+                            {{ render_field(form.family_name, class='uk-input') }}
+                        </div>
+                        <div>
+                            {{ render_field(form.birthday, class='uk-input') }}
+                        </div>
+                        <div>
+                            {{ render_field(form.mobile_phone, class='uk-input') }}
+                        </div>
+                        <div class="uk-width-1-1">
+                            {{ render_field(form.street, class='uk-input')}}
+                        </div>
+                        <div class="uk-width-1-3@m">
+                            {{ render_field(form.postal_code, class='uk-input')}}
+                        </div>
+                        <div class="uk-width-2-3@m">
+                            {{ render_field(form.city, class='uk-input')}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-right">
+        </div>
+    </div>
+    {{ form.hidden_tag() }}
     {{ form.csrf_token }}
-    <input type="submit" class="uk-button uk-button-default" value="Speichern">
 </form>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_email') }}">E-Mail ändern</a>
-<a class="uk-button uk-button-default uk-margin-top" href="{{ url_for('security.change_password') }}">Passwort ändern</a>
 {% endblock %}
