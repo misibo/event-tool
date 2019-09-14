@@ -5,10 +5,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/css/uikit.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>
+    {% include 'message_flashing.html' %}
 </head>
 
 <body>
-    <div class="uk-section-secondary">
+    <div {% block attrs %}{% endblock %}>
         <div class="uk-navbar-container uk-navbar-transparent">
             <div class="uk-container">
                 <nav uk-navbar>
@@ -37,22 +38,11 @@
                 </nav>
             </div>
         </div>
-        <div class="uk-container" uk-height-viewport="expand: true">
-            <div>
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                    {% for category, message in messages %}
-                    <div uk-alert>
-                            <a class="uk-alert-close" uk-close></a>
-                            <p>{{ message }}</p>
-                        </div>
-                    {% endfor %}
-                    {% endif %}
-                {% endwith %}
-            </div>
-            <div>
-                {% block content %}Content{% endblock %}
-            </div>
+        {% block hero %}{% endblock %}
+    </div>
+    <div class="uk-section uk-section-default">
+        <div class="uk-container">
+            {% block content %}Content{% endblock %}
         </div>
     </div>
 </body>

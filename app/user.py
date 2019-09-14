@@ -7,12 +7,13 @@ from .views import CreateEditView, DeleteView, ListView
 bp = Blueprint("user", __name__, url_prefix="/user")
 
 
-@bp.route('/<int:id>/view')
+@bp.route('/view/<int:id>')
 def view(id):
-    return render_template('user/view.html')
+    user = User.query.get_or_404(id)
+    return render_template('user/view.html', user=user, background='kjalöjsdflajdafj')
 
 
-class UserListView(ListView):
+class UserTableView(ListView):
     sorts = ['username', 'first_name', 'family_name', 'email']
     filters = {'permission': User.Permission.__members__}
     searchable = ['username', 'first_name', 'family_name', 'email']
@@ -34,7 +35,7 @@ class UserDeleteView(DeleteView):
 
 bp.add_url_rule(
     '/',
-    view_func=UserListView.as_view('list'),
+    view_func=UserTableView.as_view('list'),
     methods=['GET']
 )
 bp.add_url_rule(
