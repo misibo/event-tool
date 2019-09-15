@@ -4,19 +4,54 @@
 {% block title %}{{ user.first_name }} {{ user.family_name }}{% endblock %}
 
 {% block content %}
-    <div class="uk-card">
-        <img data-src="{{ url_for('static', filename=user.image) }}" uk-img>
-        <div>{{ user.first_name }} {{ user.family_name }}</div>
-        <div>
-            {% for role in user.roles %}
-                <span>{{ role.group.name }}</span>
-            {% endfor %}
+
+<div class="uk-flex uk-flex-center uk-flex-middle">
+    <div class="uk-width-1-2@m uk-card uk-card-default">
+        <div class="uk-card-header">
+            <div class="uk-flex-middle uk-grid-small" uk-grid>
+                <div class="uk-width-auto">
+                    {% if user.image %}
+                        <img class="uk-width-small" data-src="{{ url_for('static', filename=user.image) }}" uk-img height="32" width="32">
+                    {% else %}
+                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
+                            <span class="uk-text-large uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="uk-width-expand">
+                    <h3 class="uk-card-title uk-margin-remove">{{ user.first_name }} {{ user.family_name }}</h3>
+                    <span class="uk-text-muted">{{ user.username }}</span>
+                </div>
+            </div>
         </div>
-        <div>{{ user.email }}</div>
-        <div>{{ user.mobile_phone }}</div>
-        <div>
-            {{ user.street }} <br>
-            {{ user.postal_code }} {{ user.city }}
+        <div class="uk-card-body">
+            <dl class="uk-description-list">
+                <dt>Gruppen</dt>
+                <dd>
+                    <ul class="uk-subnav" uk-margin>
+                        {% for member in user.members %}
+                        <li>
+                            <a class="uk-link-reset" href="{{ url_for('group.view', id=member.group.id) }}">{{ member.group.name }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </dd>
+                <dt>Kontakt</dt>
+                <dd>
+                    <a class="uk-link-reset" href="mailto:{{ user.email }}">{{ user.email }}</a><br>
+                    <a class="uk-link-reset" href="tel:{{ user.mobile_phone }}">{{ user.mobile_phone }}</a>
+                </dd>
+                <dt>Adresse</dt>
+                <dd>
+                    {{ user.street }} <br>
+                    {{ user.postal_code }} {{ user.city }}
+                </dd>
+            </dl>
+        </div>
+        <div class="uk-card-footer">
+            dabei seit {{ user.created }}
         </div>
     </div>
+</div>
+
 {% endblock %}
