@@ -216,7 +216,8 @@ class UserEditForm(AccountForm):
         user.first_name = self.first_name.data
         user.family_name = self.family_name.data
         user.email = self.email.data
-        user.set_password(self.new_password.data)
+        if self.new_password.data:
+            user.set_password(self.new_password.data)
         user.birthday = self.birthday.data
         user.role = self.role.data
         user.mobile_phone = self.mobile_phone.data
