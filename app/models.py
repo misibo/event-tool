@@ -209,6 +209,13 @@ class Event(db.Model):
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
 
+    def get_leaders(self):
+        return User.query.\
+            join(GroupMember, (GroupMember.role == User.id) & (GroupMember.role == GroupMember.Role.LEADER)).\
+            join(Group, GroupMember.group).\
+            filter(Group.id.in_([g.id for g in self.groups])).\
+            all()
+
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
 

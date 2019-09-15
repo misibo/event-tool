@@ -15,6 +15,13 @@
             <div>
                 {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }}
             </div>
+            <ul class="uk-subnav" uk-margin>
+                {% for user in event.get_leaders() %}
+                <li>
+                    <a class="uk-link-reset" href="{{ url_for('user.view', id=user.id) }}">{{ user.username }}</a>
+                </li>
+                {% endfor %}
+                </ul>
             <p class="uk-text-truncate">{{ event.description }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
