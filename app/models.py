@@ -64,15 +64,15 @@ class GroupMember(db.Model):
             }
 
     __tablename__ = 'GroupMember'
-    user_id = db.Column(db.ForeignKey('User.id'), primary_key=True)
-    group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'), primary_key=True)
 
     role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
-    user = db.relationship('User', back_populates='members')
+    user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
     def get_role_label(self):
-        self.Role.get_choices()[self.role]
+        return self.Role.get_choices()[self.role]
 
 
 class GroupEventRelations(db.Model):
@@ -159,7 +159,7 @@ class User(db.Model):
     role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
-    members = db.relationship('GroupMember', back_populates='user')
+    memberships = db.relationship('GroupMember', back_populates='user')
     invitations = db.relationship('Invitation', back_populates='user')
 
     def get_role_label(self):
@@ -227,13 +227,28 @@ class Group(db.Model):
     modified = db.Column(UtcDateTime)
 
     members = db.relationship('GroupMember', back_populates='group')
-    events = db.relationship(
-        'Event', secondary=GroupEventRelations.__table__, back_populates='groups')
+    events = db.relationship('Event',
+        secondary=GroupEventRelations.__table__,
+        back_populates='groups',
+        lazy='dynamic')
 
+    def get_upcoming_events(self):
+        return self.events.\
+            filter(Event.start >= pytz.utc.localize(datetime.utcnow())).\
+            order_by(Event.start.asc()).\
+            all()
 
-@event.listens_for(Event, 'before_insert')
-@event.listens_for(Event, 'before_update')
-@event.listens_for(Group, 'before_insert')
-@event.listens_for(Group, 'before_update')
-def receive_before_modified(mapper, connection, target):
-    target.modified = pytz.utc.localize(datetime.utcnow())
+    def get_members_ordered_by_role(self):
+        return GroupMember.query.\
+            join(User, GroupMember.user).\
+            join(Group, GroupMember.group).\
+            filter(Group.id == self.id).\
+            order_by(GroupMember.role.desc()).\
+            all()
+
+# @event.listens_for(Event, 'before_insert')
+# @event.listens_for(Event, 'before_update')
+# @event.listens_for(Group, 'before_insert')
+# @event.listens_for(Group, 'before_update')
+# def receive_before_modified(mapper, connection, target):
+#     target.modified = pytz.utc.localize(datetime.utcnow())
