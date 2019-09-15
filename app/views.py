@@ -140,10 +140,12 @@ class DeleteView(View):
     redirect = 'index'
 
     def dispatch_request(self, id):
-
         model = self.model.query.get_or_404(id)
         db.session.delete(model)
         db.session.commit()
         flash('Löschen erfolgreich.')
 
-        return redirect(url_for(self.redirect))
+        if request.referrer is None:
+            return redirect(url_for(self.redirect))
+        else:
+            return redirect(request.referrer)

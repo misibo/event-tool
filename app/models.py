@@ -161,8 +161,8 @@ class User(db.Model):
     role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
-    members = db.relationship('GroupMember', back_populates='user')
-    invitations = db.relationship('Invitation', back_populates='user')
+    members = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
+    invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
 
     def get_role_label(self):
         return self.Role.get_choices()[self.role]
