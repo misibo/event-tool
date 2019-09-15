@@ -7,6 +7,7 @@ verify_ssl = true
 entrypoints = "*"
 pycodestyle = "*"
 flake8 = "*"
+jupyter = "*"
 
 [packages]
 flask = "*"
@@ -17,4 +18,3 @@ pytz = "*"
 itsdangerous = "*"
 
 [requires]
-python_version = "3.6"
