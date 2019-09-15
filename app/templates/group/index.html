@@ -33,10 +33,12 @@
         <tbody>
             {% for group in pagination.items %}
             <tr>
-                <td>
-                    <object data="/static/upload/group/{{group.id}}/logo_32x32.png" type="image/png">
+                <td style="min-width:32px">
+                    {% if group.logo_version == 0 %}
                         <img src="/static/upload_fallback/group/logo_32x32.png">
-                    </object>
+                    {% else %}
+                        <img src="/static/upload/group/{{group.id}}/logo_32x32_v{{group.logo_version}}.png">
+                    {% endif %}
                 </td>
                 <td>{{ group.name }}</td>
                 <td>{{ group.description }}</td>

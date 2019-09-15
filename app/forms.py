@@ -18,7 +18,7 @@ from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
 from . import mailing, upload
-from .models import Group, User
+from .models import Group, User, Event
 
 from PIL import Image
 
@@ -281,7 +281,7 @@ class GroupEditForm(FlaskForm):
         blank_text='- Auswählen -'
     )
 
-    def populate_obj(self, group):
+    def populate_obj(self, group: Group):
         group.name = self.name.data
         group.description = self.description.data
         group.admin = self.admin.data
@@ -307,7 +307,7 @@ class EventEditForm(FlaskForm):
         query_factory=lambda: Group.query.all()
     )
 
-    def populate_obj(self, event):
+    def populate_obj(self, event: Event):
         event.name = self.name.data
         event.description = self.description.data
         event.location = self.location.data

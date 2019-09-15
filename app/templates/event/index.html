@@ -36,10 +36,12 @@
         <tbody>
             {% for event in pagination.items %}
             <tr>
-                <td>
-                    <object data="/static/upload/event/{{event.id}}/thumbnail_32x32.png" type="image/png">
+                <td style="min-width:32px">
+                    {% if event.thumbnail_version == 0 %}
                         <img src="/static/upload_fallback/event/thumbnail_32x32.png">
-                    </object>
+                    {% else %}
+                        <img src="/static/upload/event/{{event.id}}/thumbnail_32x32_v{{event.thumbnail_version}}.png">
+                    {% endif %}
                 </td>
                 <td class="uk-table-shrink uk-text-nowrap">{{ event.name }}</td>
                 <td>{{ event.description }}</td>

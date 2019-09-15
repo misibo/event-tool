@@ -35,10 +35,12 @@ Benutzer
         <tbody>
             {% for user in pagination.items %}
             <tr>
-                <td>
-                    <object data="/static/upload/user/{{user.id}}/avatar_32x32.png" type="image/png">
+                <td style="min-width:32px">
+                    {% if user.avatar_version == 0 %}
                         <img src="/static/upload_fallback/user/avatar_32x32.png">
-                    </object>
+                    {% else %}
+                        <img src="/static/upload/user/{{user.id}}/avatar_32x32_v{{user.avatar_version}}.png">
+                    {% endif %}
                 </td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.first_name }}</td>

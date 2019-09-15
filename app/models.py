@@ -156,6 +156,8 @@ class User(db.Model):
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(UtcDateTime)
 
+    avatar_version = db.Column(db.Integer, default=0, nullable=False)
+
     role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
@@ -203,6 +205,7 @@ class Event(db.Model):
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
     created_at = db.Column(UtcDateTime)
+    thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
@@ -221,6 +224,7 @@ class Group(db.Model):
     name = db.Column(db.String)
     description = db.Column(db.String)
     age = db.Column(db.String)
+    logo_version = db.Column(db.Integer, default=0, nullable=False)
     flyer = db.Column(db.String)
     modified = db.Column(UtcDateTime)
 
