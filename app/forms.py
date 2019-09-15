@@ -188,7 +188,7 @@ class AccountForm(RegisterForm):
 class UserEditForm(AccountForm):
 
     id = HiddenField()
-    permission = SelectField('Rolle', choices=[(enum.name, label) for enum, label in User.get_permission_labels().items()])
+    role = SelectField('Rolle', choices=User.Role.get_select_choices(), coerce=int)
     new_password = PasswordField('Neues Passwort', [Optional(), Length(min=8)])
     new_password_confirm = PasswordField('Passwort bestätigen')
 
@@ -218,8 +218,7 @@ class UserEditForm(AccountForm):
         user.email = self.email.data
         user.set_password(self.new_password.data)
         user.birthday = self.birthday.data
-        # TODO: how to assign new permission?
-        # user.permission = User.Permission(self.permission.data)
+        user.role = self.role.data
         user.mobile_phone = self.mobile_phone.data
         user.street = self.street.data
         user.postal_code = self.postal_code.data

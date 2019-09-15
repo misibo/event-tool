@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 import pytz
 import itsdangerous
-from flask import Flask, current_app, render_template, request, url_for
+from flask import Flask, current_app, render_template, request, url_for, flash
 from flask_mail import Mail
 
 from . import event, group, invitation, mailing, security, user, dashboard
@@ -70,4 +70,9 @@ def send_invitations():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    flash('message', 'primary')
+    flash('warning', 'warning')
+    flash('error', 'danger')
+    flash('info', 'success')
+    flash('random', 'random')
     return render_template('home.html')

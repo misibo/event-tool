@@ -1,1 +1,65 @@
-view event
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field, render_image_field %}
+
+{% block title %}{{ event.name }}{% endblock %}
+
+{% block attrs %}class="uk-background-cover" data-src="{{ url_for('static', filename='background.jpeg') }}" uk-img{% endblock %}
+
+{% block hero %}
+    <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
+        <div class="uk-width-1-2 uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
+            {% if event.logo %}
+                <img class="uk-width-small" data-src="{{ url_for('static', filename=event.logo) }}" uk-img>
+            {% endif %}
+            <h1>{{ event.name }}</h1>
+            <div>
+                {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }}
+            </div>
+            <p class="uk-text-truncate">{{ event.description }}</p>
+            <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="details">
+        <p>
+            {{ event.description }}
+        </p>
+        <div class="uk-card uk-card-default">
+            <div class="uk-card-header">
+                <h3 class="uk-card-title">Einladungen</h3>
+            </div>
+            <div class="uk-card-body">
+                <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
+                {% for invitation in event.invitations %}
+                    {% with user = invitation.user %}
+                        <div>
+                            <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+                                <div class="uk-width-auto">
+                                    {% if user.image %}
+                                        <img class="uk-width-small" data-src="{{ url_for('static', filename=user.image) }}" uk-img height="32" width="32">
+                                    {% else %}
+                                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
+                                            <span>:D</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="uk-width-expand">
+                                    <h4 class="uk-margin-remove">{{ user.first_name }} {{ user.family_name }}</h4>
+                                    <div class="uk-text-uppercase uk-text-small">
+                                        über <a class="uk-link-reset" href="{{ url_for('user.view', id=invitation.group.id) }}">{{ invitation.group.name }}</a>
+                                        {% if invitation.accepted %}<span uk-icon="check"></span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

@@ -1,0 +1,17 @@
+<script>
+    window.onload = function () {
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+                UIkit.notification({
+                    message: '{{message}}',
+                    // styled status: primary, success, warning, danger
+                    status: '{{category}}',
+                    pos: 'bottom-right',
+                    timeout: 5000
+                });
+            {% endfor %}
+            {% endif %}
+        {% endwith %}
+    }
+</script>

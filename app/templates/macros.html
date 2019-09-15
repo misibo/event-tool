@@ -91,20 +91,19 @@
 </div>
 {% endmacro %}
 
-{% macro render_filter(label, name, options, args) %}
+{% macro render_filter(label, name, choices, args) %}
 <div uk-form-custom>
     {% with selected = args['filter.'+name] %}
     <select name="filter.{{ name }}" onchange="this.form.submit()">
         <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
-        {% for enum, label in options.items() %}
-        <option value="{{ enum.name }}" {% if enum.name == selected %}selected=""{% endif %}>{{ label }}</option>
+        {% for val, label in choices.items() %}
+        <option value="{{ val }}" {% if val == selected %}selected=""{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
     <div>
-        <!-- TODO: shows the string version of enum instead of the label -->
         {{ label }}
         {% if selected %}
-        :{{selected}}
+        :{{choices[selected]}}
         {% else %}
         <span uk-icon="icon: cog"></span>
         {% endif %}

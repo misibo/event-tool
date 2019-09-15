@@ -1,1 +1,22 @@
-view user
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field, render_image_field %}
+
+{% block title %}{{ user.first_name }} {{ user.family_name }}{% endblock %}
+
+{% block content %}
+    <div class="uk-card">
+        <img data-src="{{ url_for('static', filename=user.image) }}" uk-img>
+        <div>{{ user.first_name }} {{ user.family_name }}</div>
+        <div>
+            {% for role in user.roles %}
+                <span>{{ role.group.name }}</span>
+            {% endfor %}
+        </div>
+        <div>{{ user.email }}</div>
+        <div>{{ user.mobile_phone }}</div>
+        <div>
+            {{ user.street }} <br>
+            {{ user.postal_code }} {{ user.city }}
+        </div>
+    </div>
+{% endblock %}

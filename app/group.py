@@ -6,9 +6,10 @@ from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
-@bp.route('/<int:id>/view')
+@bp.route('/view/<int:id>')
 def view(id):
-    return render_template('group/view.html')
+    group = Group.query.get_or_404(id)
+    return render_template('group/view.html', group=group)
 
 
 class GroupListView(ListView):

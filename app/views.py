@@ -1,10 +1,10 @@
+import pytz
 from flask import (current_app, flash, redirect, render_template, request,
                    url_for)
 from flask.views import View
 from sqlalchemy import or_
 
-from .models import db, User
-import pytz
+from .models import db
 
 
 class ListView(View):
@@ -69,10 +69,10 @@ class ListView(View):
         args = {}
         for key in self.filters.keys():
             args_key = f'filter.{key}'
-            value = request.args.get(args_key)
+            value = request.args.get(args_key, type=int)
             if value and value in self.filters[key]:
                 args[args_key] = value
-                query = query.filter_by(**{key: self.filters[key][value]})
+                query = query.filter_by(**{key: value})
         return query, args
 
     def search(self, query):
