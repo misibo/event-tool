@@ -37,7 +37,13 @@ def login_required(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
+        disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
+
+        if os.environ['FLASK_ENV'] != 'development':
+            # prevent disabling authentication by accident
+            disable_auth = False
+
+        if not disable_auth and g.user is None:
             return redirect(url_for('security.login'))
 
         return view(**kwargs)
