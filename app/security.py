@@ -44,7 +44,7 @@ def login_required(view):
             disable_auth = False
 
         if not disable_auth and g.user is None:
-            return redirect(url_for('security.login'))
+            return redirect(url_for('security.login', redirect_url=request.url))
 
         return view(**kwargs)
 
@@ -172,7 +172,12 @@ def login():
             username=form.username.data).first()
         create_session(user.id)
         flash('Du hast dich erfolgreich angemeldet.')
-        return redirect(url_for('dashboard.account'))
+
+        redirect_url = request.args.get('redirect_url')
+        if redirect_url is None:
+            return redirect(url_for('dashboard.account'))
+        else:
+            return redirect(redirect_url)
 
     return render_template('security/login.html', form=form)
 
