@@ -10,7 +10,7 @@ from . import event, group, invitation, mailing, security, user, dashboard
 from .models import db
 from .utils import pretty_format_date
 
-app = Flask(__name__, instance_relative_config=True)
+app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
 
 # load conig
 app.config.from_object('config')  # load ./config.py

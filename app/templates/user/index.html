@@ -23,6 +23,7 @@ Benutzer
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>
+                <th></th>
                 <th>{{ render_sort('Benutzername', 'username', args) }}</th>
                 <th>{{ render_sort('Vorname', 'first_name', args) }}</th>
                 <th>{{ render_sort('Nachname', 'family_name', args) }}</th>
@@ -34,6 +35,11 @@ Benutzer
         <tbody>
             {% for user in pagination.items %}
             <tr>
+                <td>
+                    <object data="/static/upload/user/{{user.id}}/favicon_32x32.png" type="image/png">
+                        <img src="/static/upload_fallback/user/favicon_32x32.png">
+                    </object>
+                </td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.family_name }}</td>

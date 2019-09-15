@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import flash, g, render_template, request, url_for
+from flask import flash, g, render_template, request, url_for, current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from werkzeug.utils import secure_filename
@@ -17,8 +17,10 @@ from wtforms.validators import (DataRequired, Email, Length, NumberRange,
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
-from . import mailing
+from . import mailing, upload
 from .models import Group, User
+
+from PIL import Image
 
 
 class LocalDateTimeField(DateTimeField):
@@ -182,7 +184,6 @@ class AccountForm(RegisterForm):
         user.street = self.street.data
         user.postal_code = self.postal_code.data
         user.city = self.city.data
-        process_file_upload(self, user, 'image', 'user')
 
 
 class UserEditForm(AccountForm):
@@ -211,20 +212,15 @@ class UserEditForm(AccountForm):
 
         return True
 
-    def populate_obj(self, user):
-        user.username = self.username.data
-        user.first_name = self.first_name.data
-        user.family_name = self.family_name.data
+    def populate_obj(self, user: User):
+        super().populate_obj(user)
+
         user.email = self.email.data
         if self.new_password.data:
             user.set_password(self.new_password.data)
-        user.birthday = self.birthday.data
-        user.role = self.role.data
-        user.mobile_phone = self.mobile_phone.data
-        user.street = self.street.data
-        user.postal_code = self.postal_code.data
-        user.city = self.city.data
-        process_file_upload(self, user, 'image', 'user')
+
+        if self.image.data is not None:
+            upload.store_user_favicon(self.image.data, user)
 
 
 class ConfirmRegistrationForm(FlaskForm):
@@ -269,16 +265,6 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     widget = CheckboxListWidget()
     option_widget = CheckboxInput()
-
-
-# process file if uploaded via form
-def process_file_upload(form, model, attr, directory):
-    f = getattr(form, attr).data
-    if f and f != getattr(model, attr):
-        filename = secure_filename(f.filename)
-        # TODO how to determine base path of flask app?
-        f.save(os.path.join('app', 'static', directory, filename))
-        setattr(model, attr, os.path.join(directory, filename))
 
 
 class GroupEditForm(FlaskForm):
