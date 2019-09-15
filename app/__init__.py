@@ -10,7 +10,7 @@ from . import event, group, invitation, mailing, security, user, dashboard
 from .models import db
 from .utils import pretty_format_date
 
-app = Flask(__name__, instance_relative_config=True)
+app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
 
 # load conig
 app.config.from_object('config')  # load ./config.py
@@ -76,3 +76,12 @@ def index():
     flash('info', 'success')
     flash('random', 'random')
     return render_template('home.html')
+
+
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r

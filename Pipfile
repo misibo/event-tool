@@ -8,6 +8,7 @@ entrypoints = "*"
 pycodestyle = "*"
 flake8 = "*"
 jupyter = "*"
+pylint = "*"
 
 [packages]
 flask = "*"
@@ -16,5 +17,6 @@ flask-wtf = "*"
 flask-mail = "*"
 pytz = "*"
 itsdangerous = "*"
+Pillow = "*"
 
 [requires]

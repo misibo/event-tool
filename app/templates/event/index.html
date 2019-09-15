@@ -22,6 +22,7 @@
     <table class="uk-table uk-table-small uk-table-hover uk-table-divider uk-table-middle">
         <thead>
             <tr>
+                <th></th>
                 <th class="uk-table-shrink uk-text-nowrap">{{ render_sort('Name', 'name', args)}}</th>
                 <th>Beschreibung</th>
                 <th>Standort</th>
@@ -35,6 +36,11 @@
         <tbody>
             {% for event in pagination.items %}
             <tr>
+                <td>
+                    <object data="/static/upload/event/{{event.id}}/thumbnail_32x32.png" type="image/png">
+                        <img src="/static/upload_fallback/event/thumbnail_32x32.png">
+                    </object>
+                </td>
                 <td class="uk-table-shrink uk-text-nowrap">{{ event.name }}</td>
                 <td>{{ event.description }}</td>
                 <td>{{ event.location }}</td>

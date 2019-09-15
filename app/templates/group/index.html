@@ -23,6 +23,7 @@
     <table class="uk-table uk-table-striped">
         <thead>
             <tr>
+                <th></th>
                 <th>{{ render_sort('Name', 'name', args) }}</th>
                 <th>Beschreibung</th>
                 <th>{{ render_sort('Geändert', 'modified', args) }}</th>
@@ -32,6 +33,11 @@
         <tbody>
             {% for group in pagination.items %}
             <tr>
+                <td>
+                    <object data="/static/upload/group/{{group.id}}/logo_32x32.png" type="image/png">
+                        <img src="/static/upload_fallback/group/logo_32x32.png">
+                    </object>
+                </td>
                 <td>{{ group.name }}</td>
                 <td>{{ group.description }}</td>
                 <td>{{ group.modified.strftime('%d.%m.%y %H:%M') }}</td>

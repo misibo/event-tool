@@ -135,7 +135,6 @@ class User(db.Model):
     first_name = db.Column(db.String, nullable=False)
     family_name = db.Column(db.String, nullable=False)
     birthday = db.Column(db.Date)
-    image = db.Column(db.String)
 
     # contact info
     email = db.Column(db.String, nullable=False)
@@ -201,7 +200,6 @@ class Event(db.Model):
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
     modified = db.Column(UtcDateTime)
-    image = db.Column(db.String)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
     created_at = db.Column(UtcDateTime)
@@ -223,7 +221,6 @@ class Group(db.Model):
     name = db.Column(db.String)
     description = db.Column(db.String)
     age = db.Column(db.String)
-    logo = db.Column(db.String)
     flyer = db.Column(db.String)
     modified = db.Column(UtcDateTime)
 
