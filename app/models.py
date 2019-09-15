@@ -1,4 +1,3 @@
-import enum
 import hashlib
 import os
 from datetime import datetime
@@ -37,19 +36,43 @@ def auto_repr(obj, attrs):
     return f'{type(obj).__name__}({arglist})'
 
 
-class GroupMemberRole(db.Model):
-    class Type(enum.Enum):
-        Spectator = 10
-        Member = 20
-        Leader = 30
+class Choices:
 
-    __tablename__ = 'GroupMemberRole'
+    @classmethod
+    def get_choices(self):
+        return {}
+
+    @classmethod
+    def get_select_choices(self):
+        return [(value, label) for value, label in self.get_choices().items()]
+
+
+class GroupMember(db.Model):
+
+    class Role(Choices):
+
+        SPECTATOR = 1
+        MEMBER = 2
+        LEADER = 3
+
+        @classmethod
+        def get_choices(self):
+            return {
+                self.SPECTATOR: 'Zuschauer',
+                self.MEMBER: 'Teilnehmer',
+                self.LEADER: 'Leiter'
+            }
+
+    __tablename__ = 'GroupMember'
     user_id = db.Column(db.ForeignKey('User.id'), primary_key=True)
     group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
 
-    type = db.Column(db.Enum(Type), default=Type.Spectator, nullable=False)
-    user = db.relationship('User', back_populates='roles')
-    group = db.relationship('Group', back_populates='roles')
+    role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
+    user = db.relationship('User', back_populates='members')
+    group = db.relationship('Group', back_populates='members')
+
+    def get_role_label(self):
+        self.Role.get_choices()[self.role]
 
 
 class GroupEventRelations(db.Model):
@@ -88,10 +111,20 @@ class Invitation(db.Model):
 
 
 class User(db.Model):
-    class Permission(enum.Enum):
-        Standard = 10
-        Admin = 20
-        SuperAdmin = 30
+
+    class Role(Choices):
+
+        USER = 1
+        ADMIN = 2
+        SUPERADMIN = 3
+
+        @classmethod
+        def get_choices(self):
+            return {
+                self.USER: 'Benutzer',
+                self.ADMIN: 'Admin',
+                self.SUPERADMIN: 'Super Admin'
+            }
 
     __tablename__ = 'User'
 
@@ -124,26 +157,14 @@ class User(db.Model):
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(UtcDateTime)
 
-    permission = db.Column(db.Enum(Permission),
-                           default=Permission.Standard, nullable=False)
+    role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
-    roles = db.relationship('GroupMemberRole', back_populates='user')
+    members = db.relationship('GroupMember', back_populates='user')
     invitations = db.relationship('Invitation', back_populates='user')
-    administrated_events = db.relationship('Event', back_populates='admin')
-    administrated_groups = db.relationship('Group', back_populates='admin')
 
-    @staticmethod
-    def get_permission_labels():
-        return {
-            User.Permission.Standard: 'Standard',
-            User.Permission.Admin: 'Admin',
-            User.Permission.SuperAdmin: 'Super Admin',
-        }
-
-    def get_permission_label(self):
-        labels = self.get_permission_labels()
-        return labels[self.permission]
+    def get_role_label(self):
+        return self.Role.get_choices()[self.role]
 
     def hash_password(self, password):
         if not self.password_salt:
@@ -184,8 +205,7 @@ class Event(db.Model):
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
     created_at = db.Column(UtcDateTime)
-    admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
-    admin = db.relationship(User, back_populates='administrated_events')
+
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
@@ -206,11 +226,8 @@ class Group(db.Model):
     logo = db.Column(db.String)
     flyer = db.Column(db.String)
     modified = db.Column(UtcDateTime)
-    admin_id = db.Column(db.Integer, db.ForeignKey(User.id))
 
-    # a group admin can add and remove users from a group
-    admin = db.relationship('User', back_populates='administrated_groups')
-    roles = db.relationship('GroupMemberRole', back_populates='group')
+    members = db.relationship('GroupMember', back_populates='group')
     events = db.relationship(
         'Event', secondary=GroupEventRelations.__table__, back_populates='groups')
 

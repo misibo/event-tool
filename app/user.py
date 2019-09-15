@@ -15,7 +15,7 @@ def view(id):
 
 class UserTableView(ListView):
     sorts = ['username', 'first_name', 'family_name', 'email']
-    filters = {'permission': User.Permission.__members__}
+    filters = {'role': User.Role.get_choices().keys()}
     searchable = ['username', 'first_name', 'family_name', 'email']
     model = User
     template = 'user/index.html'
