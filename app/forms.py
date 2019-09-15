@@ -185,6 +185,9 @@ class AccountForm(RegisterForm):
         user.postal_code = self.postal_code.data
         user.city = self.city.data
 
+        if self.image.data is not None:
+            upload.store_user_avatar(self.image.data, user)
+
 
 class UserEditForm(AccountForm):
 
@@ -215,12 +218,11 @@ class UserEditForm(AccountForm):
     def populate_obj(self, user: User):
         super().populate_obj(user)
 
+        user.role = self.role.data
         user.email = self.email.data
+
         if self.new_password.data:
             user.set_password(self.new_password.data)
-
-        if self.image.data is not None:
-            upload.store_user_avatar(self.image.data, user)
 
 
 class ConfirmRegistrationForm(FlaskForm):

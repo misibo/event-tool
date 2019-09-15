@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 import pytz
+import flask
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    request, session, url_for)
 from itsdangerous import BadSignature
@@ -33,7 +34,7 @@ def is_session_active():
     return all(key in session for key in {'user_id', 'timestamp'})
 
 
-def login_required(view):
+def login_required(view, privilege=User.Role.USER):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
@@ -43,8 +44,16 @@ def login_required(view):
             # prevent disabling authentication by accident
             disable_auth = False
 
-        if not disable_auth and g.user is None:
+        if disable_auth:
+            return view(**kwargs)
+        
+        if g.user is None:
+            # not logged in
             return redirect(url_for('security.login', redirect_url=request.url))
+
+        assert privilege in {User.Role.USER, User.Role.ADMIN, User.Role.SUPERADMIN}
+        if g.user.role < privilege:
+            return flask.abort(403)  # forbidden
 
         return view(**kwargs)
 

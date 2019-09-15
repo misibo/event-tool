@@ -48,8 +48,10 @@ Benutzer
                 <td>{{ user.email }}</td>
                 <td>{{ user.get_role_label() }}</td>
                 <td>
-                    <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
-                    <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
+                    {% if myself.role >= UserRole.ADMIN %}
+                        <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
+                        <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

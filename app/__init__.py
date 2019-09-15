@@ -7,7 +7,7 @@ from flask import Flask, current_app, render_template, request, url_for, flash
 from flask_mail import Mail
 
 from . import event, group, invitation, mailing, security, user, dashboard
-from .models import db
+from .models import db, User
 from .utils import pretty_format_date
 
 app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
@@ -66,6 +66,11 @@ def send_invitations():
         # commit invitations to database individually,
         # in order to not affect subsequent invitations if something goes wrong
         db.session.commit()
+
+
+@app.context_processor
+def inject_stage_and_region():
+    return dict(UserRole=User.Role)
 
 
 @app.route('/', methods=['GET', 'POST'])
