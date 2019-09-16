@@ -44,7 +44,7 @@
 </div>
 {% endmacro %}
 
-{% macro render_pagination(pagination, endpoint, params, position='center') %}
+{% macro render_pagination(pagination, endpoint, params={}, position='center') %}
 {% if pagination.pages > 1 %}
 <ul class="uk-pagination uk-flex-{{position}}">
     {% if pagination.has_prev %}

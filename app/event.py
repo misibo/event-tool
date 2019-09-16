@@ -11,12 +11,17 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 
 @bp.route('/view')
 def upcoming():
-    return render_template('event/upcoming.html')
+
+    pagination = Event.query.\
+        order_by(Event.start.desc()).\
+        paginate(per_page=15)
+
+    return render_template('event/upcoming.html', pagination=pagination)
 
 @bp.route('/view/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
-    return render_template('event/view.html', event=event)
+    return render_template('event/event.html', event=event)
 
 @bp.route('/<int:event_id>/participants', methods=['GET'])
 @security.login_required

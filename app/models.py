@@ -211,10 +211,17 @@ class Event(db.Model):
 
     def get_leaders(self):
         return User.query.\
-            join(GroupMember, (GroupMember.role == User.id) & (GroupMember.role == GroupMember.Role.LEADER)).\
+            join(User, GroupMember.user).\
             join(Group, GroupMember.group).\
+            filter(GroupMember.role == GroupMember.Role.LEADER).\
             filter(Group.id.in_([g.id for g in self.groups])).\
             all()
+
+    def print_start_end(self):
+        if (self.start.day == self.end.day):
+            return '%s, %s bis %s' % (self.start.strftime('%d.%m.%y'), self.start.strftime('%H:%M'), self.end.strftime('%H:%M'))
+        else:
+            return '%s bis %s' % (self.start.strftime('%d.%m.%y %H:%M'), self.end.strftime('%d.%m.%y %H:%M'))
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
