@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, current_app, render_template
 
 from .forms import GroupEditForm
 from .models import Group
@@ -6,10 +6,17 @@ from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
+@bp.route('/view')
+def groups():
+    pagination = Group.query.\
+        order_by(Group.name.asc()).\
+        paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+    return render_template('group/groups.html', pagination=pagination)
+
 @bp.route('/view/<int:id>')
 def view(id):
     group = Group.query.get_or_404(id)
-    return render_template('group/view.html', group=group)
+    return render_template('group/group.html', group=group)
 
 
 class GroupListView(ListView):
