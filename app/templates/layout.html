@@ -9,36 +9,56 @@
 </head>
 
 <body>
+
+    <div id="offcanvas" uk-offcanvas="mode: push; overlay: true">
+        <div class="uk-offcanvas-bar">
+            <button class="uk-offcanvas-close" type="button" uk-close></button>
+            <ul class="uk-nav uk-nav-primary">
+                <li class="uk-nav-header">Seiten</li>
+                {% include 'menu-public.html' %}
+            </ul>
+            <ul class="uk-nav uk-nav-primary">
+                <li class="uk-nav-header">Benutzer</li>
+                {% include 'menu-user.html' %}
+            </ul>
+        </div>
+    </div>
+
     <div {% block attrs %}{% endblock %}>
-        <div class="uk-navbar-container uk-navbar-transparent">
+
+        <div class="uk-hidden@s uk-navbar-container uk-navbar-transparent" uk-navbar>
+            <div class="uk-navbar-left">
+                <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle href="#offcanvas"></a>
+            </div>
+            <div class="uk-navbar-center">
+                {% block logo %}<a class="uk-navbar-item uk-logo" href="#">E-T</a>{% endblock %}
+            </div>
+        </div>
+
+        <div class="uk-visible@s uk-navbar-container uk-navbar-transparent">
             <div class="uk-container">
                 <nav uk-navbar>
                     <div class="uk-navbar-left">
                         <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="/">Home</a></li>
+                            {% include 'menu-public.html' %}
                         </ul>
                     </div>
+                    <div class="uk-navbar-center">
+                        {{ self.logo() }}
+                    </div>
                     <div class="uk-navbar-right">
-                        {% if g.user == None %}
                         <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('security.login') }}">Anmelden</a></li>
-                            <li class="uk-active"><a href="{{ url_for('security.register') }}">Registrieren</a></li>
+                            {% include 'menu-user.html' %}
                         </ul>
-                        {% else %}
-                        <div class="uk-navbar-item">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</div>
-                        <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
-                            <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
-                            <li class="uk-active"><a href="{{ url_for('user.list') }}">Benutzer</a></li>
-                            <li class="uk-active"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                            <li class="uk-active"><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
-                        </ul>
-                        {% endif %}
                     </div>
                 </nav>
             </div>
         </div>
-        {% block hero %}{% endblock %}
+        {% block hero %}
+            <div class="uk-margin uk-text-center">
+                <h1>{{ self.title() }}</h1>
+            </div>
+        {% endblock %}
     </div>
     <div class="uk-section uk-section-default">
         <div class="uk-container">

@@ -1,0 +1,8 @@
+{% if g.user == None %}
+    <li><a href="{{ url_for('security.login') }}">Anmelden</a></li>
+    <li><a href="{{ url_for('security.register') }}">Registrieren</a></li>
+{% else %}
+    <li><a class="uk-link-reset">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</a></li>
+    <li><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
+{% endif %}
