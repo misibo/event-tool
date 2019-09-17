@@ -119,3 +119,11 @@
         value="{{ args['search'] }}" {% endif %}>
 </div>
 {% endmacro %}
+
+{% macro render_menu_item(name, endpoint, active_class='uk-active', li_cls='', a_cls='') %}
+<li {% if url_for(endpoint) == url_for(request.endpoint) %} class="uk-active" {% endif %} {% if li_cls %} class="{{ li_cls }}" {% endif %}>
+    <a {% if a_cls %} class="{{ a_cls }}" {% endif %} href="{{ url_for(endpoint) }}">{{ name }}</a>
+</li>
+{% endmacro %}
+
+

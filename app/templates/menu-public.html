@@ -1,3 +1,5 @@
-<li><a href="/">Start</a></li>
-<li><a href="{{ url_for('event.upcoming') }}">Anlässe</a></li>
-<li><a href="{{ url_for('group.groups') }}">Gruppen</a></li>
+{% from 'macros.html' import render_menu_item %}
+
+{{ render_menu_item('Start', 'index') }}
+{{ render_menu_item('Nächstens', 'event.upcoming') }}
+{{ render_menu_item('Gruppen', 'group.groups') }}

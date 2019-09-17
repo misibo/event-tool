@@ -16,10 +16,10 @@
             <ul class="uk-nav uk-nav-primary">
                 <li class="uk-nav-header">Seiten</li>
                 {% include 'menu-public.html' %}
-            </ul>
-            <ul class="uk-nav uk-nav-primary">
                 <li class="uk-nav-header">Benutzer</li>
-                {% include 'menu-user.html' %}
+                {% include 'menu-account.html' %}
+                <li class="uk-nav-header">Verwalten</li>
+                {% include 'menu-manage.html' %}
             </ul>
         </div>
     </div>
@@ -48,7 +48,10 @@
                     </div>
                     <div class="uk-navbar-right">
                         <ul class="uk-navbar-nav">
-                            {% include 'menu-user.html' %}
+                            {% include 'menu-account.html' %}
+                        </ul>
+                        <ul class="uk-navbar-nav">
+                            {% include 'menu-manage.html' %}
                         </ul>
                     </div>
                 </nav>
