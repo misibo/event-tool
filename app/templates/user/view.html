@@ -29,11 +29,15 @@
                 <dt>Gruppen</dt>
                 <dd>
                     <ul class="uk-subnav" uk-margin>
-                        {% for member in user.members %}
+                        {% if user.memberships %}
+                        {% for membership in user.memberships %}
                         <li>
-                            <a class="uk-link-reset" href="{{ url_for('group.view', id=member.group.id) }}">{{ member.group.name }}</a>
+                            <a class="uk-link-reset" href="{{ url_for('group.view', id=member.group.id) }}">{{ membership.group.name }}</a>
                         </li>
                         {% endfor %}
+                        {% else %}
+                        In keiner Gruppe Mitglied
+                        {% endif %}
                     </ul>
                 </dd>
                 <dt>Kontakt</dt>
@@ -49,7 +53,7 @@
             </dl>
         </div>
         <div class="uk-card-footer">
-            dabei seit {{ user.created }}
+            dabei seit [nicht in db vorhanden]
         </div>
     </div>
 </div>

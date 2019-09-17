@@ -5,6 +5,7 @@
 
 {% block content %}
 <div class="uk-child-width-1-1 uk-grid-divider" uk-grid>
+    {% if pagination.items %}
     {% for event in pagination.items %}
     <div>
         <div uk-grid>
@@ -32,6 +33,11 @@
     </div>
     </div>
     {% endfor %}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Anlässe</h3>
+    </div>
+    {% endif %}
 </div>
 {{ render_pagination(pagination, 'event.upcoming') }}
 {% endblock %}

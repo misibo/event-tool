@@ -27,8 +27,10 @@
                         <h3 class="uk-card-title">Nächstens</h3>
                     </div>
                     <div class="uk-card-body">
+                        {% with upcoming = group.get_upcoming_events() %}
+                        {% if upcoming %}
                         <div class="uk-grid-small" uk-grid>
-                        {% for event in group.get_upcoming_events() %}
+                        {% for event in upcoming %}
                             <div>
                                 <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
                                     <div class="uk-width-auto">
@@ -47,6 +49,11 @@
                             </div>
                         {% endfor %}
                         </div>
+                        {% else %}
+                        <div class="uk-text-center uk-margin">
+                            <h3 class="uk-text-muted">Keine Anlässe</h3>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -56,8 +63,10 @@
                         <h3 class="uk-card-title">Mitglieder</h3>
                     </div>
                     <div class="uk-card-body">
+                        {% with members = group.get_members_ordered_by_role() %}
+                        {% if members %}
                         <div class="uk-grid-small uk-child-width-1-2@s uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
-                        {% for member in group.get_members_ordered_by_role() %}
+                        {% for member in members %}
                             <div>
                                 <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
                                     <div class="uk-width-auto">
@@ -79,6 +88,11 @@
                             </div>
                         {% endfor %}
                         </div>
+                        {% else %}
+                        <div class="uk-text-center uk-margin">
+                            <h3 class="uk-text-muted">Keine Mitglieder</h3>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
