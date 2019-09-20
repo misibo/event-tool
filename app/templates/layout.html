@@ -2,47 +2,53 @@
 
 <head>
     <title>{% block title %}Title{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/css/uikit.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/css/uikit.min.css" />-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>-->
+
+    <link rel="stylesheet" href="/static/css/uikit.my-theme.css" />
+    <script src="/static/js/uikit.min.js"></script>
+    <script src="/static/js/uikit-icons.min.js"></script>
     {% include 'message_flashing.html' %}
 </head>
 
 <body>
-    <div {% block attrs %}{% endblock %}>
-        <div class="uk-navbar-container uk-navbar-transparent">
-            <div class="uk-container">
-                <nav uk-navbar>
-                    <div class="uk-navbar-left">
-                        <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="/">Home</a></li>
-                        </ul>
-                    </div>
-                    <div class="uk-navbar-right">
-                        {% if g.user == None %}
-                        <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('security.login') }}">Anmelden</a></li>
-                            <li class="uk-active"><a href="{{ url_for('security.register') }}">Registrieren</a></li>
-                        </ul>
-                        {% else %}
-                        <div class="uk-navbar-item">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</div>
-                        <ul class="uk-navbar-nav">
-                            <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
-                            <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
-                            <li class="uk-active"><a href="{{ url_for('user.list') }}">Benutzer</a></li>
-                            <li class="uk-active"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
-                            <li class="uk-active"><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
-                        </ul>
-                        {% endif %}
-                    </div>
-                </nav>
-            </div>
-        </div>
-        {% block hero %}{% endblock %}
-    </div>
-    <div class="uk-section uk-section-default">
+    <div class="uk-background-default">
         <div class="uk-container">
-            {% block content %}Content{% endblock %}
+            <div class="uk-navbar-container uk-navbar-transparent">
+                <div class="uk-container">
+                    <nav uk-navbar>
+                        <div class="uk-navbar-left">
+                            <ul class="uk-navbar-nav">
+                                <li class="uk-active"><a href="/">Home</a></li>
+                            </ul>
+                        </div>
+                        <div class="uk-navbar-right">
+                            {% if g.user == None %}
+                            <ul class="uk-navbar-nav">
+                                <li class="uk-active"><a href="{{ url_for('security.login') }}">Anmelden</a></li>
+                                <li class="uk-active"><a href="{{ url_for('security.register') }}">Registrieren</a></li>
+                            </ul>
+                            {% else %}
+                            <div class="uk-navbar-item">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</div>
+                            <ul class="uk-navbar-nav">
+                                <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
+                                <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
+                                <li class="uk-active"><a href="{{ url_for('user.list') }}">Benutzer</a></li>
+                                <li class="uk-active"><a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a></li>
+                                <li class="uk-active"><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </nav>
+                </div>
+            </div>
+            {% block hero %}{% endblock %}
+        </div>
+        <div class="uk-section uk-section-default">
+            <div class="uk-container">
+                {% block content %}Content{% endblock %}
+            </div>
         </div>
     </div>
 </body>

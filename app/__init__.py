@@ -68,9 +68,17 @@ def send_invitations():
         db.session.commit()
 
 
+@app.template_filter()
+def parse_freeform(text):
+    """Convert a string to all caps."""
+    return [x.strip() for x in text.split('\n') if x.strip() != '']
+
+
 @app.context_processor
 def inject_stage_and_region():
-    return dict(UserRole=User.Role)
+    return dict(
+        UserRole=User.Role,
+    )
 
 
 @app.route('/', methods=['GET', 'POST'])

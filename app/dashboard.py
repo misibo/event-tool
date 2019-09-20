@@ -1,8 +1,10 @@
 from flask import Blueprint, flash, g, render_template, redirect, url_for
 
 from .forms import AccountForm
-from .models import User, db
+from .models import User, db, Event
 from .security import login_required
+
+import pytz
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -10,8 +12,9 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 @bp.route('/', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    user: User = g.user
-    return render_template('user/index.html', user=user)
+    myuser: User = g.user
+    upcoming_events = db.session.query(Event).all()
+    return render_template('dashboard/main.html', upcoming_events=upcoming_events, tz=pytz.timezone('Europe/Zurich'))
 
 
 @bp.route('/index', methods=['GET', 'POST'])
