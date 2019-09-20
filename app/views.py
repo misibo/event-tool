@@ -130,7 +130,7 @@ class CreateEditView(View):
                 db.session.add(model)
             db.session.commit()
             flash('Speichern erfolgreich.')
-            return redirect(url_for(self.redirect))
+            return redirect(request.referrer or url_for(self.redirect))
 
         return render_template(self.template, form=form, myself=g.user)
 
@@ -146,7 +146,4 @@ class DeleteView(View):
         db.session.commit()
         flash('Löschen erfolgreich.')
 
-        if request.referrer is None:
-            return redirect(url_for(self.redirect))
-        else:
-            return redirect(request.referrer)
+        return redirect(request.referrer or url_for(self.redirect))

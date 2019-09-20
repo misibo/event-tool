@@ -119,3 +119,10 @@
         value="{{ args['search'] }}" {% endif %}>
 </div>
 {% endmacro %}
+
+
+{% macro text2html(text) %}
+    {% for paragraph in text|parse_freeform %}
+        {{paragraph}}<br>
+    {% endfor %}
+{% endmacro %}

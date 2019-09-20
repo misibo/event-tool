@@ -51,7 +51,7 @@ def login_required(view, privilege=User.Role.USER):
             # not logged in
             return redirect(url_for('security.login', redirect_url=request.url))
 
-        assert privilege in {User.Role.USER, User.Role.ADMIN, User.Role.SUPERADMIN}
+        assert privilege in {User.Role.USER, User.Role.MANAGER, User.Role.ADMIN}
         if g.user.role < privilege:
             return flask.abort(403)  # forbidden
 
@@ -184,7 +184,7 @@ def login():
 
         redirect_url = request.args.get('redirect_url')
         if redirect_url is None:
-            return redirect(url_for('dashboard.account'))
+            return redirect(url_for('dashboard.index'))
         else:
             return redirect(redirect_url)
 
@@ -201,7 +201,7 @@ def change_password():
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
-        return redirect(url_for('dashboard.account'))
+        return redirect(url_for('dashboard.index'))
 
     return render_template('user/password.html', form=form)
 
@@ -353,7 +353,7 @@ def confirm_email():
         flash((
             'Das E-Mail-Adresse konnte nicht geändert werden, '
             'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
-        return redirect(url_for('dashboard.account'))
+        return redirect(url_for('dashboard.index'))
     else:
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
@@ -362,7 +362,7 @@ def confirm_email():
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')
-            return redirect(url_for('dashboard.account'))
+            return redirect(url_for('dashboard.index'))
         else:
             user.email = user.email_change_request
             user.email_change_insertion_time_utc = None
@@ -373,7 +373,7 @@ def confirm_email():
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
                 'info')
-            return redirect(url_for('dashboard.account'))
+            return redirect(url_for('dashboard.index'))
 
 
 @bp.route('/logout')

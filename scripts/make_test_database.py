@@ -57,14 +57,14 @@ def create_event(name, description, location, start, end, equipment, cost, deadl
 
 with app.app_context():
     users = [
-        create_user('Melissa', 'Foley', role=User.Role.SUPERADMIN),
-        create_user('Stephanie', 'Dunlap', role=User.Role.ADMIN),
+        create_user('Melissa', 'Foley', role=User.Role.ADMIN),
+        create_user('Stephanie', 'Dunlap', role=User.Role.MANAGER),
         create_user('Nicole', 'Parsons'),
         create_user('Michelle', 'Todd'),
         create_user('Heather', 'Bruce'),
-        create_user('Jennifer', 'Roberson', role=User.Role.ADMIN),
+        create_user('Jennifer', 'Roberson', role=User.Role.MANAGER),
         create_user('Amanda', 'Jennings'),
-        create_user('Amy', 'Villarreal', role=User.Role.ADMIN),
+        create_user('Amy', 'Villarreal', role=User.Role.MANAGER),
         create_user('Jessica', 'Benson'),
         create_user('Sarah', 'Keller'),
         create_user('Anisa', 'Rodriguez'),
@@ -233,11 +233,7 @@ with app.app_context():
     ]
 
     for i, user in enumerate(users):
-        if i < len(groups):
-            role = GroupMember(user=user, group=groups[i], role=GroupMember.Role.LEADER)
-            db.session.add(role)
-
-        g1, g2 = random.sample(set(range(len(groups))) - {i}, 2)
+        g1, g2 = random.sample(set(range(len(groups))), 2)
 
         if random.uniform(0, 1) > 0.3:
             role = GroupMember(user=user, group=groups[g1], role=GroupMember.Role.MEMBER)

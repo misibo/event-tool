@@ -51,16 +51,14 @@ class GroupMember(db.Model):
 
     class Role(Choices):
 
-        SPECTATOR = 1
-        MEMBER = 2
-        LEADER = 3
+        SPECTATOR = 10
+        MEMBER = 20
 
         @classmethod
         def get_choices(self):
             return {
                 self.SPECTATOR: 'Zuschauer',
-                self.MEMBER: 'Teilnehmer',
-                self.LEADER: 'Leiter'
+                self.MEMBER: 'Mitglied',
             }
 
     __tablename__ = 'GroupMember'
@@ -68,7 +66,7 @@ class GroupMember(db.Model):
     group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
 
     role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
-    user = db.relationship('User', back_populates='members')
+    user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
     def get_role_label(self):
@@ -114,16 +112,16 @@ class User(db.Model):
 
     class Role(Choices):
 
-        USER = 1
-        ADMIN = 2
-        SUPERADMIN = 3
+        USER = 10
+        MANAGER = 20
+        ADMIN = 30
 
         @classmethod
         def get_choices(self):
             return {
                 self.USER: 'Benutzer',
-                self.ADMIN: 'Admin',
-                self.SUPERADMIN: 'Super Admin'
+                self.MANAGER: 'Leiter',
+                self.ADMIN: 'Administrator',
             }
 
     __tablename__ = 'User'
@@ -161,7 +159,7 @@ class User(db.Model):
     role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
-    members = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
+    memberships = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
     invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
 
     def get_role_label(self):

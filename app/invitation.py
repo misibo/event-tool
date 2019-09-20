@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytz
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app
 
 from .forms import EditInvitationForm
 from .models import Event, Invitation, User, db

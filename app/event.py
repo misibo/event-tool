@@ -1,7 +1,7 @@
 from flask import Blueprint, abort, redirect, render_template, url_for
 from werkzeug.exceptions import NotFound
 
-from . import security
+from . import security, mailing
 from .forms import EventEditForm
 from .models import Event, db
 from .views import CreateEditView, DeleteView, ListView
@@ -13,10 +13,12 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 def upcoming():
     return render_template('event/upcoming.html')
 
+
 @bp.route('/view/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
     return render_template('event/view.html', event=event)
+
 
 @bp.route('/<int:event_id>/participants', methods=['GET'])
 @security.login_required
@@ -67,8 +69,7 @@ def send_invitations(event_id):
         event.send_invitations = True
         db.session.commit()
 
-        from . import send_invitations
-        send_invitations()
+        mailing.send_invitations()
         return redirect(url_for('event.list_participants', event_id=event_id))
 
 
