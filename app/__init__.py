@@ -42,7 +42,8 @@ app.register_blueprint(invitation.bp)
 @app.template_filter()
 def parse_freeform(text):
     """Convert a string to all caps."""
-    return [x.strip() for x in text.split('\n') if x.strip() != '']
+    from .parser import parse_text
+    return parse_text(text)
 
 
 @app.context_processor
