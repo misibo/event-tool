@@ -37,9 +37,10 @@ def create_group(name, description):
     return group
 
 
-def create_event(name, description, location, start, end, equipment, cost, deadline, send_invitations, groups):
+def create_event(name, abstract, description, location, start, end, equipment, cost, deadline, send_invitations, groups):
     event = Event(
         name=name,
+        abstract=abstract,
         description=description,
         location=location,
         start=tz.localize(start),
@@ -91,11 +92,11 @@ with app.app_context():
     events = [
         create_event(
             name='Nationalpark-Paket Arenal',
-            description=textwrap.dedent("""
+            abstract=textwrap.dedent("""
                 Der majestätische Vulkan weist eine konische Form auf – kein Wunder, dass der Vulkan eines der
                 beliebtesten Fotomotive Costa Ricas ist. Die Gegend um den Vulkan, die grünen Hänge und
-                der tolle Ausblick sind die Highlights des Arenal-Nationalparks.
-
+                der tolle Ausblick sind die Highlights des Arenal-Nationalparks."""),
+            description=textwrap.dedent("""
                 - *1. Tag:* _San José, Tortuguero, Monteverde, Manuel Antonio oder Rincón de la Vieja – Arenal_
                 Morgens werden Sie von Ihrem, separat gebuchten Hotel in San José abgeholt und fahren in eine der
                 fruchtbarsten Zonen des Landes: die Region von San Carlos. Hier liegt der Vulkan Arenal, der zu
@@ -123,11 +124,11 @@ with app.app_context():
         ),
         create_event(
             name='Wilder Süden',
-            description=textwrap.dedent("""
+            abstract=textwrap.dedent("""
                 Costa Rica, die „reiche Küste“, ist bekannt für ihre Artenvielfalt in der Tier- und Pflanzenwelt.
                 Die Tour führt Sie in den wenig touristischen Süden. Hier finden Sie den grössten Nationalpark und die
-                letzten ursprünglichen Regenwälder auf der Pazifikseite Costa Ricas.
-
+                letzten ursprünglichen Regenwälder auf der Pazifikseite Costa Ricas."""),
+            description=textwrap.dedent("""
                 - *1. Tag:* _San José:_ Begrüssung durch einen Repräsentanten unserer Agentur am Flughafen und Ü
                 bergabe der Reiseunterlagen. Transfer zum Hotel Presidente.
 
@@ -149,7 +150,7 @@ with app.app_context():
                 von dort aus haben Sie einen fantastischen Ausblick auf den Vulkan Barú, den einzigen Vulkan Panamas.
                 Anschliessend Weiterfahrt über das mehr als 1.000 m tiefer gelegene Städtchen Neilly, dessen Gegend
                 von ausgedehnten Ölpalmenplantagen bedeckt ist, nach Golfito. Nach der Ankunft in La Gamba Abendessen
-                und 1 Nacht in der Esquinas Rainforest Lodge. `C`a. 100 km`
+                und 1 Nacht in der Esquinas Rainforest Lodge. `Ca. 100 km`
                 """),
             location='Costa Rica',
             start=today + timedelta(hours=18, minutes=45),
@@ -162,10 +163,10 @@ with app.app_context():
         ),
         create_event(
             name='Komodo & Flores zum Kennenlernen',
-            description=textwrap.dedent("""
+            abstract=textwrap.dedent("""
                 Diese Kurzreise bietet eine wunderbare Gelegenheit zwei abwechslungsreiche indonesische Inseln
-                kennenzulernen.
-
+                kennenzulernen."""),
+            description=textwrap.dedent("""
                 - *1. Tag:* _Südbali – Labuan Bajo (Flores):_ Frühmorgens Abholung von Ihrem separat gebuchten Hotel in
                 Südbali und Transfer zum Flughafen für Ihren Flug nach Labuan Bajo/Westflores.
                 Fahrt in das Dorf Melo, wo Sie einer für Sie eigens arrangierten Privataufführung des spektakulären
@@ -190,7 +191,7 @@ with app.app_context():
                 zu schnorcheln. Rückkehr nach Labuan Bajo. (`Frühstück`, `Mittagessen`)
 
                 - *4. Tag:* _Labuan Bajo – Südbali:_ Nach dem Frühstück Transfer zum Flughafen von Labuan Bajo.
-                Flug nach Bali und Transfer zu Ihrem separat gebuchten Hotel in Südbali. Ende der Reise. (Frühstück)
+                Flug nach Bali und Transfer zu Ihrem separat gebuchten Hotel in Südbali. Ende der Reise. (`Frühstück`)
                 """),
             location='Südbali​',
             start=today + timedelta(days=7, hours=17, minutes=30),
@@ -203,10 +204,10 @@ with app.app_context():
         ),
         create_event(
             name='Flusskreuzfahrt – Mekong Eyes',
-            description=textwrap.dedent("""
+            abstract=textwrap.dedent("""
                 Mit der Reisbarke „Mekong Eyes” durch das landschaftlich reizvolle und fruchtbare Mekong-Delta.
-                Entspannen Sie an Deck und schippern Sie in einem traditionellen Sampan-Boot zu farbenfrohen Märkten.
-
+                Entspannen Sie an Deck und schippern Sie in einem traditionellen Sampan-Boot zu farbenfrohen Märkten."""),
+            description=textwrap.dedent("""
                 - *1. Tag:* _Saigon – Can Tho – Cai Be_ Am Morgen gegen 07.30 Uhr Abholung von Ihrem Übernachtungshotel
                 in Saigon und Transfer zum Pier in Can Tho. Gegen Mittag gehen Sie an Bord.
                 Geniessen Sie das Mittagessen, während das Schiff seine Fahrt aufnimmt.

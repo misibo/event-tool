@@ -195,6 +195,7 @@ class Event(db.Model):
     __tablename__ = 'Event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    abstract = db.Column(db.String)
     description = db.Column(db.String)
     location = db.Column(db.String)
     start = db.Column(UtcDateTime)

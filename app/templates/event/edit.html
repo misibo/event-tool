@@ -25,6 +25,7 @@
                     {{ render_field(form.end, class='uk-input', placeholder='dd.mm.yy hh:mm') }}
                 </div>
             </div>
+            {{ render_field(form.abstract, class='uk-textarea', rows=3, placeholder="Zusammenfassung ...") }}
             {{ render_field(form.description, class='uk-textarea', rows=10, placeholder="Beschreibung ...") }}
             {{ render_field(form.equipment, class='uk-textarea', rows=3, placeholder="Benötigte Ausrüstung...") }}
         </div>

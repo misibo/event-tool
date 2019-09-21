@@ -22,7 +22,7 @@
                 </li>
                 {% endfor %}
                 </ul>
-            <p class="uk-text-truncate">{{ text2html(event.description) }}</p>
+            <p class="uk-text-truncate">{{ text2html(event.abstract) }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>
@@ -30,6 +30,7 @@
 
 {% block content %}
     <div id="details">
+        <h3 class="uk-card-title">Details</h3>
         <p>
             {{ text2html(event.description) }}
         </p>

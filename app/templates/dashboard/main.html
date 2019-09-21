@@ -23,7 +23,7 @@
                         {% endif %}
                     </h3>
                     <div class="uk-panel uk-panel-box">
-                        {{text2html(event.description)}}
+                        {{text2html(event.abstract)}}
                     </div>
                     {% if g.user %}
                         {% for group in event.groups %}

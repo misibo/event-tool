@@ -297,7 +297,8 @@ class GroupEditForm(FlaskForm):
 
 class EventEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
-    description = TextAreaField('Info', [Length(max=10000)])
+    abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
+    description = TextAreaField('Details', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
     start = LocalDateTimeField('Start', format='%d.%m.%y %H:%M')
     end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
@@ -314,6 +315,7 @@ class EventEditForm(FlaskForm):
 
     def populate_obj(self, event: Event):
         event.name = self.name.data
+        event.abstract = self.abstract.data
         event.description = self.description.data
         event.location = self.location.data
         event.start = self.start.data
