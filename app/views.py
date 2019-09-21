@@ -1,6 +1,6 @@
 import pytz
 from flask import (current_app, flash, redirect, render_template, request,
-                   url_for)
+                   url_for, g)
 from flask.views import View
 from sqlalchemy import or_
 
@@ -103,7 +103,8 @@ class ListView(View):
             pagination=pagination,
             tz=pytz.timezone('Europe/Zurich'),
             args={**sort_args, **filter_args, **search_args},
-            Model=self.model
+            Model=self.model,
+            myself=g.user,
         )
 
 
@@ -129,9 +130,9 @@ class CreateEditView(View):
                 db.session.add(model)
             db.session.commit()
             flash('Speichern erfolgreich.')
-            return redirect(url_for(self.redirect))
+            return redirect(request.referrer or url_for(self.redirect))
 
-        return render_template(self.template, form=form)
+        return render_template(self.template, form=form, myself=g.user)
 
 
 class DeleteView(View):
@@ -140,10 +141,9 @@ class DeleteView(View):
     redirect = 'index'
 
     def dispatch_request(self, id):
-
         model = self.model.query.get_or_404(id)
         db.session.delete(model)
         db.session.commit()
         flash('Löschen erfolgreich.')
 
-        return redirect(url_for(self.redirect))
+        return redirect(request.referrer or url_for(self.redirect))

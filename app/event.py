@@ -2,7 +2,7 @@ from flask import (Blueprint, abort, current_app, redirect, render_template,
                    url_for)
 from werkzeug.exceptions import NotFound
 
-from . import security
+from . import security, mailing
 from .forms import EventEditForm
 from .models import Event, db
 from .views import CreateEditView, DeleteView, ListView
@@ -17,10 +17,12 @@ def upcoming():
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
     return render_template('event/upcoming.html', pagination=pagination)
 
+
 @bp.route('/view/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
     return render_template('event/event.html', event=event)
+
 
 @bp.route('/<int:event_id>/participants', methods=['GET'])
 @security.login_required
@@ -71,8 +73,7 @@ def send_invitations(event_id):
         event.send_invitations = True
         db.session.commit()
 
-        from . import send_invitations
-        send_invitations()
+        mailing.send_invitations()
         return redirect(url_for('event.list_participants', event_id=event_id))
 
 

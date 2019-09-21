@@ -18,7 +18,7 @@ from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
 from . import mailing, upload
-from .models import Group, User
+from .models import Group, User, Event
 
 from PIL import Image
 
@@ -185,6 +185,9 @@ class AccountForm(RegisterForm):
         user.postal_code = self.postal_code.data
         user.city = self.city.data
 
+        if self.image.data is not None:
+            upload.store_user_avatar(self.image.data, user)
+
 
 class UserEditForm(AccountForm):
 
@@ -215,7 +218,9 @@ class UserEditForm(AccountForm):
     def populate_obj(self, user: User):
         super().populate_obj(user)
 
+        user.role = self.role.data
         user.email = self.email.data
+
         if self.new_password.data:
             user.set_password(self.new_password.data)
 
@@ -281,11 +286,13 @@ class GroupEditForm(FlaskForm):
         blank_text='- Auswählen -'
     )
 
-    def populate_obj(self, group):
+    def populate_obj(self, group: Group):
         group.name = self.name.data
         group.description = self.description.data
         group.admin = self.admin.data
-        process_file_upload(self, group, 'logo', 'group')
+
+        if self.logo.data is not None:
+            upload.store_group_logo(self.logo.data, group)
 
 
 class EventEditForm(FlaskForm):
@@ -305,7 +312,7 @@ class EventEditForm(FlaskForm):
         query_factory=lambda: Group.query.all()
     )
 
-    def populate_obj(self, event):
+    def populate_obj(self, event: Event):
         event.name = self.name.data
         event.description = self.description.data
         event.location = self.location.data
@@ -315,7 +322,9 @@ class EventEditForm(FlaskForm):
         event.cost = self.cost.data
         event.deadline = self.deadline.data
         event.groups = self.groups.data
-        process_file_upload(self, event, 'image', 'event')
+
+        if self.image.data is not None:
+            upload.store_event_thumbnail(self.image.data, event)
 
 
 class EditInvitationForm(FlaskForm):

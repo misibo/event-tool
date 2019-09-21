@@ -51,16 +51,16 @@ class GroupMember(db.Model):
 
     class Role(Choices):
 
-        SPECTATOR = 1
-        MEMBER = 2
-        LEADER = 3
+        SPECTATOR = 10
+        MEMBER = 20
+        LEADER = 30
 
         @classmethod
         def get_choices(self):
             return {
                 self.SPECTATOR: 'Zuschauer',
-                self.MEMBER: 'Teilnehmer',
-                self.LEADER: 'Leiter'
+                self.MEMBER: 'Mitglied',
+                self.LEADER: 'Leiter',
             }
 
     __tablename__ = 'GroupMember'
@@ -114,16 +114,16 @@ class User(db.Model):
 
     class Role(Choices):
 
-        USER = 1
-        ADMIN = 2
-        SUPERADMIN = 3
+        USER = 10
+        MANAGER = 20
+        ADMIN = 30
 
         @classmethod
         def get_choices(self):
             return {
                 self.USER: 'Benutzer',
-                self.ADMIN: 'Admin',
-                self.SUPERADMIN: 'Super Admin'
+                self.MANAGER: 'Leiter',
+                self.ADMIN: 'Administrator',
             }
 
     __tablename__ = 'User'
@@ -156,11 +156,13 @@ class User(db.Model):
     email_change_token = db.Column(db.String)
     email_change_insertion_time_utc = db.Column(UtcDateTime)
 
+    avatar_version = db.Column(db.Integer, default=0, nullable=False)
+
     role = db.Column(db.SmallInteger, default=Role.USER, nullable=False)
 
     # relations
-    memberships = db.relationship('GroupMember', back_populates='user')
-    invitations = db.relationship('Invitation', back_populates='user')
+    memberships = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
+    invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
 
     def get_role_label(self):
         return self.Role.get_choices()[self.role]
@@ -200,10 +202,10 @@ class Event(db.Model):
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
     modified = db.Column(UtcDateTime)
-    image = db.Column(db.String)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
     created_at = db.Column(UtcDateTime)
+    thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
@@ -236,7 +238,7 @@ class Group(db.Model):
     name = db.Column(db.String)
     description = db.Column(db.String)
     age = db.Column(db.String)
-    logo = db.Column(db.String)
+    logo_version = db.Column(db.Integer, default=0, nullable=False)
     flyer = db.Column(db.String)
     modified = db.Column(UtcDateTime)
 

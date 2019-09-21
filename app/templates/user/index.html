@@ -35,10 +35,12 @@ Benutzer
         <tbody>
             {% for user in pagination.items %}
             <tr>
-                <td>
-                    <object data="/static/upload/user/{{user.id}}/favicon_32x32.png" type="image/png">
-                        <img src="/static/upload_fallback/user/favicon_32x32.png">
-                    </object>
+                <td style="min-width:32px">
+                    {% if user.avatar_version == 0 %}
+                        <img src="/static/upload_fallback/user/avatar_32x32.png">
+                    {% else %}
+                        <img src="/static/upload/user/{{user.id}}/avatar_32x32_v{{user.avatar_version}}.png">
+                    {% endif %}
                 </td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.first_name }}</td>
@@ -46,8 +48,10 @@ Benutzer
                 <td>{{ user.email }}</td>
                 <td>{{ user.get_role_label() }}</td>
                 <td>
-                    <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
-                    <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
+                    {% if myself.role >= UserRole.ADMIN %}
+                        <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
+                        <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

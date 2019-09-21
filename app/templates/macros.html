@@ -126,4 +126,35 @@
 </li>
 {% endmacro %}
 
+{% macro _render_rich_text_element(parts) %}
+{% for t in parts %}
+    {% if t.mode == 'normal' %}
+        {{t.text}}
+    {% elif t.mode == 'bold' %}
+        <strong>{{t.text}}</strong>
+    {% elif t.mode == 'italic' %}
+        <em>{{t.text}}</em>
+    {% elif t.mode == 'monospace' %}
+        <kbd>{{t.text}}</kbd>
+    {% endif %}
+{% endfor %}
+{% endmacro %}
 
+
+{% macro text2html(text) %}
+    {% for p in text|parse_freeform %}
+        {% if p.type == 'simple' %}
+            <p>
+                {{_render_rich_text_element(p.parts)}}
+            </p>
+        {% elif p.type == 'list' %}
+            <ul class="uk-list uk-list-striped">
+                {% for item in p.items %}
+                    <li>
+                        {{_render_rich_text_element(item.parts)}}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}

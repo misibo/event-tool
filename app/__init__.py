@@ -3,11 +3,11 @@ from datetime import datetime
 import os
 import pytz
 import itsdangerous
-from flask import Flask, current_app, render_template, request, url_for, flash
+from flask import Flask, current_app, render_template, request, url_for, flash, redirect
 from flask_mail import Mail
 
 from . import event, group, invitation, mailing, security, user, dashboard
-from .models import db
+from .models import db, User, GroupMember
 from .utils import pretty_format_date
 
 app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
@@ -39,40 +39,25 @@ app.register_blueprint(event.bp)
 app.register_blueprint(invitation.bp)
 
 
-def send_invitations():
-    pending = invitation.list_missing_invitations()
-    current_app.logger.info(f'Check for pending invitations: {len(pending)} found')
-
-    for inv in pending:
-        token_url = request.url_root + url_for('invitation.edit', id=inv.id, token=inv.token)[1:]
-
-        success = mailing.send_single_mail(
-            recipient=inv.user.email,
-            subject=inv.event.name,
-            text=render_template(
-                'mail/invitation.text',
-                invitation=inv, token_url=token_url),
-            html=render_template(
-                'mail/invitation.html',
-                invitation=inv, token_url=token_url),
-        )
-
-        inv.send_email_attempt_utc = pytz.utc.localize(datetime.utcnow())
-        if success:
-            inv.send_email_success_utc = pytz.utc.localize(datetime.utcnow())
-
-        db.session.add(inv)
-
-        # commit invitations to database individually,
-        # in order to not affect subsequent invitations if something goes wrong
-        db.session.commit()
+@app.template_filter()
+def parse_freeform(text):
+    """Convert a string to all caps."""
+    from .parser import parse_text
+    return parse_text(text)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.context_processor
+def inject_stage_and_region():
+    return dict(
+        UserRole=User.Role,
+        SPECTATOR=GroupMember.Role.SPECTATOR,
+        MEMBER=GroupMember.Role.MEMBER,
+        USER=User.Role.USER,
+        MANAGER=User.Role.MANAGER,
+        ADMIN=User.Role.ADMIN
+    )
+
+
+@app.route('/', methods=['GET'])
 def index():
-    flash('message', 'primary')
-    flash('warning', 'warning')
-    flash('error', 'danger')
-    flash('info', 'success')
-    flash('random', 'random')
-    return render_template('home.html')
+    return redirect(url_for('dashboard.index'))
