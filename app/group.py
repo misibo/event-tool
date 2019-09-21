@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, request, g, flash
+from flask import Blueprint, current_app,render_template, redirect, request, g, flash
 
 from .security import login_required
 from .forms import GroupEditForm
@@ -8,11 +8,18 @@ from . import mailing
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
+@bp.route('/view')
+def groups():
+    pagination = Group.query.\
+        order_by(Group.name.asc()).\
+        paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+    return render_template('group/groups.html', pagination=pagination)
+
 @bp.route('/view/<int:id>')
 @login_required
 def view(id):
     group = Group.query.get_or_404(id)
-    return render_template('group/view.html', group=group)
+    return render_template('group/group.html', group=group)
 
 
 @bp.route('/join/<int:id>')

@@ -49,7 +49,7 @@
                 <td class="uk-table-shrink">{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td class="uk-table-shrink">{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td class="uk-table-shrink">{{ event.deadline.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td class="uk-table-shrink">{{ event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td class="uk-table-shrink">{{ '' if event.modified is none else event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td class="uk-table-shrink uk-text-nowrap">
                     <a href="{{ url_for('event.list_participants', event_id=event.id) }}" uk-icon="users"></a>
                     <a class="uk-margin-small-left" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a>

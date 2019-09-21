@@ -224,6 +224,9 @@ class UserEditForm(AccountForm):
         if self.new_password.data:
             user.set_password(self.new_password.data)
 
+        if self.image.data is not None:
+            upload.store_user_favicon(self.image.data, user)
+
 
 class ConfirmRegistrationForm(FlaskForm):
     username = StringField('Benutzername')  # read-only, needed for password-managers

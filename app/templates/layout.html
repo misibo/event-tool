@@ -2,62 +2,69 @@
 
 <head>
     <title>{% block title %}Title{% endblock %}</title>
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/css/uikit.min.css" />
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>
-
-    <!-- <link rel="stylesheet" href="/static/css/uikit.my-theme.css" />
-    <script src="/static/js/uikit.min.js"></script>
-    <script src="/static/js/uikit-icons.min.js"></script> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/css/uikit.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>
     {% include 'message_flashing.html' %}
 </head>
 
 <body>
-    <div class="uk-background-default">
-        <div class="uk-container">
-            <div class="uk-navbar-container uk-navbar-transparent">
-                <div class="uk-container">
-                    <nav uk-navbar>
-                        <div class="uk-navbar-left">
-                            <ul class="uk-navbar-nav">
-                                <li class="uk-active"><a href="/">Home</a></li>
-                            </ul>
-                        </div>
-                        <div class="uk-navbar-right">
-                            {% if g.user == None %}
-                            <ul class="uk-navbar-nav">
-                                <li class="uk-active"><a href="{{ url_for('security.login') }}">Anmelden</a></li>
-                                <li class="uk-active"><a href="{{ url_for('security.register') }}">Registrieren</a></li>
-                            </ul>
-                            {% else %}
-                            <div class="uk-navbar-item">
-                                Willkommen, {{ g.user.first_name }} {{ g.user.family_name }} 
-                            </div>
-                            <div class="uk-navbar-item">
-                                {% if g.user.role == MANAGER %}
-                                    <span class="uk-badge">Leiter</span>
-                                {% elif g.user.role == ADMIN %}
-                                    <span class="uk-badge">Admin</span>
-                                {% endif %}
-                            </div>
-                            <ul class="uk-navbar-nav">
-                                <li class="uk-active"><a href="{{ url_for('event.list') }}">Anlässe</a></li>
-                                <li class="uk-active"><a href="{{ url_for('group.list') }}">Gruppen</a></li>
-                                <li class="uk-active"><a href="{{ url_for('user.list') }}">Benutzer</a></li>
-                                <li class="uk-active"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
-                                <li class="uk-active"><a href="{{ url_for('security.logout') }}">Abmelden</a></li>
-                            </ul>
-                            {% endif %}
-                        </div>
-                    </nav>
-                </div>
-            </div>
-            {% block hero %}{% endblock %}
+    <div id="offcanvas" uk-offcanvas="mode: push; overlay: true">
+        <div class="uk-offcanvas-bar">
+            <button class="uk-offcanvas-close" type="button" uk-close></button>
+            <ul class="uk-nav uk-nav-primary">
+                <li class="uk-nav-header">Seiten</li>
+                {% include 'menu-public.html' %}
+                <li class="uk-nav-header">Benutzer</li>
+                {% include 'menu-account.html' %}
+                <li class="uk-nav-header">Verwalten</li>
+                {% include 'menu-manage.html' %}
+            </ul>
         </div>
-        <div class="uk-section uk-section-default">
-            <div class="uk-container">
-                {% block content %}Content{% endblock %}
+    </div>
+
+    <div {% block attrs %}{% endblock %}>
+
+        <div class="uk-hidden@s uk-navbar-container uk-navbar-transparent" uk-navbar>
+            <div class="uk-navbar-left">
+                <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle href="#offcanvas"></a>
             </div>
+            <div class="uk-navbar-center">
+                {% block logo %}<a class="uk-navbar-item uk-logo" href="#">E-T</a>{% endblock %}
+            </div>
+        </div>
+
+        <div class="uk-visible@s uk-navbar-container uk-navbar-transparent">
+            <div class="uk-container">
+                <nav uk-navbar>
+                    <div class="uk-navbar-left">
+                        <ul class="uk-navbar-nav">
+                            {% include 'menu-public.html' %}
+                        </ul>
+                    </div>
+                    <div class="uk-navbar-center">
+                        {{ self.logo() }}
+                    </div>
+                    <div class="uk-navbar-right">
+                        <ul class="uk-navbar-nav">
+                            {% include 'menu-account.html' %}
+                        </ul>
+                        <ul class="uk-navbar-nav">
+                            {% include 'menu-manage.html' %}
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        {% block hero %}
+            <div class="uk-margin uk-text-center">
+                <h1>{{ self.title() }}</h1>
+            </div>
+        {% endblock %}
+    </div>
+    <div class="uk-section uk-section-default">
+        <div class="uk-container">
+            {% block content %}Content{% endblock %}
         </div>
     </div>
 </body>

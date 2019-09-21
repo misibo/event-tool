@@ -53,24 +53,26 @@ class GroupMember(db.Model):
 
         SPECTATOR = 10
         MEMBER = 20
+        LEADER = 30
 
         @classmethod
         def get_choices(self):
             return {
                 self.SPECTATOR: 'Zuschauer',
                 self.MEMBER: 'Mitglied',
+                self.LEADER: 'Leiter',
             }
 
     __tablename__ = 'GroupMember'
-    user_id = db.Column(db.ForeignKey('User.id'), primary_key=True)
-    group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'), primary_key=True)
 
     role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
     user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
     def get_role_label(self):
-        self.Role.get_choices()[self.role]
+        return self.Role.get_choices()[self.role]
 
 
 class GroupEventRelations(db.Model):
@@ -209,6 +211,20 @@ class Event(db.Model):
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
 
+    def get_leaders(self):
+        return User.query.\
+            join(User, GroupMember.user).\
+            join(Group, GroupMember.group).\
+            filter(GroupMember.role == GroupMember.Role.LEADER).\
+            filter(Group.id.in_([g.id for g in self.groups])).\
+            all()
+
+    def print_start_end(self):
+        if (self.start.day == self.end.day):
+            return '%s, %s bis %s' % (self.start.strftime('%d.%m.%y'), self.start.strftime('%H:%M'), self.end.strftime('%H:%M'))
+        else:
+            return '%s bis %s' % (self.start.strftime('%d.%m.%y %H:%M'), self.end.strftime('%d.%m.%y %H:%M'))
+
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
 
@@ -227,13 +243,28 @@ class Group(db.Model):
     modified = db.Column(UtcDateTime)
 
     members = db.relationship('GroupMember', back_populates='group')
-    events = db.relationship(
-        'Event', secondary=GroupEventRelations.__table__, back_populates='groups')
+    events = db.relationship('Event',
+        secondary=GroupEventRelations.__table__,
+        back_populates='groups',
+        lazy='dynamic')
 
+    def get_upcoming_events(self):
+        return self.events.\
+            filter(Event.start >= pytz.utc.localize(datetime.utcnow())).\
+            order_by(Event.start.asc()).\
+            all()
 
-@event.listens_for(Event, 'before_insert')
-@event.listens_for(Event, 'before_update')
-@event.listens_for(Group, 'before_insert')
-@event.listens_for(Group, 'before_update')
-def receive_before_modified(mapper, connection, target):
-    target.modified = pytz.utc.localize(datetime.utcnow())
+    def get_members_ordered_by_role(self):
+        return GroupMember.query.\
+            join(User, GroupMember.user).\
+            join(Group, GroupMember.group).\
+            filter(Group.id == self.id).\
+            order_by(GroupMember.role.desc()).\
+            all()
+
+# @event.listens_for(Event, 'before_insert')
+# @event.listens_for(Event, 'before_update')
+# @event.listens_for(Group, 'before_insert')
+# @event.listens_for(Group, 'before_update')
+# def receive_before_modified(mapper, connection, target):
+#     target.modified = pytz.utc.localize(datetime.utcnow())

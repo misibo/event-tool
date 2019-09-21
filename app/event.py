@@ -1,4 +1,5 @@
-from flask import Blueprint, abort, redirect, render_template, url_for
+from flask import (Blueprint, abort, current_app, redirect, render_template,
+                   url_for)
 from werkzeug.exceptions import NotFound
 
 from . import security, mailing
@@ -11,13 +12,16 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 
 @bp.route('/view')
 def upcoming():
-    return render_template('event/upcoming.html')
+    pagination = Event.query.\
+        order_by(Event.start.asc()).\
+        paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+    return render_template('event/upcoming.html', pagination=pagination)
 
 
 @bp.route('/view/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
-    return render_template('event/view.html', event=event)
+    return render_template('event/event.html', event=event)
 
 
 @bp.route('/<int:event_id>/participants', methods=['GET'])

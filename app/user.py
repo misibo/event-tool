@@ -8,11 +8,11 @@ from . import security
 bp = Blueprint("user", __name__, url_prefix="/user")
 
 
-@bp.route('/<int:id>/view')
-@security.login_required
+@bp.route('/view/<int:id>')
+# @security.login_required
 def view(id):
     user = User.query.get_or_404(id)
-    return render_template('user/view.html', user=user, background='kjalöjsdflajdafj')
+    return render_template('user/view.html', user=user)
 
 
 class UserTableView(ListView):

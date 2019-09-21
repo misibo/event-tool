@@ -15,8 +15,14 @@
             <div>
                 {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }}
             </div>
+            <ul class="uk-subnav" uk-margin>
+                {% for user in event.get_leaders() %}
+                <li>
+                    <a class="uk-link-reset" href="{{ url_for('user.view', id=user.id) }}">{{ user.username }}</a>
+                </li>
+                {% endfor %}
+                </ul>
             <p class="uk-text-truncate">{{ text2html(event.description) }}</p>
-            <a class="uk-button uk-button-default" href="/event/edit/{{event.id}}">Bearbeiten</a>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>
@@ -32,6 +38,7 @@
                 <h3 class="uk-card-title">Einladungen</h3>
             </div>
             <div class="uk-card-body">
+                {% if event.invitations %}
                 <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
                 {% for invitation in event.invitations %}
                     {% with user = invitation.user %}
@@ -58,6 +65,11 @@
                     {% endwith %}
                 {% endfor %}
                 </div>
+                {% else %}
+                <div class="uk-text-center uk-margin">
+                    <h3 class="uk-text-muted">Keine Einladungen vorhanden</h3>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

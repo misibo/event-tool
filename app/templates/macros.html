@@ -44,7 +44,7 @@
 </div>
 {% endmacro %}
 
-{% macro render_pagination(pagination, endpoint, params, position='center') %}
+{% macro render_pagination(pagination, endpoint, params={}, position='center') %}
 {% if pagination.pages > 1 %}
 <ul class="uk-pagination uk-flex-{{position}}">
     {% if pagination.has_prev %}
@@ -118,6 +118,12 @@
     <input class="uk-search-input" type="search" placeholder="Search ..." name="search" {% if args['search'] %}
         value="{{ args['search'] }}" {% endif %}>
 </div>
+{% endmacro %}
+
+{% macro render_menu_item(name, endpoint, active_class='uk-active', li_cls='', a_cls='') %}
+<li {% if url_for(endpoint) == request.path %} class="{{ active_class }}" {% endif %} {% if li_cls %} class="{{ li_cls }}" {% endif %}>
+    <a {% if a_cls %} class="{{ a_cls }}" {% endif %} href="{{ url_for(endpoint) }}">{{ name }}</a>
+</li>
 {% endmacro %}
 
 {% macro _render_rich_text_element(parts) %}
