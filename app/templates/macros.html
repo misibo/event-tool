@@ -128,14 +128,18 @@
 
 {% macro _render_rich_text_element(parts) %}
 {% for t in parts %}
-    {% if t.mode == 'normal' %}
-        {{t.text}}
-    {% elif t.mode == 'bold' %}
-        <strong>{{t.text}}</strong>
-    {% elif t.mode == 'italic' %}
-        <em>{{t.text}}</em>
-    {% elif t.mode == 'monospace' %}
-        <kbd>{{t.text}}</kbd>
+    {% if t.type == 'text' %}
+        {% if t.mode == 'normal' %}
+            {{t.text}}
+        {% elif t.mode == 'bold' %}
+            <strong>{{t.text}}</strong>
+        {% elif t.mode == 'italic' %}
+            <em>{{t.text}}</em>
+        {% elif t.mode == 'monospace' %}
+            <kbd>{{t.text}}</kbd>
+        {% endif %}
+    {% elif t.type == 'link' %}
+        <a href="{{t.url}}">{{_render_rich_text_element(t.richtext)}}</a>
     {% endif %}
 {% endfor %}
 {% endmacro %}

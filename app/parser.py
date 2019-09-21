@@ -33,14 +33,28 @@ def extract_paragraphs(text):
 
 class FormattedText:
     def __init__(self, text, mode):
+        self.type = 'text'
         self.text = text
         self.mode = mode
-    
+
     def __str__(self):
-        return f'{self.mode.upper()}[{self.text}]'
+        return f'<{self.mode.upper()}>{self.text}</{self.mode.upper()}>'
     
     def __repr__(self):
-        return f'{self.mode.upper()}[{self.text}]'
+        return str(self)
+
+
+class HyperLink:
+    def __init__(self, url, richtext):
+        self.type = 'link'
+        self.url = url
+        self.richtext = richtext
+    
+    def __str__(self):
+        return f'<A href="{self.url}">{"".join(str(x) for x in self.richtext)}</A>'
+    
+    def __repr__(self):
+        return str(self)
 
 
 automaton = {
@@ -51,44 +65,79 @@ automaton = {
     },
     'bold': {
         '*': 'normal',
-        '_': 'normal',
-        '`': 'normal',
+        '_': 'bold',
+        '`': 'bold',
     },
     'italic': {
-        '*': 'normal',
+        '*': 'italic',
         '_': 'normal',
-        '`': 'normal',
+        '`': 'italic',
     },
     'monospace': {
-        '*': 'normal',
-        '_': 'normal',
+        '*': 'monospace',
+        '_': 'monospace',
         '`': 'normal',
     },
 }
 
-tokenizer = re.compile(r'(\*)|(\_)|(`)')
+inline_format_pattern = re.compile(r'(\*)|(\_)|(`)')
+hyperlink_pattern = re.compile(r'(\[(?P<label>.+)\]\((?P<url>.+)\))|(<(?P<plain_url>.+)>)')
 
 
-def parse_formatting(text):
+def parse_inline_formatting(text, mode='normal'):
     remaining = text
-    parts = []
-    mode = 'normal'
-    while True:
-        m = tokenizer.search(remaining)
+    richtext = []
+    while len(remaining) > 0:
+        # Scan text for inline format tokens such as *, _, `
+        m = inline_format_pattern.search(remaining)
         if m:
-            text = remaining[:m.start()]
-            if text != '':
-                parts.append(FormattedText(text, mode))
-            # print(f'{mode.upper()}: |{text}|')
+            block = remaining[:m.start()]
+            if block != '':
+                richtext.append(FormattedText(block, mode))
+            # print(f'{mode.upper()}: |{block}|')
             mode = automaton[mode][remaining[m.start():m.end()]]
             remaining = remaining[m.end():]
         else:
-            text = remaining
-            if text != '':
-                parts.append(FormattedText(text, mode))
-            # print(f'{mode.upper()}: |{text}|')
-            break
-    return parts
+            block = remaining
+            if block != '':
+                richtext.append(FormattedText(block, mode))
+            # print(f'{mode.upper()}: |{block}|')
+            remaining = ''
+    return mode, richtext
+
+
+def parse_simple_paragraph(text, url=True):
+    remaining = text
+    richtext = []
+    mode = 'normal'
+    while len(remaining) > 0:
+        # Scan text for hyper-links
+        m = hyperlink_pattern.search(remaining)
+        if m:
+            block = remaining[:m.start()]
+            if block != '':
+                mode, x = parse_inline_formatting(block, mode=mode)
+                richtext += x
+            groups = m.groupdict()
+            if groups['plain_url']:  # variant: <www.google.ch>
+                richtext.append(HyperLink(
+                    url=groups['plain_url'].strip(),
+                    richtext=[FormattedText(text=groups['plain_url'].strip(), mode=mode)],
+                ))
+            else:  # variant: [See google](www.google.ch)
+                mode, x = parse_inline_formatting(groups['label'], mode=mode)
+                richtext.append(HyperLink(
+                    url=groups['url'].strip(),
+                    richtext=x,
+                ))
+            remaining = remaining[m.end():]
+        else:
+            block = remaining
+            if block != '':
+                mode, x = parse_inline_formatting(block, mode=mode)
+                richtext += x
+            remaining = ''
+    return richtext
 
 
 class SimpleParagraph:
@@ -128,7 +177,7 @@ def parse_text(text):
                 tail = line[len(LIST_START_2):]
 
             # List
-            body = SimpleParagraph(parse_formatting(tail.strip()))
+            body = SimpleParagraph(parse_simple_paragraph(tail.strip()))
 
             if type(par) is not ListParagraph:
                 if par:
@@ -139,7 +188,7 @@ def parse_text(text):
             if par:
                 pars.append(par)
 
-            par = SimpleParagraph(parse_formatting(line.strip()))
+            par = SimpleParagraph(parse_simple_paragraph(line.strip()))
     
     if par:
         pars.append(par)
@@ -148,7 +197,11 @@ def parse_text(text):
 
 
 if __name__ == '__main__':
-    text = "*bold* _italic_ `monospace` normal"
+    print(parse_simple_paragraph(
+        'For some *references [see *_google_*](www.google.ch). Some <www.youtube.com> more* text'))
+    print(parse_simple_paragraph("*bold* _italic_ `mon*osp*ace`"))
 
-    for par in parse_text(text):
-        print(par)
+    # text = "*bold* _italic_ [My `monospace` link](www.google.ch) blabla"
+
+    # for par in parse_text(text):
+    #     print(par)

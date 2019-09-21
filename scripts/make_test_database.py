@@ -112,6 +112,8 @@ with app.app_context():
                 - *3. Tag:* _Arenal – San José oder Manuel Antonio, Monteverde, Rincón de la Vieja oder Cabo Blanco_
                 Am frühen Vormittag geht es je nach Buchung entweder zurück nach San José oder weiter in einen der
                 Nationalparks. 
+
+                Mehr informationen auf: [Kuoni](https://www.kuoni.ch/nord-und-zentralamerika/costa-rica/rundreisen/nationalpark-paket-arenal/)
                 """),
             location='Zypern',
             start=today + timedelta(days=-2, hours=18, minutes=30),
@@ -151,6 +153,8 @@ with app.app_context():
                 Anschliessend Weiterfahrt über das mehr als 1.000 m tiefer gelegene Städtchen Neilly, dessen Gegend
                 von ausgedehnten Ölpalmenplantagen bedeckt ist, nach Golfito. Nach der Ankunft in La Gamba Abendessen
                 und 1 Nacht in der Esquinas Rainforest Lodge. `Ca. 100 km`
+
+                Mehr informationen auf: [Kuoni](https://www.kuoni.ch/nord-und-zentralamerika/costa-rica/rundreisen/wilder-sueden/)
                 """),
             location='Costa Rica',
             start=today + timedelta(hours=18, minutes=45),
@@ -192,6 +196,8 @@ with app.app_context():
 
                 - *4. Tag:* _Labuan Bajo – Südbali:_ Nach dem Frühstück Transfer zum Flughafen von Labuan Bajo.
                 Flug nach Bali und Transfer zu Ihrem separat gebuchten Hotel in Südbali. Ende der Reise. (`Frühstück`)
+                
+                Mehr informationen auf: <https://www.kuoni.ch/asien/indonesien/rundreisen/komodo-flores-zum-kennenlernen/>
                 """),
             location='Südbali​',
             start=today + timedelta(days=7, hours=17, minutes=30),
@@ -221,6 +227,8 @@ with app.app_context():
                 schwimmenden Markt mit einer Fülle an Tropenfrüchten, Gemüse und Kunsthandwerk.
                 Nach dem Mittagessen ist es Zeit, Abschied vom Mekongdelta zu nehmen. Rücktransfer in Ihr Hotel
                 in Saigon, Ankunft am Nachmittag gegen 16.30 Uhr.
+
+                Mehr informationen auf: <https://www.kuoni.ch/asien/vietnam/rundreisen/flusskreuzfahrt-mekong-eyes/>
                 """),
             location='Mekong',
             start=today + timedelta(days=14, hours=18, minutes=00),

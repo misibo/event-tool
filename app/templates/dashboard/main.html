@@ -29,17 +29,16 @@
                         {% for group in event.groups %}
                             <!-- <span class="uk-badge">{{group.name}}</span> -->
                             <div class="uk-button-group">
-                                {% if group in memberships %}
-                                    <button class="uk-button uk-button-default">{{group.name}}
+                                <button class="uk-button uk-button-default">
+                                    {{group.name}}
+                                    {% if group in memberships %}
                                         {% if memberships[group].role == MEMBER %}
                                             <span class="uk-badge">Mitglied</span>
                                         {% elif memberships[group].role == SPECTATOR %}
                                             <span class="uk-badge">Zuschauer</span>
                                         {% endif %}
-                                    </button>
-                                {% else %}
-                                    <button class="uk-button uk-button-default">{{group.name}}</button>
-                                {% endif %}
+                                    {% endif %}
+                                </button>
                                 <div class="uk-inline">
                                     <button class="uk-button uk-button-default" type="button"><span uk-icon="icon:  triangle-down"></span></button>
                                     <div uk-dropdown="mode: click; boundary: ! .uk-button-group; boundary-align: true;">
