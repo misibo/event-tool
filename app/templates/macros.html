@@ -144,7 +144,6 @@
 {% endfor %}
 {% endmacro %}
 
-
 {% macro text2html(text) %}
     {% for p in text|parse_freeform %}
         {% if p.type == 'simple' %}
@@ -161,4 +160,32 @@
             </ul>
         {% endif %}
     {% endfor %}
+{% endmacro %}
+
+{% macro render_group_logo(group, resolution=32) %}
+    {% if group.logo_version %}
+    <img data-src="{{ url_for('static', filename='group/%d/logo_%dx%d.png'% (group.id, resolution, resolution)) }}">
+    {% else %}
+    <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
+        <div class="uk-text-large uk-text-bold uk-text-uppercase">{{ group.name[0:2] }}</div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_user_avatar(user, resolution=32) %}
+    {% if user.avatar_version %}
+    <img data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
+    {% else %}
+    <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
+        <span class="uk-text-large uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_event_date(event, width=32, height=false) %}
+{% if not height %}{% set height = width %}{% endif %}
+<div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{height}}px; width: {{width}}px;">
+    <div class="uk-text-large uk-text-bold">{{ event.start.strftime('%d') }}</div>
+    <div>{{ event.start.strftime('%b') }}</div>
+</div>
 {% endmacro %}

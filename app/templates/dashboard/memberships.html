@@ -1,0 +1,50 @@
+{% extends 'dashboard/layout.html' %}
+{% from 'macros.html' import render_group_logo, render_pagination %}
+
+{% block title %}
+    Mitgliedschaften
+{% endblock %}
+
+{% block dashboard %}
+    {% if pagination.items %}
+    <div class="uk-child-width-1-2@m uk-flex-center" uk-grid>
+        {% for membership in pagination.items %}
+        <div>
+            <div uk-grid>
+                <div class="uk-width-auto">
+                    {{ render_group_logo(membership.group) }}
+                </div>
+                <div class="uk-width-expand">
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-header">
+                            <h3 class="uk-card-title uk-margin-remove">{{ membership.group.name }}</h3>
+                            <div>
+                                <span>Du bist {{ membership.get_role_label() }}</span>
+                                {% if membership.role == membership.Role.SPECTATOR %}
+                                    <a class="uk-button uk-button-text" href="{{ url_for('group.join', id=membership.group.id) }}">Werde Teilnehmer</a>
+                                {% elif membership.role == membership.Role.MEMBER %}
+                                    <a class="uk-button uk-button-text" href="{{ url_for('group.watch', id=membership.group.id) }}">Werde Zuschauer</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="uk-card-body">
+                            {{ membership.group.description }}
+                        </div>
+                        <div class="uk-card-footer uk-flex uk-flex-between uk-flex-middle">
+                            <a class="uk-button uk-button-default" href="{{ url_for('group.view', id=membership.group.id) }}">Mehr</a>
+                            <a class="uk-button uk-button-text" href="{{ url_for('group.leave', id=membership.group.id) }}" onclick="return confirm('Bist du dir sicher?')">Austreten</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-text-large uk-margin">
+        <p class="uk-text-muted">Du bist in keiner Gruppe Mitglied.</p>
+        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Werde Mitglied</a>
+    </div>
+    {% endif %}
+    {{ render_pagination(pagination, 'dashboard.memberships')}}
+{% endblock %}

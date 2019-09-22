@@ -5,6 +5,6 @@
     {{ render_menu_item('Registrieren', 'security.register') }}
 {% else %}
     <li><a class="uk-link-reset">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</a></li>
-    {{ render_menu_item('Dashboard', 'dashboard.index') }}
+    {{ render_menu_item('Dashboard', 'dashboard.upcoming') }}
     {{ render_menu_item('Abmelden', 'security.logout') }}
 {% endif %}

@@ -60,4 +60,4 @@ def inject_stage_and_region():
 
 @app.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('dashboard.index'))
+    return redirect(url_for('dashboard.upcoming'))

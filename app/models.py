@@ -59,7 +59,7 @@ class GroupMember(db.Model):
         def get_choices(self):
             return {
                 self.SPECTATOR: 'Zuschauer',
-                self.MEMBER: 'Mitglied',
+                self.MEMBER: 'Teilnehmer',
                 self.LEADER: 'Leiter',
             }
 

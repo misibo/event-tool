@@ -1,0 +1,55 @@
+{% extends 'dashboard/layout.html' %}
+{% from 'macros.html' import render_pagination, render_event_date %}
+
+{% block title %}
+    Nächstens
+{% endblock %}
+
+{% block dashboard %}
+    {% if pagination.items %}
+    <div uk-grid>
+        {% for event in pagination.items %}
+        <div>
+            <div uk-grid>
+                <div class="uk-width-auto">
+                    {{ render_event_date(event) }}
+                </div>
+                <div class="uk-width-expand">
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-header">
+                            <h3 class="uk-card-title uk-margin-remove">{{ event.name }}</h3>
+                            <div class="uk-text-muted">
+                                <span uk-icon="users"></span>
+                                <div class="uk-inline">
+                                    <ul class="uk-subnav uk-margin-remove">
+                                        {% for group in event.groups %}
+                                            <li><a href="{{ url_for('group.view', id=group.id) }}">{{ group.name }}</a></li>
+                                            <!-- TODO zeige membership von gruppe -->
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="calendar"></span> {{ event.print_start_end() }}</div>
+                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="location"></span> {{ event.location }}</div>
+                        </div>
+                        <div class="uk-card-body">
+                            <div>{{ event.abstract }}</div>
+                        </div>
+                        <div class="uk-card-footer">
+                            <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
+                            <!-- TODO invitation: anmelden oder ablehnen, abmelden -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-text-large uk-margin">
+        <p class="uk-text-muted">Du bist in keiner Gruppe Mitglied.</p>
+        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Werde Mitglied</a>
+    </div>
+    {% endif %}
+    {{ render_pagination(pagination, 'dashboard.upcoming')}}
+{% endblock %}
