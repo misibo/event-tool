@@ -172,11 +172,11 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_user_avatar(user, resolution=32) %}
+{% macro render_user_avatar(user, resolution=32, class='') %}
     {% if user.avatar_version %}
-    <img data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
+    <img class="{{ class }}" data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
     {% else %}
-    <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
+    <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height: 32px; width: 32px;">
         <span class="uk-text-large uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
     </div>
     {% endif %}

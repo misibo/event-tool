@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar %}
 
 {% block title %}{{ group.name }}{% endblock %}$
 
@@ -52,16 +52,14 @@
                             <div>
                                 <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
                                     <div class="uk-width-auto">
-                                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
-                                            <div class="uk-text-large uk-text-bold">{{ event.start.strftime('%d') }}</div>
-                                            <div>{{ event.start.strftime('%b') }}</div>
-                                        </div>
+                                        {{ render_event_date(event) }}
                                     </div>
                                     <div class="uk-width-expand">
                                         <h4 class="uk-margin-remove">{{ event.name }}</h4>
-                                        <div class="uk-text-uppercase uk-text-small">
-                                            {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }} | <a class="uk-link-reset" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
+                                        <div class="uk-text-muted">
+                                            {{ event.print_start_end() }}
                                         </div>
+                                        <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                                     </div>
                                 </div>
                             </div>
@@ -84,25 +82,21 @@
                     <div class="uk-card-body">
                         {% with members = group.get_members_ordered_by_role() %}
                         {% if members %}
-                        <div class="uk-grid-small uk-child-width-1-2@s uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
+                        <div class="uk-grid-small uk-child-width-1-3@s uk-child-width-1-2@m uk-child-width-1-4@l" uk-grid>
                         {% for member in members %}
                             <div>
-                                <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
-                                    <div class="uk-width-auto">
-                                        {% if member.user.logo %}
-                                            <img class="uk-width-small" data-src="{{ url_for('static', filename=member.user.logo) }}" uk-img height="32" width="32">
-                                        {% else %}
-                                            <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
-                                                <span>:D</span>
-                                            </div>
+                                <div class="uk-inline" uk-tooltip="title: {{ member.user.first_name }} {{ member.user.family_name }}; pos: bottom-right">
+                                    {{ render_user_avatar(member.user, class='uk-margin-remove') }}
+                                    <div class="uk-position-absolute" style="right: -5px; bottom: -5px;">
+                                        {% if member.role == member.Role.SPECTATOR %}
+                                            <span class="uk-icon-button" uk-icon="icon: bell"></span>
+                                        {% elif member.role == member.Role.MEMBER %}
+                                            <span class="uk-icon-button" uk-icon="icon: user"></span>
+                                        {% elif member.role == member.Role.LEADER %}
+                                            <span class="uk-icon-button" uk-icon="icon: bolt"></span>
                                         {% endif %}
                                     </div>
-                                    <div class="uk-width-expand">
-                                        <h4 class="uk-margin-remove">{{ member.user.first_name }} {{ member.user.family_name }}</h4>
-                                        <div class="uk-text-uppercase uk-text-small">
-                                            {{ member.get_role_label() }} | {{ member.user.username }} | <a class="uk-link-reset" href="{{ url_for('user.view', id=member.user.id) }}">Profil</a>
-                                        </div>
-                                    </div>
+                                    <a class="uk-link-reset uk-position-cover" href="{{ url_for('user.view', id=member.user_id) }}"></a>
                                 </div>
                             </div>
                         {% endfor %}
