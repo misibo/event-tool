@@ -5,6 +5,7 @@ import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for, flash, redirect
 from flask_mail import Mail
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 
 from . import event, group, invitation, mailing, security, user, dashboard
 from .models import db, User, GroupMember
@@ -61,3 +62,10 @@ def inject_stage_and_region():
 @app.route('/', methods=['GET'])
 def index():
     return redirect(url_for('dashboard.upcoming'))
+
+@app.errorhandler(NotFound)
+@app.errorhandler(Unauthorized)
+@app.errorhandler(Forbidden)
+def handle_exception(exception):
+    return render_template('exception.html', exception=exception)
+
