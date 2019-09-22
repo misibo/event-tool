@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination %}
+{% from 'macros.html' import render_pagination, render_group_logo %}
 
 {% block title %}Gruppen{% endblock %}
 
@@ -10,9 +10,7 @@
     <div>
         <div uk-grid>
             <div class="uk-width-auto">
-                <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
-                    <div class="uk-text-uppercase">{{ group.name[0:2] }}</div>
-                </div>
+                {{ render_group_logo(group) }}
             </div>
             <div class="uk-width-expand">
                 <div class="uk-card uk-card-default">
@@ -23,7 +21,7 @@
                     <div class="uk-card-body">
                         <div>{{ group.description | truncate(200) }}</div>
                     </div>
-                    <div class="uk-card-footer">
+                    <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-between">
                         <a class="uk-button uk-button-text" href="{{ url_for('group.view', id=group.id) }}">Ansehen</a>
                     </div>
                 </div>

@@ -13,6 +13,24 @@
             {% endif %}
             <h1>{{ group.name }}</h1>
             <div>{{ group.description }}</div>
+            <div>
+                {% if g.user %}
+                    {% with membership = group.get_membership_of_authenticated_user() %}
+                    {% if membership %}
+                        {% if membership.role == membership.Role.SPECTATOR %}
+                            <a class="uk-button uk-button-text" href="{{ url_for('group.join', id=group.id) }}">Werde Teilnehmer</a>
+                        {% elif membership.role == membership.Role.MEMBER %}
+                            <a class="uk-button uk-button-text" href="{{ url_for('group.watch', id=group.id) }}">Werde Zuschauer</a>
+                        {% elif membership.role == membership.Role.LEADER %}
+                            <span>Du bist Leiter.</span>
+                        {% endif %}
+                        <a class="uk-button uk-button-text uk-margin-left" href="{{ url_for('group.leave', id=group.id) }}">Austreten</a>
+                    {% else %}
+                        <a class="uk-button uk-button-text" href="{{ url_for('group.join', id=group.id) }}">Werde Mitglied</a>
+                    {% endif %}
+                    {% endwith %}
+                {% endif %}
+            </div>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>

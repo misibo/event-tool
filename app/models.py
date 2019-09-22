@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 import pytz
+from flask import g
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from sqlalchemy.types import TypeDecorator
@@ -254,6 +255,12 @@ class Group(db.Model):
             filter(Event.start >= pytz.utc.localize(datetime.utcnow())).\
             order_by(Event.start.asc()).\
             all()
+
+    def get_membership_of_authenticated_user(self):
+        return GroupMember.query.\
+                filter(GroupMember.user_id == g.user.id).\
+                filter(GroupMember.group_id == self.id).\
+                first()
 
     def get_members_ordered_by_role(self):
         return GroupMember.query.\
