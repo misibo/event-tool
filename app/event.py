@@ -24,7 +24,7 @@ def view(id):
     return render_template('event/event.html', event=event)
 
 
-@bp.route('/<int:event_id>/participants', methods=['GET'])
+@bp.route('/participants/<int:id>', methods=['GET'])
 @security.login_required
 def list_participants(event_id):
     event = Event.query.filter_by(id=event_id).first()
@@ -63,10 +63,10 @@ def list_participants(event_id):
             'event/list_audience.html', event=event, users=users)
 
 
-@bp.route('/<int:event_id>/send_invitations', methods=['POST'])
+@bp.route('/send_invitations/<int:id>', methods=['POST'])
 @security.login_required
-def send_invitations(event_id):
-    event = Event.query.filter_by(id=event_id).first()
+def send_invitations(id):
+    event = Event.query.filter_by(id=id).first()
     if event is None:
         abort(NotFound)
     else:

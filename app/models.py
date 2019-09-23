@@ -165,6 +165,33 @@ class User(db.Model):
     memberships = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
     invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
 
+    def query_membership_for_event(self, event):
+        return GroupMember.query.\
+            join(GroupMember.user).\
+            join(GroupMember.group).\
+            join(Group.events).\
+            filter(User.id == self.id).\
+            filter(Event.id == event.id).\
+            order_by(GroupMember.role.desc()).\
+            first()
+
+    def query_membership_in_group(self, group):
+        return GroupMember.query.\
+            join(GroupMember.user).\
+            join(GroupMember.group).\
+            filter(User.id == self.id).\
+            filter(Group.id == group.id).\
+            order_by(GroupMember.role.desc()).\
+            first()
+
+    def query_invitation_for_event(self, event):
+        return Invitation.query.\
+            join(Invitation.user).\
+            join(Invitation.event).\
+            filter(Event.id == event.id).\
+            filter(User.id == self.id).\
+            first()
+
     def get_role_label(self):
         return self.Role.get_choices()[self.role]
 
