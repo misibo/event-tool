@@ -66,8 +66,9 @@ def load_logged_in_user():
         timestamp = pytz.utc.localize(datetime.strptime(session['timestamp'], '%Y-%m-%d %H:%M:%S'))
         if not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(hours=2)):
             g.user = None
-        g.user = User.query.filter_by(
-            id=session['user_id']).first()
+        g.user = User.query.\
+            filter(User.id == session['user_id']).\
+            first()
         # if user is None:
         #     # user has been deleted
         #     return flask.redirect(flask.url_for('login', redirect=flask.request.url))

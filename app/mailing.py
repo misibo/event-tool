@@ -37,7 +37,7 @@ def send_invitations():
     current_app.logger.info(f'Check for pending invitations: {len(pending)} found')
 
     for inv in pending:
-        token_url = request.url_root + url_for('invitation.edit', id=inv.id, token=inv.token)[1:]
+        token_url = request.url_root + url_for('invitation.mail_reply', id=inv.id, token=inv.token)[1:]
 
         success = mailing.send_single_mail(
             recipient=inv.user.email,

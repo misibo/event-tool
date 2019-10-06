@@ -24,7 +24,6 @@
                                     <ul class="uk-subnav uk-margin-remove">
                                         {% for group in event.groups %}
                                             <li><a href="{{ url_for('group.view', id=group.id) }}">{{ group.name }}</a></li>
-                                            <!-- TODO zeige membership von gruppe -->
                                         {% endfor %}
                                     </ul>
                                 </div>
@@ -36,25 +35,27 @@
                             <div>{{ event.abstract }}</div>
                         </div>
                         <div class="uk-card-footer">
-                            <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
-                            {% with membership = g.user.query_membership_for_event(event) %}
-                                {% if membership.role == membership.Role.LEADER %}
-                                <a class="uk-button uk-button-text" href="{{ url_for('event.list_participants', id=event.id) }}">Teilnehmerliste</a>
-                                {% endif %}
-                            {% endwith %}
-                            {% with invitation = g.user.query_invitation_for_event(event) %}
-                                {% if invitation %}
-                                    {% if invitation.accepted is none %}
-                                        Ausstehend <a>Anmelden</a> <a>Abmelden</a>
-                                    {% elif invitation.accepted  %}
-                                        Angemeldet <a>Abmelden</a>
-                                    {% else %}
-                                        Abgemeldet <a>Anmelden</a>
+                            <ul class="uk-subnav">
+                                <li><a href="{{ url_for('event.view', id=event.id) }}">Ansehen</a></li>
+                                {% with membership = g.user.query_membership_for_event(event) %}
+                                    {% if membership.role == membership.Role.LEADER %}
+                                    <li><a href="{{ url_for('event.list_participants', id=event.id) }}">Teilnehmerliste</a></li>
                                     {% endif %}
-                                {% else %}
-                                    <span>Einladung noch nicht verschickt.</span>
-                                {% endif %}
-                            {% endwith %}
+                                {% endwith %}
+                                {% with invitation = g.user.query_invitation_for_event(event) %}
+                                    {% if invitation %}
+                                        {% if invitation.accepted is none %}
+                                            <li>Ausstehend <a href="{{ url_for('invitation.accept') }}">Anmelden</a> <a href="{{ url_for('invitation.accept') }}">Abmelden</a></li>
+                                        {% elif invitation.accepted  %}
+                                            <li>Angemeldet <a href="{{ url_for('invitation.decline') }}">Abmelden</a></li>
+                                        {% else %}
+                                            <li>Abgemeldet <a href="{{ url_for('invitation.accept') }}">Anmelden</a></li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li><span>Einladung noch nicht verschickt.</span></li>
+                                    {% endif %}
+                                {% endwith %}
+                            </ul>
                         </div>
                     </div>
                 </div>

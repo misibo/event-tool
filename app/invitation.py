@@ -42,9 +42,34 @@ def list_missing_invitations():
         invitations.append(Invitation(user=user, event=event, token=token))
     return invitations
 
+@bp.route('/decline/<int:id>', methods=['GET', 'POST'])
+def decline(id):
+    invitation = Invitation.query.get_or_404()
+    if invitation.user_id != g.user.id and g.user.role != User.Role.MANAGER:
+        return flask.abort(403)
 
-@bp.route('/<int:id>/edit', methods=['GET', 'POST'])
-def edit(id):
+    invitation.accepted = False
+    db.session.commit()
+
+    flash('Du hast die Einladung abgelehnt.')
+
+    return redirect(request.args.get('redirect_url'))
+
+@bp.route('/accept/<int:id>', methods=['GET', 'POST'])
+def accept(id):
+    invitation = Invitation.query.get_or_404()
+    if invitation.user_id != g.user.id and g.user.role != User.Role.MANAGER:
+        return flask.abort(403)
+
+    invitation.accepted = False
+    db.session.commit()
+
+    flash('Du hast die Einladung angenommen.')
+
+    return redirect(request.args.get('redirect_url'))
+
+@bp.route('/mail_reply/<int:id>', methods=['GET', 'POST'])
+def mail_reply(id):
     token = request.args.get('token', 'invalid')
 
     invitation = Invitation.query.filter_by(id=id).first()

@@ -4,7 +4,7 @@ from werkzeug.exceptions import NotFound
 
 from . import security, mailing
 from .forms import EventEditForm
-from .models import Event, db
+from .models import Event, db, User
 from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("event", __name__, url_prefix="/event")
@@ -75,6 +75,61 @@ def send_invitations(id):
 
         mailing.send_invitations()
         return redirect(url_for('event.list_participants', event_id=event_id))
+
+
+# @bp.route('/', methods=['POST'])
+# @security.login_required(privilege=User.Role.MANAGER)
+# def list():
+#     query = Event.query
+#     args = request.args.to_dict()
+
+#     sorts = dict((key, args[key]) for key in ['name', 'start', 'deadline', 'modified'] if f'sort.{key}' in args and args[key] in ['asc', 'desc'])
+#     if sorts:
+#         query.order_by(**sorts)
+
+#     searches = dict((key, args[key]) for key in ['name', 'start', 'deadline', 'modified'] if key in args and args[key] in ['asc', 'desc'])
+#     query.order_by(name=)
+
+#     return render_template('event/edit.html', form=form)
+
+
+# @bp.route('/create', methods=['POST'])
+# @security.login_required(privilege=User.Role.MANAGER)
+# def create():
+#     event = Event()
+#     form = EventEditForm(obj=event)
+
+#     if form.validate_on_submit():
+#         form.populate_obj(event)
+#         db.session.add(event)
+#         db.session.commit()
+#         flash('Anlass erfolgreich erstellt.')
+#         return redirect(url_for('event.list'))
+
+#     return render_template('event/edit.html', form=form)
+
+
+# @bp.route('/edit/<int:id>', methods=['POST'])
+# def edit(id):
+#     event = Event.query.get_or_404(id)
+#     form = EventEditForm(obj=event)
+
+#     if form.validate_on_submit():
+#         form.populate_obj(event)
+#         db.session.commit()
+#         flash('Anlass erfolgreich geändert.')
+#         return redirect(url_for('event.list'))
+
+#     return render_template('event/edit.html', form=form)
+
+
+# @bp.route('/delete/<int:id>', methods=['GET'])
+# def delete(id):
+#     event = Event.query.get_or_404(id)
+#     db.session.delete(id)
+#     db.session.commit()
+#     flash('Anlass erfolgreich gelöscht.')
+#     return redirect(url_for('event.list'))
 
 
 class EventListView(ListView):
