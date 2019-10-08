@@ -39,12 +39,14 @@
                         {{ render_menu_item('Registrieren', 'security.register') }}
                     {% endblock %}
                 {% endif %}
+                {% if g.user.can_manage() %}
                 <li class="uk-nav-header">Verwalten</li>
                 {% block menu_manage %}
                     {{ render_menu_item('Gruppen', 'group.list') }}
                     {{ render_menu_item('Anlässe', 'event.list') }}
                     {{ render_menu_item('Benutzer', 'user.list') }}
                 {% endblock %}
+                {% endif %}
             </ul>
         </div>
     </div>
@@ -93,6 +95,7 @@
                             {% else %}
                                 {{ self.menu_user() }}
                             {% endif %}
+                            {% if g.user.can_manage() %}
                             <li>
                                 <a href="#">
                                     Verwalten
@@ -103,6 +106,7 @@
                                     </ul>
                                 </div>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </nav>
