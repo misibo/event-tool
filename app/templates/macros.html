@@ -176,8 +176,8 @@
     {% if user.avatar_version %}
     <img class="{{ class }}" data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
     {% else %}
-    <div class="uk-placeholder uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height: {{ resolution }}px; width: {{ resolution }}px;">
-        <span class="{% if resolution > 32 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
+    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height: {{ resolution }}px; width: {{ resolution }}px;">
+        <span class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
     </div>
     {% endif %}
 {% endmacro %}

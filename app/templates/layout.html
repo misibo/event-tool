@@ -1,3 +1,5 @@
+{% from 'macros.html' import render_user_avatar, render_menu_item %}
+
 <!DOCTYPE html>
 
 <head>
@@ -14,11 +16,35 @@
             <button class="uk-offcanvas-close" type="button" uk-close></button>
             <ul class="uk-nav uk-nav-primary">
                 <li class="uk-nav-header">Seiten</li>
-                {% include 'menu-public.html' %}
+                {% block menu_public %}
+                {{ render_menu_item('Start', 'index') }}
+                {{ render_menu_item('Nächstens', 'event.upcoming') }}
+                {{ render_menu_item('Gruppen', 'group.groups') }}
+                {% endblock %}
                 <li class="uk-nav-header">Benutzer</li>
-                {% include 'menu-account.html' %}
+                {% if g.user %}
+                    <li>
+                        <div class="uk-margin-top uk-margin-bottom">
+                            {{ render_user_avatar(g.user, 128)}}
+                        </div>
+                    </li>
+                    {% block menu_account %}
+                        <li><a class="uk-link-reset">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</a></li>
+                        {{ render_menu_item('Dashboard', 'dashboard.upcoming') }}
+                        {{ render_menu_item('Abmelden', 'security.logout') }}
+                    {% endblock %}
+                {% else %}
+                    {% block menu_user %}
+                        {{ render_menu_item('Anmelden', 'security.login') }}
+                        {{ render_menu_item('Registrieren', 'security.register') }}
+                    {% endblock %}
+                {% endif %}
                 <li class="uk-nav-header">Verwalten</li>
-                {% include 'menu-manage.html' %}
+                {% block menu_manage %}
+                    {{ render_menu_item('Gruppen', 'group.list') }}
+                    {{ render_menu_item('Anlässe', 'event.list') }}
+                    {{ render_menu_item('Benutzer', 'user.list') }}
+                {% endblock %}
             </ul>
         </div>
     </div>
@@ -39,18 +65,44 @@
                 <nav uk-navbar>
                     <div class="uk-navbar-left">
                         <ul class="uk-navbar-nav">
-                            {% include 'menu-public.html' %}
+                            {{ self.menu_public() }}
                         </ul>
                     </div>
                     <div class="uk-navbar-center">
                         {{ self.logo() }}
                     </div>
+
                     <div class="uk-navbar-right">
+                        {% if g.user %}
+                        <div class="uk-navbar-item">
+
+                        </div>
+                        {% endif %}
                         <ul class="uk-navbar-nav">
-                            {% include 'menu-account.html' %}
-                        </ul>
-                        <ul class="uk-navbar-nav">
-                            {% include 'menu-manage.html' %}
+                            {% if g.user %}
+                            <li>
+                                <a href="#">
+                                    {{ render_user_avatar(g.user, 48) }}
+                                </a>
+                                <div class="uk-navbar-dropdown">
+                                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                                        {{ self.menu_account() }}
+                                    </ul>
+                                </div>
+                            </li>
+                            {% else %}
+                                {{ self.menu_user() }}
+                            {% endif %}
+                            <li>
+                                <a href="#">
+                                    Verwalten
+                                </a>
+                                <div class="uk-navbar-dropdown">
+                                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                                        {{ self.menu_manage() }}
+                                    </ul>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </nav>
