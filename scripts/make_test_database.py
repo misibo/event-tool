@@ -86,8 +86,8 @@ with app.app_context():
     ]
 
 
-    today = datetime.now().date()
-    today = datetime(today.year, today.month, today.day)
+    today = datetime.now()
+    # today = datetime(today.year, today.month, today.day)
 
     events = [
         create_event(
@@ -244,17 +244,17 @@ with app.app_context():
     for i, user in enumerate(users):
 
         if i < len(groups):
-            role = GroupMember(user=user, group=groups[i], role=GroupMember.Role.LEADER)
+            role = GroupMember(user=user, group=groups[i], joined=tz.localize(today), role=GroupMember.Role.LEADER)
             db.session.add(role)
 
         g1, g2 = random.sample(set(range(len(groups))) - {i}, 2)
 
         if random.uniform(0, 1) > 0.3:
-            role = GroupMember(user=user, group=groups[g1], role=GroupMember.Role.MEMBER)
+            role = GroupMember(user=user, group=groups[g1], joined=tz.localize(today), role=GroupMember.Role.MEMBER)
             db.session.add(role)
 
         if random.uniform(0, 1) > 0.3:
-            role = GroupMember(user=user, group=groups[g2], role=GroupMember.Role.SPECTATOR)
+            role = GroupMember(user=user, group=groups[g2], joined=tz.localize(today), role=GroupMember.Role.SPECTATOR)
             db.session.add(role)
 
     db.session.commit()

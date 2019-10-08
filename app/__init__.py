@@ -48,6 +48,14 @@ def parse_freeform(text):
 
 
 @app.context_processor
+def utility_processor():
+    def merge_into(d, **kwargs):
+        d.update(kwargs)
+        return d
+    return dict(merge_into=merge_into)
+
+
+@app.context_processor
 def inject_stage_and_region():
     return dict(
         UserRole=User.Role,

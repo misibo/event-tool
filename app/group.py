@@ -1,10 +1,11 @@
-from flask import Blueprint, current_app,render_template, redirect, request, g, flash
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, abort)
 
-from .security import login_required
-from .forms import GroupEditForm
-from .models import Group, GroupMember, db
-from .views import CreateEditView, DeleteView, ListView
 from . import mailing
+from .forms import GroupEditForm, GroupMemberForm
+from .models import Group, GroupMember, User, db
+from .security import login_required
+from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -21,55 +22,82 @@ def view(id):
     group = Group.query.get_or_404(id)
     return render_template('group/group.html', group=group)
 
-
-@bp.route('/join/<int:id>')
+# become group member
+@bp.route('/join/<int:id>', methods=['POST'])
 @login_required
 def join(id):
+    role = request.form['role']
+
+    if role == GroupMember.Role.LEADER and not g.user.can_manage():
+        abort(403)
+
     group = Group.query.get_or_404(id)
-    m = db.session.query(GroupMember).filter_by(user=g.user, group=group).first()
-    if m:
-        m.role = GroupMember.Role.MEMBER
-    else:
-        m = GroupMember(user=g.user, group=group, role=GroupMember.Role.MEMBER)
-        db.session.add(m)
+    member = GroupMember(
+        group=group,
+        user=g.user,
+        joined=pytz.utc.localize(datetime.utcnow()),
+        role=role)
+    db.session.add(m)
     db.session.commit()
+
     mailing.send_invitations()
 
-    flash(f'Du bist jetzt Mitglied der Gruppe {group.name}!', 'info')
+    flash(f'Du bist jetzt {member.get_role_label()} der Gruppe {group.name}!', 'success')
 
     return redirect(request.referrer or '/')
 
-
-@bp.route('/watch/<int:id>')
+# change membership role
+@bp.route('/member/edit/<int:id>', methods=['POST'])
 @login_required
-def watch(id):
-    group = Group.query.get_or_404(id)
-    m = db.session.query(GroupMember).filter_by(user=g.user, group=group).first()
-    if m:
-        m.role = GroupMember.Role.SPECTATOR
-    else:
-        m = GroupMember(user=g.user, group=group, role=GroupMember.Role.SPECTATOR)
-        db.session.add(m)
+def member_edit(id):
+    member = GroupMember.query.get_or_404(id)
+    role = request.form['role']
+
+    if (role == GroupMember.Role.LEADER or member.user_id != g.user.id) and \
+            not g.user.can_manage():
+        abort(403)
+
+    member.role = role
     db.session.commit()
+
     mailing.send_invitations()
 
-    flash(f'Du bist jetzt Zuschauer der Gruppe {group.name}!', 'info')
+    flash(f'Du bist jetzt {member.get_role_label()} der Gruppe {group.name}!', 'success')
 
     return redirect(request.referrer or '/')
 
 
-@bp.route('/leave/<int:id>')
+@bp.route('/member/leave/<int:id>')
 @login_required
-def leave(id):
-    group = Group.query.get_or_404(id)
-    m = db.session.query(GroupMember).filter_by(user=g.user, group=group).first()
-    if m:
-        db.session.delete(m)
-        db.session.commit()
+def member_leave(id):
+    member = GroupMember.query.get_or_404()
 
-    flash(f'Du bist der Gruppe {group.name} ausgetreten.', 'info')
+    if member.user_id != g.user.id and not g.user.can_manage():
+        abort(403)
+
+    db.session.delete(member)
+    db.session.commit()
+
+    flash(f'Du hast die Gruppe {group.name} verlassen.', 'warning')
 
     return redirect(request.referrer or '/')
+
+@bp.route('/members/<int:id>')
+@login_required
+def members(id):
+    group = Group.query.get_or_404(id)
+    pagination = GroupMember.query.\
+        join(GroupMember.user).\
+        filter(GroupMember.group_id == id).\
+        filter_by_request(GroupMember.role, 'filter.role', GroupMember.Role.get_choices().keys()).\
+        order_by_request(User.first_name, 'order.first_name').\
+        order_by_request(User.family_name, 'order.family_name').\
+        search_by_request([User.first_name, User.family_name], 'search').\
+        paginate(
+            per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE']
+        )
+
+    return render_template('group/members.html', pagination=pagination, args={**request.args.to_dict(), **{'id': group.id}}, group=group)
 
 
 class GroupListView(ListView):

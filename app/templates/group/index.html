@@ -44,6 +44,7 @@
                 <td>{{ group.description }}</td>
                 <td>{{ '' if group.modified is none else group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
+                    <a href="{{ url_for('group.members', id=group.id) }}" uk-icon="users"></a>
                     <a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a>
                     <a class="uk-margin-small-left" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a>
                 </td>

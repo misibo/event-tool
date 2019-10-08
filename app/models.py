@@ -3,12 +3,42 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import g
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
+from flask import g, request
+from flask_sqlalchemy import BaseQuery, SQLAlchemy
+from sqlalchemy import event, or_
 from sqlalchemy.types import TypeDecorator
 
-db = SQLAlchemy()
+
+class ExtendedQuery(BaseQuery):
+
+    def order_by_request(self, attr, arg, default=''):
+        value = request.args.get(arg, default)
+        if value == 'asc':
+            return self.order_by(AttributeError.asc())
+        elif value == 'asc':
+            return self.order_by(attr.desc())
+        else:
+            return self
+
+    def filter_by_request(self, attr, arg, values):
+        value = request.args.get(arg)
+        if value and value in values:
+            return self.filter(attr == value)
+        else:
+            return self
+
+    def search_by_request(self, attrs, arg):
+        value = request.args.get(arg)
+        if value:
+            searches = []
+            for attr in attrs:
+                searches.append(attr.contains(value))
+            return self.filter(or_(*searches))
+        else:
+            return self
+
+
+db = SQLAlchemy(query_class=ExtendedQuery)
 
 
 class UtcDateTime(TypeDecorator):
@@ -65,9 +95,14 @@ class GroupMember(db.Model):
             }
 
     __tablename__ = 'GroupMember'
-    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'), primary_key=True)
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'group_id'),
+    )
 
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'))
+    joined = db.Column(UtcDateTime)
     role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
     user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
@@ -205,6 +240,9 @@ class User(db.Model):
             1000
         )
         return hash
+
+    def can_manage(self):
+        return self.role >= self.Role.MANAGER
 
     def set_password(self, password):
         self.password_hash = self.hash_password(password)

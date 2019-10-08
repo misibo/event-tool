@@ -2,9 +2,10 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import flash, g, render_template, request, url_for, current_app
+from flask import current_app, flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
+from PIL import Image
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
                      SelectField, StringField, TextAreaField, ValidationError)
@@ -18,9 +19,7 @@ from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
 from . import mailing, upload
-from .models import Group, User, Event
-
-from PIL import Image
+from .models import Event, Group, GroupMember, User
 
 
 class LocalDateTimeField(DateTimeField):
@@ -357,3 +356,6 @@ class EditInvitationForm(FlaskForm):
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
         return not error
+
+class GroupMemberForm(FlaskForm):
+    role = SelectField('Rolle', choices=GroupMember.Role.get_select_choices())
