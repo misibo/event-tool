@@ -18,5 +18,7 @@ flask-mail = "*"
 pytz = "*"
 itsdangerous = "*"
 Pillow = "*"
+celery = "*"
+redis = "*"
 
 [requires]
