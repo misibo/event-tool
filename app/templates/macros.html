@@ -13,7 +13,7 @@
 <div class="uk-margin">
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
-        {{ field(**kwargs)|safe }}
+        {{ field(**kwargs) | safe }}
         {{ render_field_errors(field) }}
     </div>
 </div>
@@ -22,23 +22,36 @@
 {% macro render_file_field(field) %}
 <div class="uk-margin">
     <div class="uk-inline uk-width-1-1" uk-form-custom="target: true">
-        {{ field(**kwargs)|safe }}
+        {{ field(**kwargs) | safe }}
         <input class="uk-input" type="text" placeholder="Datei auswählen" disabled>
         <span class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: folder"></span>
     </div>
 </div>
 {% endmacro %}
 
-{% macro render_image_field(field) %}
+{% macro render_pdf_field(field, url) %}
 <div class="uk-margin">
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
-        {% if field.data %}
-        <div data-src="{{ url_for('static', filename=field.data) }}" uk-img
+        {% if url %}
+        <a href="{{ url }}" uk-icon="icon: file-pdf" target="_blank">PDF öffnen</a>
+        {% endif %}
+        {{ render_file_field(field, accept="application/pdf", **kwargs) }}
+        {{ render_field_errors(field) }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_image_field(field, url) %}
+<div class="uk-margin">
+    {{ field.label(class_='uk-form-label') }}
+    <div class="uk-form-controls">
+        {% if url %}
+        <div data-src="{{ url }}" uk-img
             class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
         </div>
         {% endif %}
-        {{ render_file_field(field) }}
+        {{ render_file_field(field, **kwargs) }}
         {{ render_field_errors(field) }}
     </div>
 </div>

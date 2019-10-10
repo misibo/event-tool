@@ -18,8 +18,9 @@ from wtforms.validators import (DataRequired, Email, Length, NumberRange,
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
-from . import mailing, upload
+from . import mailing
 from .models import Event, Group, GroupMember, User
+from slugify import slugify
 
 
 class LocalDateTimeField(DateTimeField):
@@ -273,38 +274,37 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
 
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
-    description = TextAreaField('Beschreibung', [Length(max=1000)])
-    logo = FileField('Logo', validators=[FileAllowed(['png', 'jpg'])])
-    admin = QuerySelectField(
-        'Admin',
-        # [Required()],
-        get_label=lambda user: f'{user.first_name} {user.family_name}',
-        # default=g.user,
-        query_factory=lambda: User.query.all(),
-        allow_blank=True,
-        blank_text='- Auswählen -'
-    )
+    slug = StringField('Slug')
+    abstract = TextAreaField('Kurzinfo')
+    details = TextAreaField('Details')
+    logo = FileField('Logo', validators=[FileAllowed(['png'])])
+    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
+    flyer = FileField('Flyer', validators=[FileAllowed(['pdf'])])
 
-    def populate_obj(self, group: Group):
+    def populate_obj(self, group):
         group.name = self.name.data
-        group.description = self.description.data
-        group.admin = self.admin.data
-
+        group.abstract = self.abstract.data
+        group.details = self.details.data
+        group.slug = slugify(self.slug.data if self.slug.data else group.name)
         if self.logo.data is not None:
-            upload.store_group_logo(self.logo.data, group)
+            group.save_logo(self.logo.data)
+        if self.background.data is not None:
+            group.save_background(self.background.data)
+        if self.flyer.data is not None:
+            group.save_flyer(self.flyer.data)
 
 
 class EventEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
-    description = TextAreaField('Details', [Length(max=10000)])
+    details = TextAreaField('Details', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
     start = LocalDateTimeField('Start', format='%d.%m.%y %H:%M')
     end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
-    image = FileField('Image', validators=[FileAllowed(['png', 'jpg'])])
+    image = FileField('Hintergrund', validators=[FileAllowed(['png', 'jpg'])])
     groups = QueryMultiCheckboxField(
         'Gruppen',
         [Required()],
@@ -356,6 +356,3 @@ class EditInvitationForm(FlaskForm):
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
         return not error
-
-class GroupMemberForm(FlaskForm):
-    role = SelectField('Rolle', choices=GroupMember.Role.get_select_choices())

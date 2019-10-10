@@ -3,10 +3,12 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import g, request
+from flask import g, request, url_for
 from flask_sqlalchemy import BaseQuery, SQLAlchemy
 from sqlalchemy import event, or_
 from sqlalchemy.types import TypeDecorator
+
+from .image import store_background, store_favicon
 
 
 class ExtendedQuery(BaseQuery):
@@ -109,7 +111,6 @@ class GroupMember(db.Model):
 
     def get_role_label(self):
         return self.Role.get_choices()[self.role]
-
 
 class GroupEventRelations(db.Model):
     __tablename__ = 'GroupEventRelations'
@@ -262,12 +263,13 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     abstract = db.Column(db.String)
-    description = db.Column(db.String)
+    details = db.Column(db.String)
     location = db.Column(db.String)
     start = db.Column(UtcDateTime)
     end = db.Column(UtcDateTime)
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
+    created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
@@ -303,10 +305,13 @@ class Group(db.Model):
     __tablename__ = 'Group'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    description = db.Column(db.String)
-    age = db.Column(db.String)
+    slug = db.Column(db.String)
+    abstract = db.Column(db.String)
+    details = db.Column(db.String)
     logo_version = db.Column(db.Integer, default=0, nullable=False)
-    flyer = db.Column(db.String)
+    background_version = db.Column(db.Integer, default=0, nullable=False)
+    flyer_version = db.Column(db.Integer, default=0, nullable=False)
+    created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
 
     members = db.relationship('GroupMember', back_populates='group')
@@ -314,6 +319,38 @@ class Group(db.Model):
         secondary=GroupEventRelations.__table__,
         back_populates='groups',
         lazy='dynamic')
+
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'group', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('group', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_logo(self, file):
+        store_favicon(file, self.get_folder(), 'logo')
+        self.logo_version += 1
+
+    def save_background(self, file):
+        store_background(file, self.get_folder(), 'background')
+        self.background_version += 1
+
+    def save_flyer(self, pdf):
+        pdf.save(os.path.join(self.get_folder(), 'flyer.pdf'))
+        self.flyer_version += 1
+
+    def get_logo_url(self, resolution=256):
+        return self.get_url(f'logo_{resolution}.png', self.logo_version)
+
+    def get_background_url(self, width=1920):
+        return self.get_url(f'background_{width}.jpg', self.background_version)
+
+    def get_flyer_url(self):
+        return self.get_url(f'flyer.pdf', self.flyer_version)
 
     def get_upcoming_events(self):
         return self.events.\

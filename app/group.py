@@ -1,8 +1,8 @@
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, abort)
+from flask import (Blueprint, abort, current_app, flash, g, redirect,
+                   render_template, request, url_for)
 
 from . import mailing
-from .forms import GroupEditForm, GroupMemberForm
+from .forms import GroupEditForm
 from .models import Group, GroupMember, User, db
 from .security import login_required
 from .views import CreateEditView, DeleteView, ListView
@@ -17,7 +17,6 @@ def groups():
     return render_template('group/groups.html', pagination=pagination)
 
 @bp.route('/view/<int:id>')
-@login_required
 def view(id):
     group = Group.query.get_or_404(id)
     return render_template('group/group.html', group=group)
@@ -106,18 +105,55 @@ class GroupListView(ListView):
     model = Group
     template = 'group/index.html'
 
+@bp.route('/create', methods=['POST'])
+@login_required
+def create():
+        group = Group()
+        form = GroupEditForm(obj=group)
 
-class GroupCreateEditView(CreateEditView):
+        if form.validate_on_submit():
+            form.populate_obj(group)
+            db.session.add(group)
+            db.session.commit()
+            flash('Neue Gruppe {group.name} erstellt.')
+            return redirect(request.referrer or url_for('group.list'))
 
-    form = GroupEditForm
-    model = Group
-    template = 'group/edit.html'
-    redirect = 'group.list'
+        return render_template('group/edit.html', form=form, group=group)
+
+@bp.route('/edit/<int:id>', methods=['GET','POST'])
+@login_required
+def edit(id):
+    group = Group.query.get_or_404(id)
+    form = GroupEditForm(obj=group)
+
+    if form.validate_on_submit():
+        form.populate_obj(group)
+        db.session.commit()
+        flash('Gruppe {group.name} gespeichert.')
+        return redirect(request.referrer or url_for('group.list'))
+
+    return render_template('group/edit.html', form=form, group=group)
+
+@bp.route('/delete/<int:id>')
+@login_required
+def delete(id):
+    group = Group.query.get_or_404(id)
+    db.session.delete(group)
+    db.session.commit()
+    flash('Gruppe {group.name} gelöscht.')
 
 
-class GroupDeleteView(DeleteView):
-    model = Group
-    redirect = 'group.list'
+# class GroupCreateEditView(CreateEditView):
+
+#     form = GroupEditForm
+#     model = Group
+#     template = 'group/edit.html'
+#     redirect = 'group.list'
+
+
+# class GroupDeleteView(DeleteView):
+#     model = Group
+#     redirect = 'group.list'
 
 
 bp.add_url_rule(
@@ -125,19 +161,19 @@ bp.add_url_rule(
     view_func=GroupListView.as_view('list'),
     methods=['GET']
 )
-bp.add_url_rule(
-    '/create',
-    defaults={'id': None},
-    view_func=GroupCreateEditView.as_view('create'),
-    methods=['GET', 'POST']
-)
-bp.add_url_rule(
-    '/edit/<int:id>',
-    view_func=GroupCreateEditView.as_view('edit'),
-    methods=['GET', 'POST']
-)
-bp.add_url_rule(
-    '/delete/<int:id>',
-    view_func=GroupDeleteView.as_view('delete'),
-    methods=['GET']
-)
+# bp.add_url_rule(
+#     '/create',
+#     defaults={'id': None},
+#     view_func=GroupCreateEditView.as_view('create'),
+#     methods=['GET', 'POST']
+# )
+# bp.add_url_rule(
+#     '/edit/<int:id>',
+#     view_func=GroupCreateEditView.as_view('edit'),
+#     methods=['GET', 'POST']
+# )
+# bp.add_url_rule(
+#     '/delete/<int:id>',
+#     view_func=GroupDeleteView.as_view('delete'),
+#     methods=['GET']
+# )

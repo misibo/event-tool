@@ -39,7 +39,7 @@
                         {{ render_menu_item('Registrieren', 'security.register') }}
                     {% endblock %}
                 {% endif %}
-                {% if g.user.can_manage() %}
+                {% if g.user and g.user.can_manage() %}
                 <li class="uk-nav-header">Verwalten</li>
                 {% block menu_manage %}
                     {{ render_menu_item('Gruppen', 'group.list') }}
@@ -92,20 +92,20 @@
                                     </ul>
                                 </div>
                             </li>
+                                {% if g.user.can_manage() %}
+                                <li>
+                                    <a href="#">
+                                        Verwalten
+                                    </a>
+                                    <div class="uk-navbar-dropdown">
+                                        <ul class="uk-nav uk-navbar-dropdown-nav">
+                                            {{ self.menu_manage() }}
+                                        </ul>
+                                    </div>
+                                </li>
+                                {% endif %}
                             {% else %}
                                 {{ self.menu_user() }}
-                            {% endif %}
-                            {% if g.user.can_manage() %}
-                            <li>
-                                <a href="#">
-                                    Verwalten
-                                </a>
-                                <div class="uk-navbar-dropdown">
-                                    <ul class="uk-nav uk-navbar-dropdown-nav">
-                                        {{ self.menu_manage() }}
-                                    </ul>
-                                </div>
-                            </li>
                             {% endif %}
                         </ul>
                     </div>
