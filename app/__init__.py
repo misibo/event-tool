@@ -46,6 +46,12 @@ def parse_freeform(text):
     from .parser import parse_text
     return parse_text(text)
 
+@app.template_filter()
+def if_not(value, string):
+    if value:
+        return value
+    else:
+        return string
 
 @app.context_processor
 def utility_processor():

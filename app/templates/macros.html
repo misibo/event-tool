@@ -34,7 +34,7 @@
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
         {% if url %}
-        <a href="{{ url }}" uk-icon="icon: file-pdf" target="_blank">PDF öffnen</a>
+        <span uk-icon="icon: file-pdf"></span><a class="uk-button uk-button-text uk-margin-small-left" href="{{ url }}" target="_blank">Öffnen</a>
         {% endif %}
         {{ render_file_field(field, accept="application/pdf", **kwargs) }}
         {{ render_field_errors(field) }}
@@ -82,10 +82,10 @@
 {% endif %}
 {% endmacro %}
 
-{% macro render_sort(label, name, args, form='') %}
+{% macro render_order(label, name, args, form='') %}
 <div uk-form-custom>
-    {% with selected = args['sort.'+name] %}
-    <select name="sort.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
+    {% with selected = args['order.'+name] %}
+    <select name="order.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
         <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
         <option {% if selected == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
         <option {% if selected == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
@@ -97,7 +97,7 @@
         {% elif selected == 'desc' %}
         <span uk-icon="icon: arrow-down"></span>
         {% else %}
-        <span uk-icon="icon: cog"></span>
+        <span uk-icon="icon: pencil"></span>
         {% endif %}
     </div>
     {% endwith %}
@@ -118,7 +118,7 @@
         {% if selected %}
         :{{choices[selected]}}
         {% else %}
-        <span uk-icon="icon: cog"></span>
+        <span uk-icon="icon: settings"></span>
         {% endif %}
     </div>
     {% endwith %}
@@ -177,10 +177,10 @@
 
 {% macro render_group_logo(group, resolution=32) %}
     {% if group.logo_version %}
-    <img data-src="{{ url_for('static', filename='group/%d/logo_%dx%d.png'% (group.id, resolution, resolution)) }}">
+    <img data-src="{{ group.get_logo_url(resolution=resolution) }}" uk-img>
     {% else %}
-    <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
-        <div class="uk-text-large uk-text-bold uk-text-uppercase">{{ group.name[0:2] }}</div>
+    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle" style="height:{{ resolution }}px; width:{{ resolution }}px;">
+        <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ group.name[0:2] }}</div>
     </div>
     {% endif %}
 {% endmacro %}
@@ -189,15 +189,15 @@
     {% if user.avatar_version %}
     <img class="{{ class }}" data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
     {% else %}
-    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height: {{ resolution }}px; width: {{ resolution }}px;">
-        <span class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
+    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
+        <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
     </div>
     {% endif %}
 {% endmacro %}
 
-{% macro render_event_date(event, width=32, height=false) %}
+{% macro render_event_date(event, width=64, height=false) %}
 {% if not height %}{% set height = width %}{% endif %}
-<div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{height}}px; width: {{width}}px;">
+<div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{height}}px; width: {{width}}px;">
     <div class="uk-text-large uk-text-bold">{{ event.start.strftime('%d') }}</div>
     <div>{{ event.start.strftime('%b') }}</div>
 </div>

@@ -37,30 +37,22 @@ class UserDeleteView(DeleteView):
 
 bp.add_url_rule(
     '/',
-    view_func=security.login_required(
-        UserTableView.as_view('list'), 
-        privilege=User.Role.ADMIN),
+    view_func=UserTableView.as_view('list'),
     methods=['GET']
 )
 bp.add_url_rule(
     '/create',
     defaults={'id': None},
-    view_func=security.login_required(
-        UserCreateEditView.as_view('create'),
-        privilege=User.Role.ADMIN),
+    view_func=UserCreateEditView.as_view('create'),
     methods=['GET', 'POST']
 )
 bp.add_url_rule(
     '/edit/<int:id>',
-    view_func=security.login_required(
-        UserCreateEditView.as_view('edit'),
-        privilege=User.Role.ADMIN),
+    view_func=UserCreateEditView.as_view('edit'),
     methods=['GET', 'POST']
 )
 bp.add_url_rule(
     '/delete/<int:id>',
-    view_func=security.login_required(
-        UserDeleteView.as_view('delete'),
-        privilege=User.Role.ADMIN),
+    view_func=UserDeleteView.as_view('delete'),
     methods=['GET']
 )

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort, render_search %}
+{% from 'macros.html' import render_pagination, render_order, render_search %}
 
 {% block title %}
     Events
@@ -23,13 +23,13 @@
         <thead>
             <tr>
                 <th></th>
-                <th class="uk-table-shrink uk-text-nowrap">{{ render_sort('Name', 'name', args)}}</th>
+                <th class="uk-table-shrink uk-text-nowrap">{{ render_order('Name', 'name', args)}}</th>
                 <th>Beschreibung</th>
                 <th>Standort</th>
-                <th class="uk-table-shrink uk-text-nowrap">{{ render_sort('Start', 'start', args)}}</th>
+                <th class="uk-table-shrink uk-text-nowrap">{{ render_order('Start', 'start', args)}}</th>
                 <th class="uk-table-shrink">Ende</th>
-                <th class="uk-table-shrink uk-text-nowrap">{{ render_sort('Deadline', 'deadline', args)}}</th>
-                <th class="uk-table-shrink uk-text-nowrap">{{ render_sort('Geändert', 'modified', args)}}</th>
+                <th class="uk-table-shrink uk-text-nowrap">{{ render_order('Deadline', 'deadline', args)}}</th>
+                <th class="uk-table-shrink uk-text-nowrap">{{ render_order('Geändert', 'modified', args)}}</th>
                 <th class="uk-table-shrink">Aktion</th>
             </tr>
         </thead>

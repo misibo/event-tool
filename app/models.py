@@ -16,7 +16,7 @@ class ExtendedQuery(BaseQuery):
     def order_by_request(self, attr, arg, default=''):
         value = request.args.get(arg, default)
         if value == 'asc':
-            return self.order_by(AttributeError.asc())
+            return self.order_by(attr.asc())
         elif value == 'asc':
             return self.order_by(attr.desc())
         else:
@@ -211,7 +211,7 @@ class User(db.Model):
             order_by(GroupMember.role.desc()).\
             first()
 
-    def query_membership_in_group(self, group):
+    def query_membership(self, group):
         return GroupMember.query.\
             join(GroupMember.user).\
             join(GroupMember.group).\
@@ -244,6 +244,9 @@ class User(db.Model):
 
     def can_manage(self):
         return self.role >= self.Role.MANAGER
+
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
 
     def set_password(self, password):
         self.password_hash = self.hash_password(password)

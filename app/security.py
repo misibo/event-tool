@@ -1,11 +1,11 @@
-import functools
 import os
 from datetime import datetime, timedelta
+from functools import wraps
 
-import pytz
 import flask
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, session, url_for)
+import pytz
+from flask import (Blueprint, abort, current_app, flash, g, redirect,
+                   render_template, request, session, url_for)
 from itsdangerous import BadSignature
 
 from . import mailing
@@ -33,31 +33,58 @@ def create_session(user_id):
 def is_session_active():
     return all(key in session for key in {'user_id', 'timestamp'})
 
-
-def login_required(view, privilege=User.Role.USER):
-
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
-
-        if os.environ['FLASK_ENV'] != 'development':
-            # prevent disabling authentication by accident
-            disable_auth = False
-
-        if disable_auth:
-            return view(**kwargs)
-
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
         if g.user is None:
-            # not logged in
             return redirect(url_for('security.login', redirect_url=request.url))
+        elif not g.user.is_admin():
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
-        assert privilege in {User.Role.USER, User.Role.MANAGER, User.Role.ADMIN}
-        if g.user.role < privilege:
-            return flask.abort(403)  # forbidden
+def manager_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('security.login', redirect_url=request.url))
+        elif not g.user.can_manage():
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
-        return view(**kwargs)
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('security.login', redirect_url=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
-    return wrapped_view
+# def login_required(view):
+
+#     @functools.wraps(view)
+#     def wrapped_view(**kwargs):
+#         disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
+
+#         if os.environ['FLASK_ENV'] != 'development':
+#             # prevent disabling authentication by accident
+#             disable_auth = False
+
+#         if disable_auth:
+#             return view(**kwargs)
+
+#         if g.user is None:
+#             # not logged in
+#             return redirect(url_for('security.login', redirect_url=request.url))
+
+#         assert privilege in {User.Role.USER, User.Role.MANAGER, User.Role.ADMIN}
+#         if g.user.role < privilege:
+#             return flask.abort(403)  # forbidden
+
+#         return view(**kwargs)
+
+#     return wrapped_view
 
 
 @bp.before_app_request

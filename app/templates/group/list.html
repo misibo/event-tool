@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort, render_search %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_group_logo %}
 
 {% block title %}
     Gruppen
@@ -8,15 +8,14 @@
 {% block content %}
 <form id="form" method="GET">
         <div class="uk-margin" uk-grid>
-            <div>
-                <h2>Gruppen</h2>
-            </div>
             <div class="uk-width-expand">
                 {{ render_search(args) }}
             </div>
+            {% if g.user.is_admin() %}
             <div>
                 <a href="{{ url_for('group.create') }}" class="uk-button uk-button-default">Hinzufügen</a>
             </div>
+            {% endif %}
         </div>
     {% if pagination.items %}
         <input name="page" value="{{ pagination.page }}" hidden>
@@ -24,29 +23,28 @@
         <thead>
             <tr>
                 <th></th>
-                <th>{{ render_sort('Name', 'name', args) }}</th>
-                <th>Beschreibung</th>
-                <th>{{ render_sort('Geändert', 'modified', args) }}</th>
+                <th>{{ render_order('Name', 'name', args) }}</th>
+                <th>Kurzinfo</th>
+                <th>{{ render_order('Geändert', 'modified', args) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
         <tbody>
             {% for group in pagination.items %}
             <tr>
-                <td style="min-width:32px">
-                    {% if group.logo_version == 0 %}
-                        <img src="/static/upload_fallback/group/logo_32x32.png">
-                    {% else %}
-                        <img src="/static/upload/group/{{group.id}}/logo_32x32_v{{group.logo_version}}.png">
-                    {% endif %}
-                </td>
+                <td> {{ render_group_logo(group) }}</td>
                 <td>{{ group.name }}</td>
-                <td>{{ group.description }}</td>
+                <td class="uk-table-expand">{{ group.abstract }}</td>
                 <td>{{ '' if group.modified is none else group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
-                    <a href="{{ url_for('group.members', id=group.id) }}" uk-icon="users"></a>
-                    <a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a>
-                    <a class="uk-margin-small-left" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a>
+                    <ul class="uk-iconnav">
+                        <li><a href="{{ url_for('group.members', id=group.id) }}" uk-icon="users"></a></li>
+                        <li><a href="{{ url_for('group.view', slug=group.slug) }}" target="_blank" uk-icon="link"></a></li>
+                        <li><a href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a></li>
+                        {% if g.user.is_admin() %}
+                            <li><a href="{{ url_for('group.delete', id=group.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
+                        {% endif %}
+                    </ul>
                 </td>
             </tr>
             {% endfor %}

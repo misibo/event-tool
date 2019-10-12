@@ -23,7 +23,7 @@
                                 <div class="uk-inline">
                                     <ul class="uk-subnav uk-margin-remove">
                                         {% for group in event.groups %}
-                                            <li><a href="{{ url_for('group.view', id=group.id) }}">{{ group.name }}</a></li>
+                                            <li><a href="{{ url_for('group.view', slug=group.slug) }}">{{ group.name }}</a></li>
                                         {% endfor %}
                                     </ul>
                                 </div>

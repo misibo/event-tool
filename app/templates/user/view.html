@@ -32,11 +32,11 @@
                         {% if user.memberships %}
                         {% for membership in user.memberships %}
                         <li>
-                            <a class="uk-link-reset" href="{{ url_for('group.view', id=member.group.id) }}">{{ membership.group.name }}</a>
+                            <a class="uk-link-reset" href="{{ url_for('group.view', slug=member.group.slug) }}">{{ membership.group.name }}</a>
                         </li>
                         {% endfor %}
                         {% else %}
-                        In keiner Gruppe Mitglied
+                            In keiner Gruppe Mitglied
                         {% endif %}
                     </ul>
                 </dd>

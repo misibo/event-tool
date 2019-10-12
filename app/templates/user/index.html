@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort, render_filter, render_search %}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search %}
 
 {% block title %}
 Benutzer
@@ -24,10 +24,10 @@ Benutzer
         <thead>
             <tr>
                 <th></th>
-                <th>{{ render_sort('Benutzername', 'username', args) }}</th>
-                <th>{{ render_sort('Vorname', 'first_name', args) }}</th>
-                <th>{{ render_sort('Nachname', 'family_name', args) }}</th>
-                <th>{{ render_sort('Mail', 'email', args) }}</th>
+                <th>{{ render_order('Benutzername', 'username', args) }}</th>
+                <th>{{ render_order('Vorname', 'first_name', args) }}</th>
+                <th>{{ render_order('Nachname', 'family_name', args) }}</th>
+                <th>{{ render_order('Mail', 'email', args) }}</th>
                 <th>{{ render_filter('Berechtigung', 'role', Model.Role.get_choices(), args) }}</th>
                 <th>Aktion</th>
             </tr>

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_sort, render_search, render_user_avatar with context %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_user_avatar with context %}
 
 {% block title %}
     Mitglieder
@@ -25,8 +25,8 @@
     <thead>
         <tr>
             <th></th>
-            <th>{{ render_sort('Vorname', 'first_name', args, 'filter_sort') }}</th>
-            <th>{{ render_sort('Nachname', 'family_name', args, 'filter_sort') }}</th>
+            <th>{{ render_order('Vorname', 'first_name', args, 'filter_sort') }}</th>
+            <th>{{ render_order('Nachname', 'family_name', args, 'filter_sort') }}</th>
             <th>Rolle</th>
             <th></th>
         </tr>
