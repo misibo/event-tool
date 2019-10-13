@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_filter, render_search %}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_user_avatar with context %}
 
 {% block title %}
 Benutzer
@@ -8,9 +8,6 @@ Benutzer
 {% block content %}
 <form id="form" method="GET">
     <div class="uk-margin" uk-grid>
-        <div>
-            <h2>Benutzer</h2>
-        </div>
         <div class="uk-width-expand">
             {{ render_search(args) }}
         </div>
@@ -28,30 +25,31 @@ Benutzer
                 <th>{{ render_order('Vorname', 'first_name', args) }}</th>
                 <th>{{ render_order('Nachname', 'family_name', args) }}</th>
                 <th>{{ render_order('Mail', 'email', args) }}</th>
-                <th>{{ render_filter('Berechtigung', 'role', Model.Role.get_choices(), args) }}</th>
+                <th>Geändert</th>
+                <th>Letzte Anmeldung</th>
+                <th>{{ render_filter('Rolle', 'role', UserRoles, args) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
         <tbody>
             {% for user in pagination.items %}
             <tr>
-                <td style="min-width:32px">
-                    {% if user.avatar_version == 0 %}
-                        <img src="/static/upload_fallback/user/avatar_32x32.png">
-                    {% else %}
-                        <img src="/static/upload/user/{{user.id}}/avatar_32x32_v{{user.avatar_version}}.png">
-                    {% endif %}
+                <td>
+                    {{ render_user_avatar(user) }}
                 </td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.family_name }}</td>
                 <td>{{ user.email }}</td>
+                <td>{{ user.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>{{ user.get_role_label() }}</td>
                 <td>
-                    {% if myself.role >= UserRole.ADMIN %}
-                        <a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a>
-                        <a class="uk-margin-small-left" href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a>
-                    {% endif %}
+                    <ul class="uk-iconnav">
+                        <li><a href="{{ url_for('user.view', username=user.username) }}" target="_blank" uk-icon="link"></a></li>
+                        <li><a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a></li>
+                        <li><a  href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a></li>
+                    </ul>
                 </td>
             </tr>
             {% endfor %}

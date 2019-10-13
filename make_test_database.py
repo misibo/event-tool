@@ -24,6 +24,9 @@ def create_user(first_name, family_name, role=User.Role.USER):
         username=username,
         first_name=first_name,
         family_name=family_name,
+        registered=tz.localize(datetime.now()),
+        modified=tz.localize(datetime.now()),
+        last_login=tz.localize(datetime.now()),
         email=email,
         role=role,
     )

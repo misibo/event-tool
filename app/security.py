@@ -16,6 +16,7 @@ from .models import User, db
 
 bp = Blueprint("security", __name__)
 
+tz = pytz.timezone('Europe/Zurich')
 
 def close_session():
     for key in {'user_id', 'timestamp'}:
@@ -96,9 +97,6 @@ def load_logged_in_user():
         g.user = User.query.\
             filter(User.id == session['user_id']).\
             first()
-        # if user is None:
-        #     # user has been deleted
-        #     return flask.redirect(flask.url_for('login', redirect=flask.request.url))
     else:
         g.user = None
 
@@ -192,6 +190,8 @@ def confirm():
                     family_name=payload['family_name']
                 )
                 user.set_password(form.password.data)
+                user.registered = tz.localize(datetime.now())
+                user.modified = tz.localize(datetime.now())
                 db.session.add(user)
                 db.session.commit()
 
@@ -205,9 +205,12 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(
-            username=form.username.data).first()
+        user = User.query.\
+            filter(User.username == form.username.data).\
+            first()
         create_session(user.id)
+        user.last_login = tz.localize(datetime.now())
+        db.session.commit()
         flash('Du hast dich erfolgreich angemeldet.')
 
         redirect_url = request.args.get('redirect_url')

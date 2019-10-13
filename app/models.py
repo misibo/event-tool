@@ -22,9 +22,9 @@ class ExtendedQuery(BaseQuery):
         else:
             return self
 
-    def filter_by_request(self, attr, arg, values):
-        value = request.args.get(arg)
-        if value and value in values:
+    def filter_by_request(self, attr, arg, choices, type=int):
+        value = request.args.get(arg, type=type)
+        if value and value in choices:
             return self.filter(attr == value)
         else:
             return self
@@ -72,12 +72,35 @@ def auto_repr(obj, attrs):
 class Choices:
 
     @classmethod
+    def cast_value(self, value):
+        return int(value) if value else None
+
+    @classmethod
+    def get_items(self):
+        return self.get_choices().items()
+
+    @classmethod
+    def get_labels(self):
+        return self.get_choices().values()
+
+    @classmethod
+    def has_value(self, value):
+        return self.value_type(value) in self.get_values()
+
+    @classmethod
+    def get_values(self):
+        return self.get_choices().keys()
+
+    @classmethod
+    def get_choice_label(self, value):
+        return self.get_choices().get(self.cast_value(value))
+
     def get_choices(self):
         return {}
 
     @classmethod
     def get_select_choices(self):
-        return [(value, label) for value, label in self.get_choices().items()]
+        return [(value, label) for value, label in self.get_items()]
 
 
 class GroupMember(db.Model):
@@ -110,7 +133,7 @@ class GroupMember(db.Model):
     group = db.relationship('Group', back_populates='members')
 
     def get_role_label(self):
-        return self.Role.get_choices()[self.role]
+        return self.Role.get_choice_label(self.role)
 
 class GroupEventRelations(db.Model):
     __tablename__ = 'GroupEventRelations'
@@ -167,6 +190,10 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
+
+    registered = db.Column(UtcDateTime)
+    last_login = db.Column(UtcDateTime)
+    modified = db.Column(UtcDateTime)
 
     # personal info
     first_name = db.Column(db.String, nullable=False)
@@ -229,7 +256,7 @@ class User(db.Model):
             first()
 
     def get_role_label(self):
-        return self.Role.get_choices()[self.role]
+        return self.Role.get_choice_label(self.role)
 
     def hash_password(self, password):
         if not self.password_salt:
@@ -248,11 +275,32 @@ class User(db.Model):
     def is_admin(self):
         return self.role == self.Role.ADMIN
 
+    def get_fullname(self):
+        return f'{self.first_name} {self.family_name}'
+
     def set_password(self, password):
         self.password_hash = self.hash_password(password)
 
     def validate_password(self, password):
         return self.hash_password(password) == self.password_hash
+
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'user', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('user', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_avatar(self, file):
+        store_favicon(file, self.get_folder(), 'avatar')
+        self.avatar_version += 1
+
+    def get_avatar_url(self, resolution=256):
+        return self.get_url(f'avatar_{resolution}.png', self.avatar_version)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'username', 'email', 'first_name', 'family_name'])

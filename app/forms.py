@@ -24,6 +24,7 @@ from slugify import slugify
 
 
 class LocalDateTimeField(DateTimeField):
+
     tz = pytz.timezone('Europe/Zurich')
 
     def process_data(self, value):
@@ -157,10 +158,15 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
+    def populate_obj(self, user: User):
+        user.username = self.username.data
+        user.email = self.email.data
+        user.first_name = self.first_name.data
+        user.family_name = self.family_name.data
 
 class AccountForm(RegisterForm):
 
-    image = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
+    avatar = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
     birthday = DateField('Geburtstag', [Optional()], format='%d.%m.%y')
     mobile_phone = TelField('Handynummer', [Optional()])
     street = StringField('Strasse', [Optional()])
@@ -175,18 +181,17 @@ class AccountForm(RegisterForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
-    def populate_obj(self, user):
-        user.username = self.username.data
-        user.first_name = self.first_name.data
-        user.family_name = self.family_name.data
+    def populate_obj(self, user: User):
+        super().populate_obj(user)
+        user.modified = timezone.localize(datetime.now())
         user.birthday = self.birthday.data
         user.mobile_phone = self.mobile_phone.data
         user.street = self.street.data
         user.postal_code = self.postal_code.data
         user.city = self.city.data
 
-        if self.image.data is not None:
-            upload.store_user_avatar(self.image.data, user)
+        if self.avatar.data is not None:
+            user.save_avatar(self.avatar.data)
 
 
 class UserEditForm(AccountForm):
@@ -223,9 +228,6 @@ class UserEditForm(AccountForm):
 
         if self.new_password.data:
             user.set_password(self.new_password.data)
-
-        if self.image.data is not None:
-            upload.store_user_favicon(self.image.data, user)
 
 
 class ConfirmRegistrationForm(FlaskForm):

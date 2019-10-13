@@ -18,7 +18,7 @@
             <ul class="uk-subnav" uk-margin>
                 {% for user in event.get_leaders() %}
                 <li>
-                    <a class="uk-link-reset" href="{{ url_for('user.view', id=user.id) }}">{{ user.username }}</a>
+                    <a class="uk-link-reset" href="{{ url_for('user.view', username=user.username) }}">{{ user.username }}</a>
                 </li>
                 {% endfor %}
                 </ul>
@@ -57,7 +57,7 @@
                                 <div class="uk-width-expand">
                                     <h4 class="uk-margin-remove">{{ user.first_name }} {{ user.family_name }}</h4>
                                     <div class="uk-text-uppercase uk-text-small">
-                                        über <a class="uk-link-reset" href="{{ url_for('user.view', id=invitation.group.id) }}">{{ invitation.group.name }}</a>
+                                        über <a class="uk-link-reset" href="{{ url_for('user.view', username=invitation.user.username) }}">{{ invitation.group.name }}</a>
                                         {% if invitation.accepted %}<span uk-icon="check"></span>{% endif %}
                                     </div>
                                 </div>

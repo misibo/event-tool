@@ -64,6 +64,7 @@ def utility_processor():
 @app.context_processor
 def inject_stage_and_region():
     return dict(
+        tz=pytz.timezone('Europe/Zurich'),
         UserRole=User.Role,
         SPECTATOR=GroupMember.Role.SPECTATOR,
         MEMBER=GroupMember.Role.MEMBER,

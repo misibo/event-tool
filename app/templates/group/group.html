@@ -28,7 +28,7 @@
                                         {% endfor %}
                                     </select>
                                     <div>
-                                        <span uk-icon="icon: pencil"></span>
+                                        <span uk-icon="user"></span>
                                         <span></span>
                                     </div>
                                 </div>
@@ -53,7 +53,7 @@
                                         {% endfor %}
                                     </select>
                                     <span class="uk-link">
-                                        <span uk-icon="icon: pencil"></span>
+                                        <span uk-icon="user"></span>
                                         <span></span>
                                     </span>
                                 </div>
@@ -144,7 +144,7 @@
                                             <span class="uk-icon-button" uk-icon="icon: bolt"></span>
                                         {% endif %}
                                     </div>
-                                    <a class="uk-link-reset uk-position-cover" href="{{ url_for('user.view', id=member.user_id) }}"></a>
+                                    <a class="uk-link-reset uk-position-cover" href="{{ url_for('user.view', username=member.user.username) }}"></a>
                                 </div>
                             </div>
                         {% endfor %}

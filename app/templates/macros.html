@@ -84,14 +84,15 @@
 
 {% macro render_order(label, name, args, form='') %}
 <div uk-form-custom>
-    {% with selected = args['order.'+name] %}
+    {% with selected = args.get('order.'+name, None) %}
     <select name="order.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
         <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
         <option {% if selected == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
         <option {% if selected == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
     </select>
     <div>
-        {{ label }}
+        <span>{{ label }}</span>
+        <span>|</span>
         {% if selected == 'asc' %}
         <span uk-icon="icon: arrow-up"></span>
         {% elif selected == 'desc' %}
@@ -104,21 +105,22 @@
 </div>
 {% endmacro %}
 
-{% macro render_filter(label, name, choices, args, form='') %}
+{% macro render_filter(label, name, Choices, args, form='') %}
 <div uk-form-custom>
-    {% with selected = args['filter.'+name] %}
+    {% with selected = args.get('filter.'+name, None) %}
     <select name="filter.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
         <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
-        {% for val, label in choices.items() %}
-        <option value="{{ val }}" {% if val == selected %}selected=""{% endif %}>{{ label }}</option>
+        {% for val, label in Choices.get_items() %}
+        <option value="{{ val }}" {% if val == Choices.cast_value(selected) %}selected=""{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
     <div>
-        {{ label }}
+        <span>{{ label }}</span>
+        <span>|</span>
         {% if selected %}
-        :{{choices[selected]}}
+        <span>{{ Choices.get_choice_label(selected) }}</span>
         {% else %}
-        <span uk-icon="icon: settings"></span>
+        <span uk-icon="pencil"></span>
         {% endif %}
     </div>
     {% endwith %}
@@ -185,9 +187,9 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render_user_avatar(user, resolution=64, class='') %}
+{% macro render_user_avatar(user, resolution=32, class='') %}
     {% if user.avatar_version %}
-    <img class="{{ class }}" data-src="{{ url_for('static', filename='user/%d/avatar_%dx%d.png'% (user.id, resolution, resolution)) }}">
+    <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}">
     {% else %}
     <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
         <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
