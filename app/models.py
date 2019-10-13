@@ -268,7 +268,7 @@ class User(db.Model):
             self.password_salt.encode('UTF-8'),
             1000
         )
-        return hash
+        return hash.hex()
 
     def can_manage(self):
         return self.role >= self.Role.MANAGER

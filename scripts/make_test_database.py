@@ -273,6 +273,6 @@ with app.app_context():
     db.session.commit()
 
     # Pre-populate invitations
-    for invitation in list_missing_invitations():
-        db.session.add(invitation)
+#    for invitation in list_missing_invitations():
+#        db.session.add(invitation)
     db.session.commit()

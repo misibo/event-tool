@@ -1,6 +1,6 @@
 Hallo {{invitation.user.first_name}},
 
-{{invitation.event.admin.first_name}} hat dich zum Anlass "{{invitation.event.name}}" eingeladen:
+Du bist zu folgendem Anlass "{{invitation.event.name}}" eingeladen:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {{invitation.event.abstract}}
 {{invitation.event.description}}

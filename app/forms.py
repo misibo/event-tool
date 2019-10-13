@@ -152,9 +152,7 @@ class RegisterForm(FlaskForm):
     family_name = StringField('Nachname', [DataRequired(), Length(max=100)])
 
     def validate_username(self, field):
-        user = User.query.\
-            filter_by(User.username == field.data).\
-            first()
+        user = User.query.filter_by(username=field.data).first()
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 

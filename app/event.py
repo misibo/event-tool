@@ -55,7 +55,7 @@ def list_participants(id):
         users = set()
 
         for group in event.groups:
-            for role in group.roles:
+            for role in group.members:
                 users.add(role.user)
 
         users = sorted(users, key=lambda x: (x.family_name, x.first_name))

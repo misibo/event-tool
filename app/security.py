@@ -62,32 +62,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# def login_required(view):
-
-#     @functools.wraps(view)
-#     def wrapped_view(**kwargs):
-#         disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
-
-#         if os.environ['FLASK_ENV'] != 'development':
-#             # prevent disabling authentication by accident
-#             disable_auth = False
-
-#         if disable_auth:
-#             return view(**kwargs)
-
-#         if g.user is None:
-#             # not logged in
-#             return redirect(url_for('security.login', redirect_url=request.url))
-
-#         assert privilege in {User.Role.USER, User.Role.MANAGER, User.Role.ADMIN}
-#         if g.user.role < privilege:
-#             return flask.abort(403)  # forbidden
-
-#         return view(**kwargs)
-
-#     return wrapped_view
-
-
 @bp.before_app_request
 def load_logged_in_user():
     if is_session_active():
@@ -119,7 +93,7 @@ def register():
         confirm_url = request.url_root + url_for('security.confirm', token=token)[1:]
         current_app.logger.info(f'{form.email.data,} can confirmed by {confirm_url}')
 
-        success = mailing.send_single_mail(
+        mailing.send_single_mail(
             recipient=form.email.data,
             subject="Registrierung",
             text=render_template(
@@ -130,17 +104,10 @@ def register():
                 user=form.first_name.data, confirm_url=confirm_url),
         )
 
-        if not success:
-            current_app.logger.exception('Could not delivery e-mail.')
-            flash((
-                'Beim Versenden der E-Mail ist ein Fehler aufgetreten. '
-                'Bitte überprüfe die E-Mail-Adresse auf Tippfehler.'),
-                'error')
-        else:
-            flash((
-                'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
-                'um die Registrierung abzuschliessen.'),
-                'info')
+        flash((
+            'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
+            'um die Registrierung abzuschliessen.'),
+            'info')
 
         # TODO: Implement page to explain what the user has to do now
 
@@ -261,7 +228,7 @@ def reset_password():
         current_app.logger.info(
             f'The password of {username} is reset by {confirm_url}')
 
-        success = mailing.send_single_mail(
+        mailing.send_single_mail(
             recipient=email,
             subject='Passwort zurücksetzen',
             text=render_template('mail/reset_password.text',
@@ -270,16 +237,10 @@ def reset_password():
                                  user=user, confirm_url=confirm_url),
         )
 
-        if not success:
-            flash((
-                'Beim Versenden der E-Mail ist ein Fehler aufgetreten. '
-                'Möglicherweise ist die E-Mail-Adresse ungültig.'),
-                'error')
-        else:
-            flash((
-                'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
-                'um das Passwort zurückzusetzen.'),
-                'info')
+        flash((
+            'Du wirst in Kürze eine E-Mail mit einem Link erhalten, '
+            'um das Passwort zurückzusetzen.'),
+            'info')
 
     return render_template('security/reset_password.html', form=form)
 
@@ -348,7 +309,7 @@ def change_email():
         # current_app.logger.info(
         #     f'New email address is activated by {confirm_url}')
 
-        success = mailing.send_single_mail(
+        mailing.send_single_mail(
             recipient=user.email_change_request,
             subject='E-Mail-Adresse ändern',
             text=render_template('mail/change_email.text',
@@ -357,17 +318,10 @@ def change_email():
                                     user=user, confirm_url=confirm_url),
         )
 
-        if not success:
-            flash((
-                'Beim Versenden des Bestätigungs-Link '
-                'an die neue E-Mail-Adresse ist ein Fehler aufgetreten. '
-                'Möglicherweise enthält die Adresse ein Tippfehler.'),
-                'error')
-        else:
-            flash((
-                'Es wurde eine Mail mit einem Bestätigungs-Link '
-                'an die neue E-Mail-Addresse verschickt.'),
-                'info')
+        flash((
+            'Es wurde eine Mail mit einem Bestätigungs-Link '
+            'an die neue E-Mail-Addresse verschickt.'),
+            'info')
         db.session.commit()
 
     return render_template('user/email.html', form=form)

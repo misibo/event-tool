@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pytz
 from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app
-
+from sqlalchemy.orm import aliased
 from .forms import EditInvitationForm
-from .models import Event, Invitation, User, db
+from .models import Event, Invitation, User, db, GroupMember, Group
 
 bp = Blueprint("invitation", __name__, url_prefix="/invitation")
 
@@ -13,32 +13,37 @@ def list_missing_invitations():
     """Create model instances for missing invitations, but does not submit them to database.
     """
     import os
-    result = db.engine.execute("""
-        with MissingInvitations as (
-            with EligibleInvitations as (
-                select distinct
-                    GroupEventRelations.event_id as event_id,
-                    GroupMember.user_id
-                from GroupEventRelations
-                inner join GroupMember on GroupMember.group_id = GroupEventRelations.group_id
-            )
-            select event_id, user_id from EligibleInvitations
-            except
-            select event_id, user_id from Invitation
-        )
-        select User.id as user_id, Event.id as event_id from MissingInvitations
-        inner join User on User.id = MissingInvitations.user_id
-        inner join Event on Event.id = MissingInvitations.event_id
-        where Event.send_invitations = True
-            and :utcnow <= Event.deadline
-        order by User.id, Event.id
-        """, dict(utcnow=datetime.utcnow()))
+    # result = db.engine.execute("""
+    # select User.id, Event.id
+    # from User, Event, "Group"
+    # inner join GroupMember
+    #     on GroupMember.user_id = User.id and GroupMember.group_id = "Group".id
+    # inner join GroupEventRelations
+    #     on GroupEventRelations.event_id = Event.id and GroupEventRelations.group_id = "Group".id
+    # left join Invitation
+    #     on Invitation.user_id = User.id and Invitation.event_id == Event.id
+    # where Event.send_invitations
+    #     and Invitation.id is null
+    #     and :utcnow <= Event.deadline
+    # group by User.id, Event.id
+    # """, dict(utcnow=datetime.utcnow()))
+
+    Invitation2 = aliased(Invitation)
+    result = db.session.query(User, Event) \
+        .join(GroupMember.user) \
+        .join(GroupMember.group) \
+        .join(Group.events) \
+        .join(Invitation, Invitation.user_id == User.id, isouter=True) \
+        .join(Invitation2, Invitation2.event_id == Event.id, isouter=True) \
+        .filter(Event.send_invitations) \
+        .filter(Invitation.id == None) \
+        .filter(pytz.utc.localize(datetime.utcnow()) <= Event.deadline) \
+        .group_by(User.id, Event.id) \
+        .all()
 
     invitations = []
-    for user_id, event_id in result:
+    for user, event in result:
         token = os.urandom(16).hex()
-        user = User.query.filter_by(id=user_id).first()
-        event = Event.query.filter_by(id=event_id).first()
         invitations.append(Invitation(user=user, event=event, token=token))
     return invitations
 
