@@ -11,7 +11,7 @@
     <div>
         Es wurden noch keine Einladungen versendet.
     </div>
-    <form class="uk-form-stacked" action="{{ url_for('event.send_invitations', event_id=event.id) }}" method="POST">
+    <form class="uk-form-stacked" action="{{ url_for('event.send_invitations', id=event.id) }}" method="POST">
         <button class="uk-button uk-button-default uk-margin-top">Einladungen versenden</button>
     </form>
     <table class="uk-table uk-table-striped">

@@ -3,11 +3,45 @@ import os
 from datetime import datetime
 
 import pytz
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
+from flask import g, request, url_for
+from flask_sqlalchemy import BaseQuery, SQLAlchemy
+from sqlalchemy import event, or_
 from sqlalchemy.types import TypeDecorator
 
-db = SQLAlchemy()
+from .image import store_background, store_favicon
+
+tz = pytz.timezone('Europe/Zurich')
+
+class ExtendedQuery(BaseQuery):
+
+    def order_by_request(self, attr, arg, default=''):
+        value = request.args.get(arg, default)
+        if value == 'asc':
+            return self.order_by(attr.asc())
+        elif value == 'asc':
+            return self.order_by(attr.desc())
+        else:
+            return self
+
+    def filter_by_request(self, attr, arg, choices, type=int):
+        value = request.args.get(arg, type=type)
+        if value and value in choices:
+            return self.filter(attr == value)
+        else:
+            return self
+
+    def search_by_request(self, attrs, arg):
+        value = request.args.get(arg)
+        if value:
+            searches = []
+            for attr in attrs:
+                searches.append(attr.contains(value))
+            return self.filter(or_(*searches))
+        else:
+            return self
+
+
+db = SQLAlchemy(query_class=ExtendedQuery)
 
 
 class UtcDateTime(TypeDecorator):
@@ -39,12 +73,35 @@ def auto_repr(obj, attrs):
 class Choices:
 
     @classmethod
+    def cast_value(self, value):
+        return int(value) if value else None
+
+    @classmethod
+    def get_items(self):
+        return self.get_choices().items()
+
+    @classmethod
+    def get_labels(self):
+        return self.get_choices().values()
+
+    @classmethod
+    def has_value(self, value):
+        return self.cast_value(value) in self.get_values()
+
+    @classmethod
+    def get_values(self):
+        return self.get_choices().keys()
+
+    @classmethod
+    def get_choice_label(self, value):
+        return self.get_choices().get(self.cast_value(value))
+
     def get_choices(self):
         return {}
 
     @classmethod
     def get_select_choices(self):
-        return [(value, label) for value, label in self.get_choices().items()]
+        return [(value, label) for value, label in self.get_items()]
 
 
 class GroupMember(db.Model):
@@ -59,21 +116,25 @@ class GroupMember(db.Model):
         def get_choices(self):
             return {
                 self.SPECTATOR: 'Zuschauer',
-                self.MEMBER: 'Mitglied',
+                self.MEMBER: 'Teilnehmer',
                 self.LEADER: 'Leiter',
             }
 
     __tablename__ = 'GroupMember'
-    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'), primary_key=True)
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'group_id'),
+    )
 
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+    group_id = db.Column(db.Integer, db.ForeignKey('Group.id'))
+    joined = db.Column(UtcDateTime)
     role = db.Column(db.SmallInteger, default=Role.SPECTATOR, nullable=False)
     user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
     def get_role_label(self):
-        return self.Role.get_choices()[self.role]
-
+        return self.Role.get_choice_label(self.role)
 
 class GroupEventRelations(db.Model):
     __tablename__ = 'GroupEventRelations'
@@ -131,6 +192,10 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, nullable=False, unique=True)
 
+    registered = db.Column(UtcDateTime)
+    last_login = db.Column(UtcDateTime)
+    modified = db.Column(UtcDateTime)
+
     # personal info
     first_name = db.Column(db.String, nullable=False)
     family_name = db.Column(db.String, nullable=False)
@@ -164,8 +229,35 @@ class User(db.Model):
     memberships = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
     invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
 
+    def query_membership_for_event(self, event):
+        return GroupMember.query.\
+            join(GroupMember.user).\
+            join(GroupMember.group).\
+            join(Group.events).\
+            filter(User.id == self.id).\
+            filter(Event.id == event.id).\
+            order_by(GroupMember.role.desc()).\
+            first()
+
+    def query_membership(self, group):
+        return GroupMember.query.\
+            join(GroupMember.user).\
+            join(GroupMember.group).\
+            filter(User.id == self.id).\
+            filter(Group.id == group.id).\
+            order_by(GroupMember.role.desc()).\
+            first()
+
+    def query_invitation_for_event(self, event):
+        return Invitation.query.\
+            join(Invitation.user).\
+            join(Invitation.event).\
+            filter(Event.id == event.id).\
+            filter(User.id == self.id).\
+            first()
+
     def get_role_label(self):
-        return self.Role.get_choices()[self.role]
+        return self.Role.get_choice_label(self.role)
 
     def hash_password(self, password):
         if not self.password_salt:
@@ -178,11 +270,38 @@ class User(db.Model):
         )
         return hash.hex()
 
+    def can_manage(self):
+        return self.role >= self.Role.MANAGER
+
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
+
+    def get_fullname(self):
+        return f'{self.first_name} {self.family_name}'
+
     def set_password(self, password):
         self.password_hash = self.hash_password(password)
 
     def validate_password(self, password):
         return self.hash_password(password) == self.password_hash
+
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'user', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('user', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_avatar(self, file):
+        store_favicon(file, self.get_folder(), 'avatar')
+        self.avatar_version += 1
+
+    def get_avatar_url(self, resolution=256):
+        return self.get_url(f'avatar_{resolution}.png', self.avatar_version)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'username', 'email', 'first_name', 'family_name'])
@@ -196,16 +315,16 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     abstract = db.Column(db.String)
-    description = db.Column(db.String)
+    details = db.Column(db.String)
     location = db.Column(db.String)
     start = db.Column(UtcDateTime)
     end = db.Column(UtcDateTime)
     equipment = db.Column(db.String)
     cost = db.Column(db.Integer)
+    created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
-    created_at = db.Column(UtcDateTime)
     thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
@@ -222,9 +341,9 @@ class Event(db.Model):
 
     def print_start_end(self):
         if (self.start.day == self.end.day):
-            return '%s, %s bis %s' % (self.start.strftime('%d.%m.%y'), self.start.strftime('%H:%M'), self.end.strftime('%H:%M'))
+            return f'{self.start.astimezone(tz).strftime("%d.%m.%y")}, {self.start.astimezone(tz).strftime("%H:%M")} bis {self.end.strftime("%H:%M")}'
         else:
-            return '%s bis %s' % (self.start.strftime('%d.%m.%y %H:%M'), self.end.strftime('%d.%m.%y %H:%M'))
+            return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
@@ -237,10 +356,13 @@ class Group(db.Model):
     __tablename__ = 'Group'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    description = db.Column(db.String)
-    age = db.Column(db.String)
+    slug = db.Column(db.String)
+    abstract = db.Column(db.String)
+    details = db.Column(db.String)
     logo_version = db.Column(db.Integer, default=0, nullable=False)
-    flyer = db.Column(db.String)
+    background_version = db.Column(db.Integer, default=0, nullable=False)
+    flyer_version = db.Column(db.Integer, default=0, nullable=False)
+    created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
 
     members = db.relationship('GroupMember', back_populates='group')
@@ -249,11 +371,49 @@ class Group(db.Model):
         back_populates='groups',
         lazy='dynamic')
 
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'group', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('group', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_logo(self, file):
+        store_favicon(file, self.get_folder(), 'logo')
+        self.logo_version += 1
+
+    def save_background(self, file):
+        store_background(file, self.get_folder(), 'background')
+        self.background_version += 1
+
+    def save_flyer(self, pdf):
+        pdf.save(os.path.join(self.get_folder(), 'flyer.pdf'))
+        self.flyer_version += 1
+
+    def get_logo_url(self, resolution=256):
+        return self.get_url(f'logo_{resolution}.png', self.logo_version)
+
+    def get_background_url(self, width=1920):
+        return self.get_url(f'background_{width}.jpg', self.background_version)
+
+    def get_flyer_url(self):
+        return self.get_url(f'flyer.pdf', self.flyer_version)
+
     def get_upcoming_events(self):
         return self.events.\
             filter(Event.start >= pytz.utc.localize(datetime.utcnow())).\
             order_by(Event.start.asc()).\
             all()
+
+    def get_membership_of_authenticated_user(self):
+        return GroupMember.query.\
+                filter(GroupMember.user_id == g.user.id).\
+                filter(GroupMember.group_id == self.id).\
+                first()
 
     def get_members_ordered_by_role(self):
         return GroupMember.query.\
@@ -262,10 +422,3 @@ class Group(db.Model):
             filter(Group.id == self.id).\
             order_by(GroupMember.role.desc()).\
             all()
-
-# @event.listens_for(Event, 'before_insert')
-# @event.listens_for(Event, 'before_update')
-# @event.listens_for(Group, 'before_insert')
-# @event.listens_for(Group, 'before_update')
-# def receive_before_modified(mapper, connection, target):
-#     target.modified = pytz.utc.localize(datetime.utcnow())

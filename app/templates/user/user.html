@@ -1,25 +1,18 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field %}
+{% from 'macros.html' import render_user_avatar %}
 
-{% block title %}{{ user.first_name }} {{ user.family_name }}{% endblock %}
+{% block title %}Benutzerprofil{% endblock %}
 
 {% block content %}
-
 <div class="uk-flex uk-flex-center uk-flex-middle">
     <div class="uk-width-1-2@m uk-card uk-card-default">
         <div class="uk-card-header">
             <div class="uk-flex-middle uk-grid-small" uk-grid>
-                <div class="uk-width-auto">
-                    {% if user.image %}
-                        <img class="uk-width-small" data-src="{{ url_for('static', filename=user.image) }}" uk-img height="32" width="32">
-                    {% else %}
-                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
-                            <span class="uk-text-large uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</span>
-                        </div>
-                    {% endif %}
+                <div>
+                    {{ render_user_avatar(user, resolution=128) }}
                 </div>
                 <div class="uk-width-expand">
-                    <h3 class="uk-card-title uk-margin-remove">{{ user.first_name }} {{ user.family_name }}</h3>
+                    <h3 class="uk-card-title uk-margin-remove">{{ user.get_fullname() }}</h3>
                     <span class="uk-text-muted">{{ user.username }}</span>
                 </div>
             </div>
@@ -32,28 +25,29 @@
                         {% if user.memberships %}
                         {% for membership in user.memberships %}
                         <li>
-                            <a class="uk-link-reset" href="{{ url_for('group.view', id=member.group.id) }}">{{ membership.group.name }}</a>
+                            <a href="{{ url_for('group.view', slug=membership.group.slug) }}">{{ membership.group.name }}</a>
                         </li>
                         {% endfor %}
                         {% else %}
-                        In keiner Gruppe Mitglied
+                            In keiner Gruppe Mitglied
                         {% endif %}
                     </ul>
                 </dd>
                 <dt>Kontakt</dt>
                 <dd>
                     <a class="uk-link-reset" href="mailto:{{ user.email }}">{{ user.email }}</a><br>
-                    <a class="uk-link-reset" href="tel:{{ user.mobile_phone }}">{{ user.mobile_phone }}</a>
+                    <a class="uk-link-reset" href="tel:{{ user.mobile_phone }}">{{ user.mobile_phone | if_not('Keine Nummer') }}</a>
                 </dd>
                 <dt>Adresse</dt>
                 <dd>
-                    {{ user.street }} <br>
-                    {{ user.postal_code }} {{ user.city }}
+                    {{ user.street | if_not('Keine Strasse') }} <br>
+                    {{ user.postal_code | if_not('Kein PLZ') }} {{ user.city | if_not('Keine Stadt') }}
                 </dd>
             </dl>
         </div>
         <div class="uk-card-footer">
-            dabei seit [nicht in db vorhanden]
+            dabei seit <span class="uk-text-muted">{{ user.registered.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span><br>
+            zuletzt angemeldet <span class="uk-text-muted">{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span>
         </div>
     </div>
 </div>

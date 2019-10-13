@@ -1,11 +1,11 @@
-import functools
 import os
 from datetime import datetime, timedelta
+from functools import wraps
 
-import pytz
 import flask
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, session, url_for)
+import pytz
+from flask import (Blueprint, abort, current_app, flash, g, redirect,
+                   render_template, request, session, url_for)
 from itsdangerous import BadSignature
 
 from . import mailing
@@ -16,6 +16,7 @@ from .models import User, db
 
 bp = Blueprint("security", __name__)
 
+tz = pytz.timezone('Europe/Zurich')
 
 def close_session():
     for key in {'user_id', 'timestamp'}:
@@ -33,32 +34,33 @@ def create_session(user_id):
 def is_session_active():
     return all(key in session for key in {'user_id', 'timestamp'})
 
-
-def login_required(view, privilege=User.Role.USER):
-
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
-
-        if current_app.env != 'development':
-            # prevent disabling authentication by accident
-            disable_auth = False
-
-        if disable_auth:
-            return view(**kwargs)
-        
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
         if g.user is None:
-            # not logged in
             return redirect(url_for('security.login', redirect_url=request.url))
+        elif not g.user.is_admin():
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
-        assert privilege in {User.Role.USER, User.Role.MANAGER, User.Role.ADMIN}
-        if g.user.role < privilege:
-            return flask.abort(403)  # forbidden
+def manager_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('security.login', redirect_url=request.url))
+        elif not g.user.can_manage():
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
-        return view(**kwargs)
-
-    return wrapped_view
-
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('security.login', redirect_url=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -66,11 +68,9 @@ def load_logged_in_user():
         timestamp = pytz.utc.localize(datetime.strptime(session['timestamp'], '%Y-%m-%d %H:%M:%S'))
         if not (timestamp <= pytz.utc.localize(datetime.utcnow()) < timestamp + timedelta(hours=2)):
             g.user = None
-        g.user = User.query.filter_by(
-            id=session['user_id']).first()
-        # if user is None:
-        #     # user has been deleted
-        #     return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+        g.user = User.query.\
+            filter(User.id == session['user_id']).\
+            first()
     else:
         g.user = None
 
@@ -157,6 +157,8 @@ def confirm():
                     family_name=payload['family_name']
                 )
                 user.set_password(form.password.data)
+                user.registered = tz.localize(datetime.now())
+                user.modified = tz.localize(datetime.now())
                 db.session.add(user)
                 db.session.commit()
 
@@ -170,14 +172,17 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(
-            username=form.username.data).first()
+        user = User.query.\
+            filter(User.username == form.username.data).\
+            first()
         create_session(user.id)
+        user.last_login = tz.localize(datetime.now())
+        db.session.commit()
         flash('Du hast dich erfolgreich angemeldet.')
 
         redirect_url = request.args.get('redirect_url')
         if redirect_url is None:
-            return redirect(url_for('dashboard.index'))
+            return redirect(url_for('dashboard.upcoming'))
         else:
             return redirect(redirect_url)
 
@@ -194,7 +199,7 @@ def change_password():
         db.session.commit()
 
         flash('Passwort wurde erfolgreich geändert.')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.upcoming'))
 
     return render_template('user/password.html', form=form)
 
@@ -333,7 +338,7 @@ def confirm_email():
         flash((
             'Das E-Mail-Adresse konnte nicht geändert werden, '
             'weil der Link ungültig ist, oder bereits verwendet wurde.'), 'error')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.upcoming'))
     else:
         insertion_time = user.email_change_insertion_time_utc
         expiry_date = user.email_change_insertion_time_utc + timedelta(hours=2)
@@ -342,7 +347,7 @@ def confirm_email():
             flash((
                 'Das E-Mail-Adresse konnte nicht geändert werden, '
                 'weil der Link abgelaufen ist. '), 'error')
-            return redirect(url_for('dashboard.index'))
+            return redirect(url_for('dashboard.upcoming'))
         else:
             user.email = user.email_change_request
             user.email_change_insertion_time_utc = None
@@ -353,7 +358,7 @@ def confirm_email():
             flash((
                 'Die neue E-Mail-Adresse wurde erfolgreich aktiviert'),
                 'info')
-            return redirect(url_for('dashboard.index'))
+            return redirect(url_for('dashboard.upcoming'))
 
 
 @bp.route('/logout')

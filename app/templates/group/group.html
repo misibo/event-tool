@@ -1,26 +1,94 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar %}
+{% block title %}{{ group.name }}{% endblock %}
+{% block logo %}
+<div class="uk-navbar-item uk-logo">
+    <img class="uk-logo" data-src="{{ group.get_logo_url(resolution=64) }}" uk-img>
+</div>
+{% endblock %}
 
-{% block title %}{{ group.name }}{% endblock %}$
-
-{% block attrs %}class="uk-background-cover" data-src="{{ url_for('static', filename='background.jpeg') }}" uk-img{% endblock %}
+{% block attrs %}class="uk-background-cover" data-src="{{ group.get_background_url() }}" uk-img{% endblock %}
 
 {% block hero %}
-    <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
-        <div class="uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
-            {% if group.logo %}
-                <img class="uk-width-small" data-src="{{ url_for('static', filename=group.logo) }}" uk-img>
-            {% endif %}
-            <h1>{{ group.name }}</h1>
-            <div>{{ group.description }}</div>
-            <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
+<div class="uk-position-relative" uk-height-viewport="offset-top: true">
+    <div class="uk-position-large uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-flex-column">
+        <h1>{{ group.name }}</h1>
+        <div>{{ group.abstract | if_not('Keine Kurzinfo') }}</div>
+        {% if g.user %}
+        <div class="uk-margin">
+            <ul class="uk-subnav">
+                    {% with membership = g.user.query_membership(group) %}
+                    {% if membership %}
+                        <li>
+                            <form method="POST" action="{{ url_for('group.member_edit', id=membership.id) }}">
+                                <div uk-form-custom="target: > * > span:last-child">
+                                    <select name="role" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
+                                        {% for val, label in GroupMember.Role.get_choices().items() %}
+                                        <option {% if val == GroupMember.Role.LEADER and not g.user.can_manage() %}disabled{% endif %} value="{{ val }}" {% if val == membership.role %}selected=""{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div>
+                                        <span uk-icon="user"></span>
+                                        <span></span>
+                                    </div>
+                                </div>
+                            </form>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('group.member_leave', id=membership.id) }}" onclick="return confirm('Bist du dir sicher?')">Verlassen</a>
+                        </li>
+                        {% if g.user.can_manage() %}
+                        <li>
+                            <a href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li>
+                            <form method="POST" action="{{ url_for('group.join', id=group.id) }}">
+                                <div uk-form-custom="target: > * > span:last-child">
+                                    <select name="role" onchange="this.form.submit()">
+                                        <option value="">Beitreten als</option>
+                                        {% for val, label in GroupMember.Role.get_choices().items() %}
+                                        <option {% if val == GroupMember.Role.LEADER %}disabled{% endif %} value="{{ val }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <span class="uk-link">
+                                        <span uk-icon="user"></span>
+                                        <span></span>
+                                    </span>
+                                </div>
+                            </form>
+                        </li>
+                    {% endif %}
+                    {% endwith %}
+                </ul>
+        </div>
+        {% endif %}
+        <div class="uk-margin">
+            <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block content %}
     <div id="details">
         <div class="uk-child-width-1-2@m" uk-grid>
+            <div>
+                <div class="uk-card uk-card-default">
+                    <div class="uk-card-header">
+                        <h3 class="uk-card-title">Details</h3>
+                    </div>
+                    <div class="uk-card-body">
+                        {{ group.details | if_not("Nicht vorhanden.") }}
+                    </div>
+                    {% if group.flyer_version %}
+                    <div class="uk-card-footer">
+                        <span uk-icon="icon: file-pdf"></span><a href="{{ group.get_flyer_url() }}" class="uk-margin-small-left uk-button uk-button-text" target="_blank">Flyer öffnen</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
             <div>
                 <div class="uk-card uk-card-default">
                     <div class="uk-card-header">
@@ -34,25 +102,21 @@
                             <div>
                                 <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
                                     <div class="uk-width-auto">
-                                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
-                                            <div class="uk-text-large uk-text-bold">{{ event.start.strftime('%d') }}</div>
-                                            <div>{{ event.start.strftime('%b') }}</div>
-                                        </div>
+                                        {{ render_event_date(event) }}
                                     </div>
                                     <div class="uk-width-expand">
                                         <h4 class="uk-margin-remove">{{ event.name }}</h4>
-                                        <div class="uk-text-uppercase uk-text-small">
-                                            {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }} | <a class="uk-link-reset" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
+                                        <div class="uk-text-muted">
+                                            {{ event.print_start_end() }}
                                         </div>
+                                        <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                                     </div>
                                 </div>
                             </div>
                         {% endfor %}
                         </div>
                         {% else %}
-                        <div class="uk-text-center uk-margin">
-                            <h3 class="uk-text-muted">Keine Anlässe</h3>
-                        </div>
+                            Keine Anlässe
                         {% endif %}
                         {% endwith %}
                     </div>
@@ -66,33 +130,27 @@
                     <div class="uk-card-body">
                         {% with members = group.get_members_ordered_by_role() %}
                         {% if members %}
-                        <div class="uk-grid-small uk-child-width-1-2@s uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
+                        <div class="uk-grid-small uk-child-width-1-4 uk-child-width-1-6@s uk-child-width-1-4@m uk-child-width-1-5@l uk-child-width-1-6@xl" uk-grid>
                         {% for member in members %}
                             <div>
-                                <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
-                                    <div class="uk-width-auto">
-                                        {% if member.user.logo %}
-                                            <img class="uk-width-small" data-src="{{ url_for('static', filename=member.user.logo) }}" uk-img height="32" width="32">
-                                        {% else %}
-                                            <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
-                                                <span>:D</span>
-                                            </div>
+                                <div class="uk-inline" uk-tooltip="title: {{ member.user.first_name }} {{ member.user.family_name }}; pos: bottom-right">
+                                    {{ render_user_avatar(member.user, class='uk-margin-remove') }}
+                                    <div class="uk-position-absolute" style="right: -5px; bottom: -5px;">
+                                        {% if member.role == member.Role.SPECTATOR %}
+                                            <span class="uk-icon-button" uk-icon="icon: bell"></span>
+                                        {% elif member.role == member.Role.MEMBER %}
+                                            <span class="uk-icon-button" uk-icon="icon: user"></span>
+                                        {% elif member.role == member.Role.LEADER %}
+                                            <span class="uk-icon-button" uk-icon="icon: bolt"></span>
                                         {% endif %}
                                     </div>
-                                    <div class="uk-width-expand">
-                                        <h4 class="uk-margin-remove">{{ member.user.first_name }} {{ member.user.family_name }}</h4>
-                                        <div class="uk-text-uppercase uk-text-small">
-                                            {{ member.get_role_label() }} | {{ member.user.username }} | <a class="uk-link-reset" href="{{ url_for('user.view', id=member.user.id) }}">Profil</a>
-                                        </div>
-                                    </div>
+                                    <a class="uk-link-reset uk-position-cover" href="{{ url_for('user.view', username=member.user.username) }}"></a>
                                 </div>
                             </div>
                         {% endfor %}
                         </div>
                         {% else %}
-                        <div class="uk-text-center uk-margin">
-                            <h3 class="uk-text-muted">Keine Mitglieder</h3>
-                        </div>
+                            Keine Mitglieder
                         {% endif %}
                         {% endwith %}
                     </div>

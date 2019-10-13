@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_filter, render_user_avatar with context %}
+
+{% block title %}
+    Mitglieder
+{% endblock %}
+
+{% block content %}
+<form id="filter_sort" method="GET">
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <input type="submit" hidden>
+</form>
+
+<div class="uk-margin" uk-grid>
+    <div>
+        <h3 class="uk-heading-bullet">
+            <a class="uk-link-heading" href="{{ url_for('group.edit', id=group.id) }}">{{ group.name }}</a>
+        </h3>
+    </div>
+    <div class="uk-width-expand@s">
+        {{ render_search(args, form='filter_sort') }}
+    </div>
+    <div>
+        <a class="uk-button uk-button-default" href="{{ request.referrer }}">Zurück</a>
+    </div>
+</div>
+{% if pagination.items %}
+<table class="uk-table uk-table-striped">
+    <thead>
+        <tr>
+            <th></th>
+            <th>{{ render_order('Vorname', 'first_name', args, form='filter_sort') }}</th>
+            <th>{{ render_order('Nachname', 'family_name', args, form='filter_sort') }}</th>
+            <th>{{ render_filter('Rolle', 'role', GroupMemberRoles, args, form='filter_sort') }}</th>
+            <th>Aktion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for member in pagination.items %}
+        <tr>
+            <td>
+                {{ render_user_avatar(member.user, resolution=32) }}
+            </td>
+            <td>{{ member.user.first_name }}</td>
+            <td>{{ member.user.family_name }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('group.member_edit', id=member.id) }}">
+                    <div uk-form-custom="target: > * > span:last-child">
+                        <select name="role" onchange="this.form.submit()">
+                            {% for val, label in member.Role.get_choices().items() %}
+                            <option value="{{ val }}" {% if val == member.role %}selected=""{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <span>
+                            <span></span>
+                            <span uk-icon="pencil"></span>
+                        </span>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_leave', id=group.id) }}" uk-icon="sign-out"></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{{ render_pagination(pagination, 'group.members', args) }}
+{% else %}
+<div class="uk-text-center uk-margin">
+    <h3 class="uk-text-muted">Keine Mitglieder gefunden</h3>
+</div>
+{% endif %}
+{% endblock %}

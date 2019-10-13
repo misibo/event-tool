@@ -2,9 +2,10 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import flash, g, render_template, request, url_for, current_app
+from flask import current_app, flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
+from PIL import Image
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
                      SelectField, StringField, TextAreaField, ValidationError)
@@ -17,13 +18,13 @@ from wtforms.validators import (DataRequired, Email, Length, NumberRange,
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
-from . import mailing, upload
-from .models import Group, User, Event
-
-from PIL import Image
+from . import mailing
+from .models import Event, Group, GroupMember, User
+from slugify import slugify
 
 
 class LocalDateTimeField(DateTimeField):
+
     tz = pytz.timezone('Europe/Zurich')
 
     def process_data(self, value):
@@ -155,10 +156,15 @@ class RegisterForm(FlaskForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
+    def populate_obj(self, user: User):
+        user.username = self.username.data
+        user.email = self.email.data
+        user.first_name = self.first_name.data
+        user.family_name = self.family_name.data
 
 class AccountForm(RegisterForm):
 
-    image = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
+    avatar = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
     birthday = DateField('Geburtstag', [Optional()], format='%d.%m.%y')
     mobile_phone = TelField('Handynummer', [Optional()])
     street = StringField('Strasse', [Optional()])
@@ -173,18 +179,17 @@ class AccountForm(RegisterForm):
         if user is not None:
             raise ValidationError('Benutzername bereits benutzt.')
 
-    def populate_obj(self, user):
-        user.username = self.username.data
-        user.first_name = self.first_name.data
-        user.family_name = self.family_name.data
+    def populate_obj(self, user: User):
+        super().populate_obj(user)
+        user.modified = timezone.localize(datetime.now())
         user.birthday = self.birthday.data
         user.mobile_phone = self.mobile_phone.data
         user.street = self.street.data
         user.postal_code = self.postal_code.data
         user.city = self.city.data
 
-        if self.image.data is not None:
-            upload.store_user_avatar(self.image.data, user)
+        if self.avatar.data is not None:
+            user.save_avatar(self.avatar.data)
 
 
 class UserEditForm(AccountForm):
@@ -221,9 +226,6 @@ class UserEditForm(AccountForm):
 
         if self.new_password.data:
             user.set_password(self.new_password.data)
-
-        if self.image.data is not None:
-            upload.store_user_favicon(self.image.data, user)
 
 
 class ConfirmRegistrationForm(FlaskForm):
@@ -272,38 +274,37 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
 
 class GroupEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
-    description = TextAreaField('Beschreibung', [Length(max=1000)])
-    logo = FileField('Logo', validators=[FileAllowed(['png', 'jpg'])])
-    admin = QuerySelectField(
-        'Admin',
-        # [Required()],
-        get_label=lambda user: f'{user.first_name} {user.family_name}',
-        # default=g.user,
-        query_factory=lambda: User.query.all(),
-        allow_blank=True,
-        blank_text='- Auswählen -'
-    )
+    slug = StringField('Slug')
+    abstract = TextAreaField('Kurzinfo')
+    details = TextAreaField('Details')
+    logo = FileField('Logo', validators=[FileAllowed(['png'])])
+    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
+    flyer = FileField('Flyer', validators=[FileAllowed(['pdf'])])
 
-    def populate_obj(self, group: Group):
+    def populate_obj(self, group):
         group.name = self.name.data
-        group.description = self.description.data
-        group.admin = self.admin.data
-
+        group.abstract = self.abstract.data
+        group.details = self.details.data
+        group.slug = slugify(self.slug.data if self.slug.data else group.name)
         if self.logo.data is not None:
-            upload.store_group_logo(self.logo.data, group)
+            group.save_logo(self.logo.data)
+        if self.background.data is not None:
+            group.save_background(self.background.data)
+        if self.flyer.data is not None:
+            group.save_flyer(self.flyer.data)
 
 
 class EventEditForm(FlaskForm):
     name = StringField('Name', [DataRequired(), Length(max=100)])
     abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
-    description = TextAreaField('Details', [Length(max=10000)])
+    details = TextAreaField('Details', [Length(max=10000)])
     location = StringField('Standort', [DataRequired(), Length(max=100)])
     start = LocalDateTimeField('Start', format='%d.%m.%y %H:%M')
     end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
-    image = FileField('Image', validators=[FileAllowed(['png', 'jpg'])])
+    image = FileField('Hintergrund', validators=[FileAllowed(['png', 'jpg'])])
     groups = QueryMultiCheckboxField(
         'Gruppen',
         [Required()],

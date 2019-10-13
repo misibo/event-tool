@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination %}
+{% from 'macros.html' import render_pagination, render_event_date with context %}
 
 {% block title %}Anstehende Anlässe{% endblock %}
 
@@ -9,11 +9,8 @@
     {% for event in pagination.items %}
     <div>
         <div uk-grid>
-            <div class="uk-width-auto">
-                <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: 32px; width: 32px;">
-                    <div class="uk-text-large uk-text-bold">{{ event.start.strftime('%d') }}</div>
-                    <div>{{ event.start.strftime('%b') }}</div>
-                </div>
+            <div>
+                {{ render_event_date(event) }}
             </div>
             <div class="uk-width-expand">
                 <div class="uk-card uk-card-default">
@@ -23,14 +20,14 @@
                         <div class="uk-text-muted"><span uk-icon="location"></span> {{ event.location }}</div>
                     </div>
                     <div class="uk-card-body">
-                        <div>{{ event.description | truncate(200) }}</div>
+                        <div>{{ event.abstract }}</div>
                     </div>
                     <div class="uk-card-footer">
                         <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                     </div>
                 </div>
             </div>
-    </div>
+        </div>
     </div>
     {% endfor %}
     {% else %}

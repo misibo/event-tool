@@ -5,10 +5,9 @@ import os
 import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for, flash, redirect
-
+from flask_mail import Mail
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 from . import utils
-
-
 from logging.config import dictConfig
 
 dictConfig({
@@ -64,10 +63,25 @@ def parse_freeform(text):
     from .parser import parse_text
     return parse_text(text)
 
+@app.template_filter()
+def if_not(value, string):
+    if value:
+        return value
+    else:
+        return string
+
+@app.context_processor
+def utility_processor():
+    def merge_into(d, **kwargs):
+        d.update(kwargs)
+        return d
+    return dict(merge_into=merge_into)
+
 
 @app.context_processor
 def inject_stage_and_region():
     return dict(
+        tz=pytz.timezone('Europe/Zurich'),
         UserRole=User.Role,
         SPECTATOR=GroupMember.Role.SPECTATOR,
         MEMBER=GroupMember.Role.MEMBER,
@@ -79,4 +93,12 @@ def inject_stage_and_region():
 
 @app.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('dashboard.index'))
+    return redirect(url_for('dashboard.upcoming'))
+
+@app.errorhandler(NotFound)
+@app.errorhandler(Unauthorized)
+@app.errorhandler(Forbidden)
+@app.errorhandler(MethodNotAllowed)
+def handle_exception(exception):
+    return render_template('exception.html', exception=exception)
+

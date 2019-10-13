@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_search %}
+
+{% block title %}
+    Events
+{% endblock %}
+
+{% block content %}
+<form method="GET">
+    <div class="uk-margin" uk-grid>
+        <div class="uk-width-expand@s">
+            {{ render_search(args) }}
+        </div>
+        <div>
+            <a href="{{ url_for('group.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
+        </div>
+    </div>
+    {% if pagination.items %}
+    <table class="uk-table uk-table-small uk-table-hover uk-table-divider uk-table-middle">
+        <thead>
+            <tr>
+                <th></th>
+                <th>{{ render_order('Name', 'name', args)}}</th>
+                <th>Kurzinfo</th>
+                <th>Standort</th>
+                <th>{{ render_order('Start', 'start', args)}}</th>
+                <th>Ende</th>
+                <th>{{ render_order('Deadline', 'deadline', args)}}</th>
+                <th>{{ render_order('Geändert', 'modified', args)}}</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in pagination.items %}
+            <tr>
+                <td style="min-width:32px">
+                    {% if event.thumbnail_version == 0 %}
+                        <img src="/static/upload_fallback/event/thumbnail_32x32.png">
+                    {% else %}
+                        <img src="/static/upload/event/{{event.id}}/thumbnail_32x32_v{{event.thumbnail_version}}.png">
+                    {% endif %}
+                </td>
+                <td>{{ event.name }}</td>
+                <td>{{ event.abstract }}</td>
+                <td>{{ event.location }}</td>
+                <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ event.deadline.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ '' if event.modified is none else event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>
+                    <ul class="uk-iconnav" uk-margin>
+                        <li><a uk-tooltip="Einladungen" href="{{ url_for('event.list_participants', id=event.id) }}" uk-icon="mail"></a></li>
+                        <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a></li>
+                        <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=event.id) }}" uk-icon="copy"></a></li>
+                        <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=event.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'event.list', args) }}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Events gefunden</h3>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

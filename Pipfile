@@ -18,6 +18,7 @@ flask-mail = "*"
 pytz = "*"
 itsdangerous = "*"
 Pillow = "*"
+python-slugify="*"
 psycopg2 = "*"
 
 [requires]

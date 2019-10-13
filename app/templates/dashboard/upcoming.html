@@ -1,0 +1,73 @@
+{% extends 'dashboard/layout.html' %}
+{% from 'macros.html' import render_pagination, render_event_date %}
+
+{% block title %}
+    Nächstens
+{% endblock %}
+
+{% block dashboard %}
+    {% if pagination.items %}
+    <div uk-grid>
+        {% for event in pagination.items %}
+        <div>
+            <div uk-grid>
+                <div class="uk-width-auto">
+                    {{ render_event_date(event) }}
+                </div>
+                <div class="uk-width-expand">
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-header">
+                            <h3 class="uk-card-title uk-margin-remove">{{ event.name }}</h3>
+                            <div class="uk-text-muted">
+                                <span uk-icon="users"></span>
+                                <div class="uk-inline">
+                                    <ul class="uk-subnav uk-margin-remove">
+                                        {% for group in event.groups %}
+                                            <li><a href="{{ url_for('group.view', slug=group.slug) }}">{{ group.name }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="calendar"></span> {{ event.print_start_end() }}</div>
+                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="location"></span> {{ event.location }}</div>
+                        </div>
+                        <div class="uk-card-body">
+                            <div>{{ event.abstract }}</div>
+                        </div>
+                        <div class="uk-card-footer">
+                            <ul class="uk-subnav">
+                                <li><a href="{{ url_for('event.view', id=event.id) }}">Ansehen</a></li>
+                                {% with membership = g.user.query_membership_for_event(event) %}
+                                    {% if membership.role == membership.Role.LEADER %}
+                                    <li><a href="{{ url_for('event.list_participants', id=event.id) }}">Teilnehmerliste</a></li>
+                                    {% endif %}
+                                {% endwith %}
+                                {% with invitation = g.user.query_invitation_for_event(event) %}
+                                    {% if invitation %}
+                                        {% if invitation.accepted is none %}
+                                            <li>Ausstehend <a href="{{ url_for('invitation.accept') }}">Anmelden</a> <a href="{{ url_for('invitation.accept') }}">Abmelden</a></li>
+                                        {% elif invitation.accepted  %}
+                                            <li>Angemeldet <a href="{{ url_for('invitation.decline') }}">Abmelden</a></li>
+                                        {% else %}
+                                            <li>Abgemeldet <a href="{{ url_for('invitation.accept') }}">Anmelden</a></li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li><span>Einladung noch nicht verschickt.</span></li>
+                                    {% endif %}
+                                {% endwith %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-text-large uk-margin">
+        <p class="uk-text-muted">Du bist in keiner Gruppe Mitglied.</p>
+        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Werde Mitglied</a>
+    </div>
+    {% endif %}
+    {{ render_pagination(pagination, 'dashboard.upcoming')}}
+{% endblock %}
