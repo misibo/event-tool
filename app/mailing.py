@@ -54,6 +54,10 @@ def send_invitations():
     current_app.logger.info(f'Check for pending invitations: {len(pending)} found')
 
     for inv in pending:
+        db.session.add(inv)
+        db.session.commit()
+
+        assert inv.id is not None
         token_url = request.url_root + url_for('invitation.edit', id=inv.id, token=inv.token)[1:]
 
         send_single_mail(
@@ -68,9 +72,4 @@ def send_invitations():
         )
 
         inv.send_email_attempt_utc = pytz.utc.localize(datetime.utcnow())
-
-        db.session.add(inv)
-
-        # commit invitations to database individually,
-        # in order to not affect subsequent invitations if something goes wrong
         db.session.commit()

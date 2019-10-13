@@ -40,7 +40,7 @@ def login_required(view, privilege=User.Role.USER):
     def wrapped_view(**kwargs):
         disable_auth = bool(current_app.config.get('DISABLE_AUTH', False))
 
-        if os.environ['FLASK_ENV'] != 'development':
+        if current_app.env != 'development':
             # prevent disabling authentication by accident
             disable_auth = False
 
