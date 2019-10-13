@@ -1,13 +1,14 @@
+from datetime import datetime
+
+import pytz
 from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
 from . import mailing
 from .forms import GroupEditForm
 from .models import Group, GroupMember, User, db
-from .security import login_required, manager_required, admin_required
+from .security import admin_required, login_required, manager_required
 from .views import CreateEditView, DeleteView, ListView
-import pytz
-import datetime
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -38,7 +39,7 @@ def join(id):
     member = GroupMember(
         group=group,
         user=g.user,
-        joined=pytz.utc.localize(datetime.datetime.utcnow()),
+        joined=pytz.utc.localize(datetime.utcnow()),
         role=role)
     db.session.add(member)
     db.session.commit()
@@ -122,26 +123,20 @@ def members(id):
 @bp.route('/list')
 @manager_required
 def list():
-        pagination = Group.query.\
-            order_by_request(Group.name, 'order.name').\
-            order_by_request(Group.modified, 'order.modified').\
-            search_by_request([Group.name, Group.abstract, Group.details], 'search').\
-            paginate(
-                per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE']
-            )
-
-        return render_template(
-            'group/list.html',
-            pagination=pagination,
-            args=request.args.to_dict(),
-            tz=pytz.timezone('Europe/Zurich')
+    pagination = Group.query.\
+        order_by_request(Group.name, 'order.name').\
+        order_by_request(Group.modified, 'order.modified').\
+        search_by_request([Group.name, Group.abstract, Group.details], 'search').\
+        paginate(
+            per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE']
         )
 
-# class GroupListView(ListView):
-#     sorts = ['name', 'modified']
-#     searchable = ['name', 'description']
-#     model = Group
-#     template = 'group/index.html'
+    return render_template(
+        'group/list.html',
+        pagination=pagination,
+        args=request.args.to_dict(),
+        tz=pytz.timezone('Europe/Zurich')
+    )
 
 @bp.route('/create', methods=['POST'])
 @admin_required

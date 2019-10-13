@@ -1,16 +1,18 @@
-from flask import (Blueprint, abort, current_app, redirect, render_template,
-                   url_for)
+from flask import (Blueprint, abort, current_app, flash, redirect,
+                   render_template, request, url_for)
+from sqlalchemy.orm.session import make_transient
 from werkzeug.exceptions import NotFound
 
-from . import security, mailing
+from . import mailing
 from .forms import EventEditForm
-from .models import Event, db, User
+from .models import Event, User, db
+from .security import login_required, manager_required
 from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("event", __name__, url_prefix="/event")
 
 
-@bp.route('/view')
+@bp.route('/')
 def upcoming():
     pagination = Event.query.\
         order_by(Event.start.asc()).\
@@ -25,12 +27,11 @@ def view(id):
 
 
 @bp.route('/participants/<int:id>', methods=['GET'])
-@security.login_required
-def list_participants(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    if event is None:
-        abort(NotFound)
-    elif event.send_invitations:
+@manager_required
+def list_participants(id):
+    event = Event.query.get_or_404(id)
+
+    if event.send_invitations:
         num_participants = 0
         num_car_seats = 0
         num_friends = 0
@@ -64,112 +65,85 @@ def list_participants(event_id):
 
 
 @bp.route('/send_invitations/<int:id>', methods=['POST'])
-@security.login_required
+@manager_required
 def send_invitations(id):
-    event = Event.query.filter_by(id=id).first()
-    if event is None:
-        abort(NotFound)
-    else:
-        event.send_invitations = True
+    event = Event.query.get_or_404(id)
+    event.send_invitations = True
+    db.session.commit()
+    mailing.send_invitations()
+    return redirect(url_for('event.list_participants', id=event_id))
+
+
+@bp.route('/list')
+@manager_required
+def list():
+    pagination = Event.query.\
+        order_by_request(Event.name, 'order.name').\
+        order_by_request(Event.start, 'order.start').\
+        order_by_request(Event.modified, 'order.modified').\
+        order_by_request(Event.modified, 'order.deadline').\
+        search_by_request([Event.name, Event.abstract, Event.details], 'search').\
+        paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+
+    return render_template(
+        'event/list.html',
+        pagination=pagination,
+        args=request.args.to_dict()
+    )
+
+
+@bp.route('/create', methods=['GET', 'POST'])
+@manager_required
+def create():
+    event = Event()
+    form = EventEditForm(obj=event)
+
+    if form.validate_on_submit():
+        form.populate_obj(event)
+        db.session.add(event)
         db.session.commit()
+        flash(f'Anlass {event.name} erstellt.', 'success')
+        return redirect(request.referrer or url_for('event.list'))
 
-        mailing.send_invitations()
-        return redirect(url_for('event.list_participants', event_id=event_id))
+    return render_template('event/edit.html', form=form, event=event)
 
+@bp.route('/copy/<int:id>', methods=['GET'])
+@manager_required
+def copy(id):
+    event = Event.query.get_or_404(id)
+    name = event.name
 
-# @bp.route('/', methods=['POST'])
-# @security.login_required(privilege=User.Role.MANAGER)
-# def list():
-#     query = Event.query
-#     args = request.args.to_dict()
+    db.session.expunge(event)
+    make_transient(event)
 
-#     sorts = dict((key, args[key]) for key in ['name', 'start', 'deadline', 'modified'] if f'sort.{key}' in args and args[key] in ['asc', 'desc'])
-#     if sorts:
-#         query.order_by(**sorts)
+    event.id = None
+    event.name =  f'{name} - Kopie'
+    db.session.add(event)
+    db.session.commit()
 
-#     searches = dict((key, args[key]) for key in ['name', 'start', 'deadline', 'modified'] if key in args and args[key] in ['asc', 'desc'])
-#     query.order_by(name=)
+    flash(f'Kopie von {name} erstellt.', 'success')
+    return redirect(url_for('event.edit', id=event.id))
 
-#     return render_template('event/edit.html', form=form)
+@bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@manager_required
+def edit(id):
+    event = Event.query.get_or_404(id)
+    form = EventEditForm(obj=event)
 
+    if form.validate_on_submit():
+        form.populate_obj(event)
+        db.session.commit()
+        flash(f'Anlass {event.name} gespeichert.', 'success')
+        return redirect(request.referrer or url_for('event.list'))
 
-# @bp.route('/create', methods=['POST'])
-# @security.login_required(privilege=User.Role.MANAGER)
-# def create():
-#     event = Event()
-#     form = EventEditForm(obj=event)
-
-#     if form.validate_on_submit():
-#         form.populate_obj(event)
-#         db.session.add(event)
-#         db.session.commit()
-#         flash('Anlass erfolgreich erstellt.')
-#         return redirect(url_for('event.list'))
-
-#     return render_template('event/edit.html', form=form)
-
-
-# @bp.route('/edit/<int:id>', methods=['POST'])
-# def edit(id):
-#     event = Event.query.get_or_404(id)
-#     form = EventEditForm(obj=event)
-
-#     if form.validate_on_submit():
-#         form.populate_obj(event)
-#         db.session.commit()
-#         flash('Anlass erfolgreich geändert.')
-#         return redirect(url_for('event.list'))
-
-#     return render_template('event/edit.html', form=form)
+    return render_template('event/edit.html', form=form, event=event)
 
 
-# @bp.route('/delete/<int:id>', methods=['GET'])
-# def delete(id):
-#     event = Event.query.get_or_404(id)
-#     db.session.delete(id)
-#     db.session.commit()
-#     flash('Anlass erfolgreich gelöscht.')
-#     return redirect(url_for('event.list'))
-
-
-class EventListView(ListView):
-    sorts = ['name', 'start', 'deadline', 'modified']
-    searchable = ['name', 'description', 'location', 'equipment']
-    model = Event
-    template = 'event/index.html'
-
-
-class EventCreateEditView(CreateEditView):
-
-    form = EventEditForm
-    model = Event
-    template = 'event/edit.html'
-    redirect = 'event.list'
-
-
-class EventDeleteView(DeleteView):
-    model = Event
-    redirect = 'event.list'
-
-
-bp.add_url_rule(
-    '/',
-    view_func=EventListView.as_view('list'),
-    methods=['GET']
-)
-bp.add_url_rule(
-    '/create',
-    defaults={'id': None},
-    view_func=EventCreateEditView.as_view('create'),
-    methods=['GET', 'POST']
-)
-bp.add_url_rule(
-    '/edit/<int:id>',
-    view_func=EventCreateEditView.as_view('edit'),
-    methods=['GET', 'POST']
-)
-bp.add_url_rule(
-    '/delete/<int:id>',
-    view_func=EventDeleteView.as_view('delete'),
-    methods=['GET']
-)
+@bp.route('/delete/<int:id>', methods=['GET'])
+@manager_required
+def delete(id):
+    event = Event.query.get_or_404(id)
+    flash(f'Anlass "{event.name}" gelöscht.', 'danger')
+    db.session.delete(event)
+    db.session.commit()
+    return redirect(request.referrer or url_for('event.list'))

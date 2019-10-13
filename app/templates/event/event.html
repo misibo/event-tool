@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, text2html %}
+{% from 'macros.html' import render_field, render_image_field, text2html with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
 
@@ -13,7 +13,7 @@
             {% endif %}
             <h1>{{ event.name }}</h1>
             <div>
-                {{ event.start.strftime('%d.%m.%y %H:%M') }} - {{ event.start.strftime('%d.%m.%y %H:%M') }}
+                {{ event.print_start_end() }}
             </div>
             <ul class="uk-subnav" uk-margin>
                 {% for user in event.get_leaders() %}
@@ -32,7 +32,7 @@
     <div id="details">
         <h3 class="uk-card-title">Details</h3>
         <p>
-            {{ text2html(event.description) }}
+            {{ text2html(event.details) }}
         </p>
         <div class="uk-card uk-card-default">
             <div class="uk-card-header">

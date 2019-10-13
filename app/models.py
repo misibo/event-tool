@@ -10,6 +10,7 @@ from sqlalchemy.types import TypeDecorator
 
 from .image import store_background, store_favicon
 
+tz = pytz.timezone('Europe/Zurich')
 
 class ExtendedQuery(BaseQuery):
 
@@ -324,7 +325,6 @@ class Event(db.Model):
     modified = db.Column(UtcDateTime)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
-    created_at = db.Column(UtcDateTime)
     thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
@@ -341,9 +341,9 @@ class Event(db.Model):
 
     def print_start_end(self):
         if (self.start.day == self.end.day):
-            return '%s, %s bis %s' % (self.start.strftime('%d.%m.%y'), self.start.strftime('%H:%M'), self.end.strftime('%H:%M'))
+            return f'{self.start.astimezone(tz).strftime("%d.%m.%y")}, {self.start.astimezone(tz).strftime("%H:%M")} bis {self.end.strftime("%H:%M")}'
         else:
-            return '%s bis %s' % (self.start.strftime('%d.%m.%y %H:%M'), self.end.strftime('%d.%m.%y %H:%M'))
+            return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
@@ -422,10 +422,3 @@ class Group(db.Model):
             filter(Group.id == self.id).\
             order_by(GroupMember.role.desc()).\
             all()
-
-# @event.listens_for(Event, 'before_insert')
-# @event.listens_for(Event, 'before_update')
-# @event.listens_for(Group, 'before_insert')
-# @event.listens_for(Group, 'before_update')
-# def receive_before_modified(mapper, connection, target):
-#     target.modified = pytz.utc.localize(datetime.utcnow())
