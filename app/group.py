@@ -56,16 +56,22 @@ def member_edit(id):
     member = GroupMember.query.get_or_404(id)
     role = request.form['role']
 
-    if (role == GroupMember.Role.LEADER or member.user_id != g.user.id) and \
+    editing = member.user_id != g.user.id
+
+    if (role == GroupMember.Role.LEADER or editing) and \
             not g.user.can_manage():
         abort(403)
-    if int(role) in GroupMember.Role.get_choices().keys():
+
+    if GroupMember.Role.has_value(role):
         member.role = role
         db.session.commit()
 
-    # mailing.send_invitations()
+    # TODO mailing.send_invitations()
 
-    flash(f'Du bist jetzt {member.get_role_label()} der Gruppe {member.group.name}!', 'success')
+    if editing:
+        flash(f'Mitglied "{member.user.get_fullname()}" hat jetzt die Rolle "{member.get_role_label()}" in der Gruppe "{member.group.name}".', 'success')
+    else:
+        flash(f'Du bist jetzt "{member.get_role_label()}" der Gruppe "{member.group.name}".', 'success')
 
     return redirect(request.referrer or '/')
 
@@ -75,10 +81,15 @@ def member_edit(id):
 def member_leave(id):
     member = GroupMember.query.get_or_404(id)
 
-    if member.user_id != g.user.id and not g.user.can_manage():
+    editing = member.user_id != g.user.id
+
+    if  editing and not g.user.can_manage():
         abort(403)
 
-    flash(f'Du hast die Gruppe {member.group.name} verlassen.', 'warning')
+    if editing:
+        flash(f'Mitglied "{member.user.get_fullname()} von der Gruppe "{member.group.name}" entfernt.', 'warning')
+    else:
+        flash(f'Du hast die Gruppe "{member.group.name}" verlassen.', 'warning')
 
     db.session.delete(member)
     db.session.commit()
@@ -92,7 +103,7 @@ def members(id):
     pagination = GroupMember.query.\
         join(GroupMember.user).\
         filter(GroupMember.group_id == id).\
-        filter_by_request(GroupMember.role, 'filter.role', GroupMember.Role.get_choices().keys()).\
+        filter_by_request(GroupMember.role, 'filter.role', GroupMember.Role.get_values()).\
         order_by_request(User.first_name, 'order.first_name').\
         order_by_request(User.family_name, 'order.family_name').\
         search_by_request([User.first_name, User.family_name], 'search').\
@@ -100,7 +111,13 @@ def members(id):
             per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE']
         )
 
-    return render_template('group/members.html', pagination=pagination, args={**request.args.to_dict(), **{'id': group.id}}, group=group)
+    return render_template(
+        'group/members.html',
+        pagination=pagination,
+        args={**request.args.to_dict(), **{'id': group.id}},
+        group=group,
+        GroupMemberRoles=GroupMember.Role
+    )
 
 @bp.route('/list')
 @manager_required

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_search, render_user_avatar with context %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_filter, render_user_avatar with context %}
 
 {% block title %}
     Mitglieder
@@ -8,13 +8,17 @@
 {% block content %}
 <form id="filter_sort" method="GET">
     <input name="page" value="{{ pagination.page }}" hidden>
+    <input type="submit" hidden>
 </form>
+
 <div class="uk-margin" uk-grid>
     <div>
-        <h2><a class="uk-link-reset" href="{{ url_for('group.edit', id=group.id) }}">{{ group.name }}</a></h2>
+        <h3 class="uk-heading-bullet">
+            <a class="uk-link-heading" href="{{ url_for('group.edit', id=group.id) }}">{{ group.name }}</a>
+        </h3>
     </div>
-    <div class="uk-width-expand">
-        {{ render_search(args) }}
+    <div class="uk-width-expand@s">
+        {{ render_search(args, form='filter_sort') }}
     </div>
     <div>
         <a class="uk-button uk-button-default" href="{{ request.referrer }}">Zurück</a>
@@ -25,10 +29,10 @@
     <thead>
         <tr>
             <th></th>
-            <th>{{ render_order('Vorname', 'first_name', args, 'filter_sort') }}</th>
-            <th>{{ render_order('Nachname', 'family_name', args, 'filter_sort') }}</th>
-            <th>Rolle</th>
-            <th></th>
+            <th>{{ render_order('Vorname', 'first_name', args, form='filter_sort') }}</th>
+            <th>{{ render_order('Nachname', 'family_name', args, form='filter_sort') }}</th>
+            <th>{{ render_filter('Rolle', 'role', GroupMemberRoles, args, form='filter_sort') }}</th>
+            <th>Aktion</th>
         </tr>
     </thead>
     <tbody>
@@ -47,15 +51,15 @@
                             <option value="{{ val }}" {% if val == member.role %}selected=""{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
-                        <span class="uk-link">
-                            <span uk-icon="icon: pencil"></span>
+                        <span>
                             <span></span>
+                            <span uk-icon="pencil"></span>
                         </span>
                     </div>
                 </form>
             </td>
             <td>
-                    <a href="{{ url_for('group.member_leave', id=group.id) }}" uk-icon="sign-out"></a>
+                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_leave', id=group.id) }}" uk-icon="sign-out"></a>
             </td>
         </tr>
         {% endfor %}

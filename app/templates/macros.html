@@ -127,11 +127,10 @@
 </div>
 {% endmacro %}
 
-{% macro render_search(args) %}
+{% macro render_search(args, form='') %}
 <div class="uk-search uk-search-default uk-width-medium">
     <button uk-search-icon></button>
-    <input class="uk-search-input" type="search" placeholder="Search ..." name="search" {% if args['search'] %}
-        value="{{ args['search'] }}" {% endif %}>
+    <input class="uk-search-input uk-width-large" type="search" placeholder="Search ..." name="search" {% if args['search'] %} value="{{ args['search'] }}" {% endif %} {% if form %}form="{{form}}"{% endif %}>
 </div>
 {% endmacro %}
 

@@ -85,7 +85,7 @@ class Choices:
 
     @classmethod
     def has_value(self, value):
-        return self.value_type(value) in self.get_values()
+        return self.cast_value(value) in self.get_values()
 
     @classmethod
     def get_values(self):

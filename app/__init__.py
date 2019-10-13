@@ -5,7 +5,7 @@ import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for, flash, redirect
 from flask_mail import Mail
-from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 
 from . import event, group, invitation, mailing, security, user, dashboard
 from .models import db, User, GroupMember
@@ -81,6 +81,7 @@ def index():
 @app.errorhandler(NotFound)
 @app.errorhandler(Unauthorized)
 @app.errorhandler(Forbidden)
+@app.errorhandler(MethodNotAllowed)
 def handle_exception(exception):
     return render_template('exception.html', exception=exception)
 
