@@ -24,6 +24,8 @@ def list():
             order_by_request(User.username, 'order.username').\
             order_by_request(User.first_name, 'order.first_name').\
             order_by_request(User.family_name, 'order.family_name').\
+            order_by_request(User.last_login, 'order.last_login').\
+            order_by_request(User.modified, 'order.modified').\
             order_by_request(User.email, 'order.email').\
             filter_by_request(User.role, 'filter.role', User.Role.get_values()).\
             search_by_request([User.username, User.first_name, User.family_name, User.email], 'search').\
@@ -75,6 +77,6 @@ def edit(id):
 @admin_required
 def delete(id):
     user = User.query.get_or_404(id)
-    flash(f'Benutzer {user.get_fullname()} gelöscht.', 'warning')
+    flash(f'Benutzer {user.get_fullname()} gelöscht.', 'danger')
     db.session.delete(user)
     db.session.commit()

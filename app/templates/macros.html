@@ -90,8 +90,8 @@
         <option {% if selected == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
         <option {% if selected == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
     </select>
-    <div>
-        <span>{{ label }}</span>
+    <div class="uk-text-nowrap">
+        <span>{{ label | safe }}</span>
         <span>|</span>
         {% if selected == 'asc' %}
         <span uk-icon="icon: arrow-up"></span>
@@ -114,8 +114,8 @@
         <option value="{{ val }}" {% if val == Choices.cast_value(selected) %}selected=""{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
-    <div>
-        <span>{{ label }}</span>
+    <div class="uk-text-nowrap">
+        <span>{{ label | safe }}</span>
         <span>|</span>
         {% if selected %}
         <span>{{ Choices.get_choice_label(selected) }}</span>

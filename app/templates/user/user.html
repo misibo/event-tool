@@ -4,7 +4,6 @@
 {% block title %}Benutzerprofil{% endblock %}
 
 {% block content %}
-
 <div class="uk-flex uk-flex-center uk-flex-middle">
     <div class="uk-width-1-2@m uk-card uk-card-default">
         <div class="uk-card-header">
@@ -26,7 +25,7 @@
                         {% if user.memberships %}
                         {% for membership in user.memberships %}
                         <li>
-                            <a class="uk-link-reset" href="{{ url_for('group.view', slug=membership.group.slug) }}">{{ membership.group.name }}</a>
+                            <a href="{{ url_for('group.view', slug=membership.group.slug) }}">{{ membership.group.name }}</a>
                         </li>
                         {% endfor %}
                         {% else %}
@@ -47,8 +46,8 @@
             </dl>
         </div>
         <div class="uk-card-footer">
-            dabei seit {{ user.registered.astimezone(tz).strftime('%d.%m.%y %H:%M') }} <br>
-            zuletzt angemeldet {{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}
+            dabei seit <span class="uk-text-muted">{{ user.registered.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span><br>
+            zuletzt angemeldet <span class="uk-text-muted">{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span>
         </div>
     </div>
 </div>

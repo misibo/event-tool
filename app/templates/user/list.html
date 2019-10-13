@@ -17,44 +17,46 @@ Benutzer
     </div>
     {% if pagination.items %}
     <input name="page" value="{{ pagination.page }}" hidden>
-    <table class="uk-table uk-table-striped">
-        <thead>
-            <tr>
-                <th></th>
-                <th>{{ render_order('Benutzername', 'username', args) }}</th>
-                <th>{{ render_order('Vorname', 'first_name', args) }}</th>
-                <th>{{ render_order('Nachname', 'family_name', args) }}</th>
-                <th>{{ render_order('Mail', 'email', args) }}</th>
-                <th>Geändert</th>
-                <th>Letzte Anmeldung</th>
-                <th>{{ render_filter('Rolle', 'role', UserRoles, args) }}</th>
-                <th>Aktion</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in pagination.items %}
-            <tr>
-                <td>
-                    {{ render_user_avatar(user) }}
-                </td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.first_name }}</td>
-                <td>{{ user.family_name }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ user.get_role_label() }}</td>
-                <td>
-                    <ul class="uk-iconnav">
-                        <li><a href="{{ url_for('user.view', username=user.username) }}" target="_blank" uk-icon="link"></a></li>
-                        <li><a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a></li>
-                        <li><a  href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a></li>
-                    </ul>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="uk-overflow-auto">
+        <table class="uk-table uk-table-striped">
+            <thead>
+                <tr>
+                    <th class="uk-visible@m"></th>
+                    <th class="uk-visible@m">{{ render_order('Benutzer <br> name', 'username', args) }}</th>
+                    <th>{{ render_order('Vorname', 'first_name', args) }}</th>
+                    <th class="uk-visible@s">{{ render_order('Nachname', 'family_name', args) }}</th>
+                    <th class="uk-visible@m">{{ render_order('Mail', 'email', args) }}</th>
+                    <th>{{ render_order('Letzte <br> Anmdelung', 'last_login', args) }}</th>
+                    <th class="uk-visible@m">{{ render_order('Geändert', 'modified', args) }}</th>
+                    <th>{{ render_filter('Rolle', 'role', UserRoles, args) }}</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pagination.items %}
+                <tr>
+                    <td class="uk-visible@m">
+                        {{ render_user_avatar(user) }}
+                    </td>
+                    <td class="uk-visible@m">{{ user.username }}</td>
+                    <td>{{ user.first_name }}</td>
+                    <td class="uk-visible@s">{{ user.family_name }}</td>
+                    <td class="uk-visible@m">{{ user.email }}</td>
+                    <td>{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td class="uk-visible@m">{{ user.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td>{{ user.get_role_label() }}</td>
+                    <td>
+                        <ul class="uk-iconnav" uk-margin>
+                            <li><a href="{{ url_for('user.view', username=user.username) }}" target="_blank" uk-icon="link"></a></li>
+                            <li><a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a></li>
+                            <li><a  href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a></li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {{ render_pagination(pagination, 'user.list', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">
