@@ -176,7 +176,7 @@ class User(db.Model):
             self.password_salt.encode('UTF-8'),
             1000
         )
-        return hash
+        return hash.hex()
 
     def set_password(self, password):
         self.password_hash = self.hash_password(password)
