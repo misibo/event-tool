@@ -20,13 +20,13 @@ def upcoming():
     return render_template('event/upcoming.html', pagination=pagination)
 
 
-@bp.route('/view/<int:id>')
+@bp.route('/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
     return render_template('event/event.html', event=event)
 
 
-@bp.route('/participants/<int:id>', methods=['GET'])
+@bp.route('/invitations/<int:id>', methods=['GET'])
 @manager_required
 def list_participants(id):
     event = Event.query.get_or_404(id)
@@ -74,6 +74,12 @@ def send_invitations(id):
     return redirect(url_for('event.list_participants', id=event_id))
 
 
+@bp.route('/send_update/<int:id>')
+@manager_required
+def send_update(id):
+    return ''
+
+
 @bp.route('/list')
 @manager_required
 def list():
@@ -102,7 +108,7 @@ def create():
         form.populate_obj(event)
         db.session.add(event)
         db.session.commit()
-        flash(f'Anlass {event.name} erstellt.', 'success')
+        flash(f'Anlass "{event.name}" erstellt.', 'success')
         return redirect(request.referrer or url_for('event.list'))
 
     return render_template('event/edit.html', form=form, event=event)
