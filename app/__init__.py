@@ -50,7 +50,7 @@ app.register_blueprint(invitation.bp)
 
 
 # initizalize database
-from .models import db, User, GroupMember
+from .models import db
 db.init_app(app)
 
 with app.app_context():
@@ -72,23 +72,20 @@ def if_not(value, string):
 
 @app.context_processor
 def utility_processor():
+
     def merge_into(d, **kwargs):
         d.update(kwargs)
         return d
-    return dict(merge_into=merge_into)
+
+    return dict(
+        merge_into=merge_into
+    )
 
 
 @app.context_processor
-def inject_stage_and_region():
+def timezone_processor():
     return dict(
-        tz=pytz.timezone('Europe/Zurich'),
-        UserRole=User.Role,
-        SPECTATOR=GroupMember.Role.SPECTATOR,
-        MEMBER=GroupMember.Role.MEMBER,
-        USER=User.Role.USER,
-        MANAGER=User.Role.MANAGER,
-        ADMIN=User.Role.ADMIN,
-        TZ=pytz.timezone('Europe/Zurich'),
+        tz=pytz.timezone(app.config['TIMEZONE'])
     )
 
 

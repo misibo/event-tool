@@ -1,8 +1,8 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_search %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_event_date with context%}
 
 {% block title %}
-    Events
+    Anlässe
 {% endblock %}
 
 {% block content %}
@@ -12,53 +12,51 @@
             {{ render_search(args) }}
         </div>
         <div>
-            <a href="{{ url_for('group.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
+            <a href="{{ url_for('event.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
         </div>
     </div>
     {% if pagination.items %}
-    <table class="uk-table uk-table-small uk-table-hover uk-table-divider uk-table-middle">
-        <thead>
-            <tr>
-                <th></th>
-                <th>{{ render_order('Name', 'name', args)}}</th>
-                <th>Kurzinfo</th>
-                <th>Standort</th>
-                <th>{{ render_order('Start', 'start', args)}}</th>
-                <th>Ende</th>
-                <th>{{ render_order('Deadline', 'deadline', args)}}</th>
-                <th>{{ render_order('Geändert', 'modified', args)}}</th>
-                <th>Aktion</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for event in pagination.items %}
-            <tr>
-                <td style="min-width:32px">
-                    {% if event.thumbnail_version == 0 %}
-                        <img src="/static/upload_fallback/event/thumbnail_32x32.png">
-                    {% else %}
-                        <img src="/static/upload/event/{{event.id}}/thumbnail_32x32_v{{event.thumbnail_version}}.png">
-                    {% endif %}
-                </td>
-                <td>{{ event.name }}</td>
-                <td>{{ event.abstract }}</td>
-                <td>{{ event.location }}</td>
-                <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ event.deadline.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>{{ '' if event.modified is none else event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
-                <td>
-                    <ul class="uk-iconnav" uk-margin>
-                        <li><a uk-tooltip="Einladungen" href="{{ url_for('event.list_participants', id=event.id) }}" uk-icon="mail"></a></li>
-                        <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a></li>
-                        <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=event.id) }}" uk-icon="copy"></a></li>
-                        <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=event.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
-                    </ul>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="uk-overflow-auto">
+        <table class="uk-table uk-table-small uk-table-hover uk-table-striped uk-table-middle">
+            <thead>
+                <tr>
+                    <th class="uk-visible@m"></th>
+                    <th>{{ render_order('Name', 'name', args)}}</th>
+                    <th class="uk-visible@m">Kurzinfo</th>
+                    <th>Standort</th>
+                    <th>{{ render_order('Start', 'start', args)}}</th>
+                    <th class="uk-visible@s">Ende</th>
+                    <th>{{ render_order('Deadline', 'deadline', args)}}</th>
+                    <th class="uk-visible@m">{{ render_order('Geändert', 'modified', args)}}</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in pagination.items %}
+                <tr>
+                    <td class="uk-visible@m">
+                        {{ render_event_date(event) }}
+                    </td>
+                    <td>{{ event.name }}</td>
+                    <td class="uk-visible@m">{{ event.abstract }}</td>
+                    <td>{{ event.location }}</td>
+                    <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td class="uk-visible@s">{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td>{{ event.deadline.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td class="uk-visible@m">{{ event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td>
+                        <ul class="uk-iconnav" uk-margin>
+                            <li><a uk-tooltip="Einladungen" href="{{ url_for('event.list_participants', id=event.id) }}" uk-icon="mail"></a></li>
+                            <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a></li>
+                            <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=event.id) }}" uk-icon="copy"></a></li>
+                            <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=event.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {{ render_pagination(pagination, 'event.list', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">

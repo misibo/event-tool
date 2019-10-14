@@ -3,9 +3,9 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import g, request, url_for
+from flask import current_app, g, request, url_for
 from flask_sqlalchemy import BaseQuery, SQLAlchemy
-from sqlalchemy import event, or_
+from sqlalchemy import or_
 from sqlalchemy.types import TypeDecorator
 
 from .image import store_background, store_favicon
@@ -325,7 +325,7 @@ class Event(db.Model):
     modified = db.Column(UtcDateTime)
     send_invitations = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
-    thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
+    background_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
@@ -344,6 +344,24 @@ class Event(db.Model):
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y")}, {self.start.astimezone(tz).strftime("%H:%M")} bis {self.end.strftime("%H:%M")}'
         else:
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
+
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'event', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_background(self, file):
+        store_background(file, self.get_folder(), 'background')
+        self.background_version += 1
+
+    def get_background_url(self, resolution=1920):
+        return self.get_url(f'background_{resolution}.jpg', self.background_version)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])

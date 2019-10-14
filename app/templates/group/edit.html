@@ -1,20 +1,20 @@
 {% extends 'layout.html' %}
 {% from 'macros.html' import render_field, render_image_field, render_pdf_field %}
 
-{% block title %}Gruppe bearbeiten{% endblock %}
+{% block title %}Gruppe {{ 'bearbeiten' if group.id else 'erstellen' }}{% endblock %}
 
 {% block content %}
 <form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
     <div class="uk-grid-divider" uk-grid>
         <div class="uk-width-1-1">
             <div uk-grid>
-                {% if group.id %}
-                <div class="uk-width-expand">
+                <div class="uk-width-expand@s">
+                    {% if group.id %}
                     <h3 class="uk-heading-bullet">
                         <a class="uk-link-heading" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank">{{ group.name }}</a>
                     </h3>
+                    {% endif %}
                 </div>
-                {% endif %}
                 <div>
                     <a class="uk-button uk-button-default uk-margin-right" href="{{ request.referrer or url_for('group.list') }}">Zurück</a>
                     <input type="submit" class="uk-button uk-button-primary" value="Speichern">

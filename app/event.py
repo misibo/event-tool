@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import pytz
 from flask import (Blueprint, abort, current_app, flash, redirect,
                    render_template, request, url_for)
 from sqlalchemy.orm.session import make_transient
@@ -7,10 +10,10 @@ from . import mailing
 from .forms import EventEditForm
 from .models import Event, User, db
 from .security import login_required, manager_required
-from .views import CreateEditView, DeleteView, ListView
 
 bp = Blueprint("event", __name__, url_prefix="/event")
 
+tz = pytz.timezone('Europe/Zurich')
 
 @bp.route('/')
 def upcoming():
@@ -71,7 +74,7 @@ def send_invitations(id):
     event.send_invitations = True
     db.session.commit()
     mailing.send_invitations()
-    return redirect(url_for('event.list_participants', id=event_id))
+    return redirect(url_for('event.list_participants', id=id))
 
 
 @bp.route('/send_update/<int:id>')
@@ -106,6 +109,8 @@ def create():
 
     if form.validate_on_submit():
         form.populate_obj(event)
+        event.created = tz.localize(datetime.now())
+        event.modified = tz.localize(datetime.now())
         db.session.add(event)
         db.session.commit()
         flash(f'Anlass "{event.name}" erstellt.', 'success')
@@ -124,10 +129,13 @@ def copy(id):
 
     event.id = None
     event.name =  f'{name} - Kopie'
+    event.created = tz.localize(datetime.now())
+    event.modified = tz.localize(datetime.now())
+
     db.session.add(event)
     db.session.commit()
 
-    flash(f'Kopie von {name} erstellt.', 'success')
+    flash(f'Kopie von Anlass "{name}" erstellt.', 'success')
     return redirect(url_for('event.edit', id=event.id))
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
@@ -138,8 +146,9 @@ def edit(id):
 
     if form.validate_on_submit():
         form.populate_obj(event)
+        event.modified = tz.localize(datetime.now())
         db.session.commit()
-        flash(f'Anlass {event.name} gespeichert.', 'success')
+        flash(f'Anlass "{event.name}" gespeichert.', 'success')
         return redirect(request.referrer or url_for('event.list'))
 
     return render_template('event/edit.html', form=form, event=event)

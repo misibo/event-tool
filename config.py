@@ -1,3 +1,5 @@
+SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite3'
 SQLALCHEMY_ECHO = True
 SECRET_KEY = 'event-tool'
 PAGINATION_ITEMS_PER_PAGE = 10
+TIMEZONE = 'Europe/Zurich'

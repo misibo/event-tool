@@ -199,7 +199,7 @@
 {% macro render_event_date(event, width=64, height=false) %}
 {% if not height %}{% set height = width %}{% endif %}
 <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{height}}px; width: {{width}}px;">
-    <div class="uk-text-large uk-text-bold">{{ event.start.astimezone(TZ).strftime('%d') }}</div>
-    <div>{{ event.start.astimezone(TZ).strftime('%b') }}</div>
+    <div class="uk-text-large uk-text-bold">{{ event.start.astimezone(tz).strftime('%d') }}</div>
+    <div>{{ event.start.astimezone(tz).strftime('%b') }}</div>
 </div>
 {% endmacro %}

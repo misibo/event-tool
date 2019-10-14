@@ -22,10 +22,11 @@ from . import mailing
 from .models import Event, Group, GroupMember, User
 from slugify import slugify
 
+tz = pytz.timezone('Europe/Zurich')
 
 class LocalDateTimeField(DateTimeField):
 
-    tz = pytz.timezone('Europe/Zurich')
+    tz = tz
 
     def process_data(self, value):
         """
@@ -245,7 +246,6 @@ class ConfirmRegistrationForm(FlaskForm):
         return True
 
 
-# class MultiCheckboxField(SelectMultipleField):
 class QueryMultiCheckboxField(QuerySelectMultipleField):
 
     class CheckboxListWidget(object):
@@ -304,7 +304,7 @@ class EventEditForm(FlaskForm):
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
-    image = FileField('Hintergrund', validators=[FileAllowed(['png', 'jpg'])])
+    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
     groups = QueryMultiCheckboxField(
         'Gruppen',
         [Required()],
@@ -312,20 +312,26 @@ class EventEditForm(FlaskForm):
         query_factory=lambda: Group.query.all()
     )
 
-    def populate_obj(self, event: Event):
-        event.name = self.name.data
-        event.abstract = self.abstract.data
-        event.description = self.description.data
-        event.location = self.location.data
-        event.start = self.start.data
-        event.end = self.end.data
-        event.equipment = self.equipment.data
-        event.cost = self.cost.data
-        event.deadline = self.deadline.data
-        event.groups = self.groups.data
+    def validate(self):
+        if not super(EventEditForm, self).validate():
+            return False
 
-        if self.image.data is not None:
-            upload.store_event_thumbnail(self.image.data, event)
+        error = False
+
+        if self.start.data > self.end.data:
+            self.start.errors.append('Start muss vor dem Ende sein.')
+            error = True
+
+        if self.deadline.data > self.start.data:
+            self.deadline.errors.append('Deadline muss vor dem Start sein.')
+            error = True
+
+        return not error
+
+    def populate_obj(self, event: Event):
+        super().populate_obj(event)
+        if self.background.data is not None:
+            event.save_background(self.background.data)
 
 
 class EditInvitationForm(FlaskForm):

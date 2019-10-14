@@ -20,6 +20,5 @@ itsdangerous = "*"
 Pillow = "*"
 python-slugify="*"
 psycopg2 = "*"
-slugify = "*"
 
 [requires]
