@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar with context %}
 {% block title %}{{ group.name }}{% endblock %}
 {% block logo %}
 <div class="uk-navbar-item uk-logo">

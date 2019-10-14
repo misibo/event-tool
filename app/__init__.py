@@ -87,7 +87,8 @@ def inject_stage_and_region():
         MEMBER=GroupMember.Role.MEMBER,
         USER=User.Role.USER,
         MANAGER=User.Role.MANAGER,
-        ADMIN=User.Role.ADMIN
+        ADMIN=User.Role.ADMIN,
+        TZ=pytz.timezone('Europe/Zurich'),
     )
 
 
