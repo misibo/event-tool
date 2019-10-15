@@ -3,26 +3,25 @@
 
 {% block title %}{{ event.name }}{% endblock %}
 
-{% block attrs %}class="uk-background-cover" data-src="{{ url_for('static', filename='background.jpeg') }}" uk-img{% endblock %}
+{% block attrs %}class="uk-background-cover" data-src="{{ event.get_background_url() }}" uk-img{% endblock %}
 
 {% block hero %}
     <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
         <div class="uk-width-1-2 uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
-            {% if event.logo %}
-                <img class="uk-width-small" data-src="{{ url_for('static', filename=event.logo) }}" uk-img>
-            {% endif %}
-            <h1>{{ event.name }}</h1>
-            <div>
+            <h1 class="uk-heading-line uk-heading-medium"><span>{{ event.name }}</span></h1>
+            <div class="uk-text-lead">
                 {{ event.print_start_end() }}
             </div>
-            <ul class="uk-subnav" uk-margin>
-                {% for user in event.get_leaders() %}
-                <li>
-                    <a class="uk-link-reset" href="{{ url_for('user.view', username=user.username) }}">{{ user.username }}</a>
-                </li>
-                {% endfor %}
+            <div class="uk-flex uk-flex-center uk-margin">
+                <ul class="uk-subnav uk-subnav-divider uk-margin-remove" uk-margin>
+                    {% for user in event.get_leaders() %}
+                    <li>
+                        <a class="uk-link-reset" href="{{ url_for('user.view', username=user.username) }}">{{ user.username }}</a>
+                    </li>
+                    {% endfor %}
                 </ul>
-            <p class="uk-text-truncate">{{ text2html(event.abstract) }}</p>
+            </div>
+            <p>{{ event.abstract }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>

@@ -8,7 +8,7 @@ from werkzeug.exceptions import NotFound
 
 from . import mailing
 from .forms import EventEditForm
-from .models import Event, User, db
+from .models import Event, User, db, Choices, Group
 from .security import login_required, manager_required
 
 bp = Blueprint("event", __name__, url_prefix="/event")
@@ -83,6 +83,11 @@ def send_update(id):
     return ''
 
 
+class GroupChoices(Choices):
+
+    def get_choices():
+        return { g.id: g.name for g in Group.query.all() }
+
 @bp.route('/list')
 @manager_required
 def list():
@@ -90,6 +95,7 @@ def list():
         order_by_request(Event.name, 'order.name').\
         order_by_request(Event.start, 'order.start').\
         order_by_request(Event.modified, 'order.modified').\
+        filter_by_request(Group.id, 'filter.group', GroupChoices.get_values(), join=Event.groups).\
         order_by_request(Event.modified, 'order.deadline').\
         search_by_request([Event.name, Event.abstract, Event.details], 'search').\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
@@ -97,7 +103,8 @@ def list():
     return render_template(
         'event/list.html',
         pagination=pagination,
-        args=request.args.to_dict()
+        args=request.args.to_dict(),
+        GroupChoices=GroupChoices
     )
 
 

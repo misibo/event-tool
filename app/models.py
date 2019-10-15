@@ -23,12 +23,16 @@ class ExtendedQuery(BaseQuery):
         else:
             return self
 
-    def filter_by_request(self, attr, arg, choices, type=int):
-        value = request.args.get(arg, type=type)
+    def filter_by_request(self, attr, arg, choices, t=int, join=None):
+        value = request.args.get(arg, type=t)
+        query = self
+
+        if join:
+            query = query.join(join)
         if value and value in choices:
-            return self.filter(attr == value)
-        else:
-            return self
+            query = query.filter(attr == value)
+
+        return query
 
     def search_by_request(self, attrs, arg):
         value = request.args.get(arg)

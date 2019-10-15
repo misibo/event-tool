@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_search, render_event_date with context%}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date with context%}
 
 {% block title %}
     Anlässe
@@ -28,6 +28,7 @@
                     <th class="uk-visible@s">Ende</th>
                     <th>{{ render_order('Deadline', 'deadline', args)}}</th>
                     <th class="uk-visible@m">{{ render_order('Geändert', 'modified', args)}}</th>
+                    <th>{{ render_filter('Gruppen', 'group', GroupChoices, args)}}</th>
                     <th>Aktion</th>
                 </tr>
             </thead>
@@ -44,6 +45,15 @@
                     <td class="uk-visible@s">{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                     <td>{{ event.deadline.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                     <td class="uk-visible@m">{{ event.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                    <td>
+                        <ul class="uk-subnav">
+                            {% for group in event.groups %}
+                                <li>
+                                    <a class="uk-link" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank">{{ group.name }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
                     <td>
                         <ul class="uk-iconnav" uk-margin>
                             <li><a uk-tooltip="Einladungen" href="{{ url_for('event.list_participants', id=event.id) }}" uk-icon="mail"></a></li>
