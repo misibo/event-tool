@@ -15,7 +15,6 @@
             <a href="{{ url_for('event.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
         </div>
     </div>
-    {% if pagination.items %}
     <input name="page" value="{{ pagination.page }}" hidden>
     <div class="uk-overflow-auto">
         <table class="uk-table uk-table-small uk-table-hover uk-table-striped uk-table-middle">
@@ -52,9 +51,9 @@
                                 <li>
                                     <a class="uk-link" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank">{{ group.name }}</a>
                                 </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
+                                {% endfor %}
+                            </ul>
+                        </td>
                     <td>
                         <ul class="uk-iconnav" uk-margin>
                             <li><a uk-tooltip="Einladungen" href="{{ url_for('event.invitations', id=event.id) }}" uk-icon="mail"></a></li>
@@ -68,6 +67,7 @@
             </tbody>
         </table>
     </div>
+    {% if pagination.items %}
     {{ render_pagination(pagination, 'event.list', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">

@@ -17,7 +17,6 @@
         </div>
         {% endif %}
     </div>
-    {% if pagination.items %}
     <input name="page" value="{{ pagination.page }}" hidden>
     <table class="uk-table uk-table-small uk-table-hover uk-table-striped uk-table-middle">
         <thead>
@@ -35,14 +34,14 @@
                 <td> {{ render_group_logo(group) }}</td>
                 <td>{{ group.name }}</td>
                 <td class="uk-table-expand">{{ group.abstract }}</td>
-                <td>{{ '' if group.modified is none else group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
+                <td>{{ group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
                     <ul class="uk-iconnav">
                         <li><a uk-tooltip="Mitglieder" href="{{ url_for('group.members', id=group.id) }}" uk-icon="users"></a></li>
                         <li><a uk-tooltip="Ansicht" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank" uk-icon="link"></a></li>
                         <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a></li>
                         {% if g.user.is_admin() %}
-                            <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=group.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
+                        <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=group.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
                         {% endif %}
                     </ul>
                 </td>
@@ -50,6 +49,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% if pagination.items %}
     {{ render_pagination(pagination, 'group.list', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">

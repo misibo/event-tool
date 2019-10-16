@@ -20,7 +20,6 @@
             <a href="{{ url_for('event.invite', id=event.id) }}" class="uk-button uk-button-primary">Einladen</a>
         </div>
     </div>
-    {% if pagination.items %}
     <input name="page" value="{{ pagination.page }}" hidden>
     <table class="uk-table uk-table-striped">
         <thead>
@@ -28,7 +27,7 @@
                 <th></th>
                 <th>{{ render_order('Vorname', 'first_name', args) }}</th>
                 <th>{{ render_order('Nachname', 'family_name', args) }}</th>
-                <th>{{ render_filter('Antwort', 'reply', ReplyChoicesf, args) }}</th>
+                <th>{{ render_filter('Antwort', 'reply', ReplyChoices, args) }}</th>
                 <th>Aktion</th>
             </tr>
         </thead>
@@ -50,6 +49,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% if pagination.items %}
     {{ render_pagination(pagination, 'event.invitations', args) }}
     {% else %}
     <div class="uk-text-center uk-margin">
