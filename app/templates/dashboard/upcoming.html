@@ -39,16 +39,16 @@
                                 <li><a href="{{ url_for('event.view', id=event.id) }}">Ansehen</a></li>
                                 {% with membership = g.user.query_membership_for_event(event) %}
                                     {% if membership.role == membership.Role.LEADER %}
-                                    <li><a href="{{ url_for('event.list_participants', id=event.id) }}">Teilnehmerliste</a></li>
+                                    <li><a href="{{ url_for('event.invitations', id=event.id) }}">Teilnehmerliste</a></li>
                                     {% endif %}
                                 {% endwith %}
                                 {% with invitation = g.user.query_invitation_for_event(event) %}
                                     {% if invitation %}
-                                        {% if invitation.accepted is none %}
-                                            <li>Ausstehend <a href="{{ url_for('invitation.accept') }}">Anmelden</a> <a href="{{ url_for('invitation.accept') }}">Abmelden</a></li>
-                                        {% elif invitation.accepted  %}
+                                        {% if invitation.role == invitation.Reply.NONE %}
+                                            <li>Ausstehend <a href="{{ url_for('invitation.accept', id=invitation.id) }}">Anmelden</a> <a href="{{ url_for('invitation.accept') }}">Abmelden</a></li>
+                                        {% elif invitation.role == invitation.Reply.ACCEPTED  %}
                                             <li>Angemeldet <a href="{{ url_for('invitation.decline') }}">Abmelden</a></li>
-                                        {% else %}
+                                        {% elif invitation.role == invitation.Reply.DECLINED %}
                                             <li>Abgemeldet <a href="{{ url_for('invitation.accept') }}">Anmelden</a></li>
                                         {% endif %}
                                     {% else %}
