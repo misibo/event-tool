@@ -5,6 +5,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for,
 from sqlalchemy.orm import aliased
 from .forms import EditInvitationForm
 from .models import Event, Invitation, User, db, GroupMember, Group
+from .security import manager_required
 
 bp = Blueprint("invitation", __name__, url_prefix="/invitation")
 
@@ -53,7 +54,7 @@ def decline(id):
     if invitation.user_id != g.user.id and g.user.role != User.Role.MANAGER:
         return flask.abort(403)
 
-    invitation.accepted = False
+    invitation.reply = Invitation.Reply.DECLINED
     db.session.commit()
 
     flash('Du hast die Einladung abgelehnt.')
@@ -66,18 +67,38 @@ def accept(id):
     if invitation.user_id != g.user.id and g.user.role != User.Role.MANAGER:
         return flask.abort(403)
 
-    invitation.accepted = False
+    invitation.accepted = Invitation.Reply.ACCEPTED
     db.session.commit()
 
     flash('Du hast die Einladung angenommen.')
 
     return redirect(request.args.get('redirect_url'))
 
+@bp.route('/edit/<int:id>', methods=['GET', 'POST'])
+@manager_required
+def edit(id):
+    invitation = Invitation.query.get_or_404(id)
+
+    form = EditInvitationForm(obj=invitation)
+
+    if form.validate_on_submit():
+        form.populate_obj(invitation)
+        db.session.commit()
+
+        return redirect(url_for('event.invitations', id=invitation.event.id))
+
+    return render_template(
+        'invitation/edit.html',
+        form=form,
+        invitation=invitation
+    )
+
+
 @bp.route('/mail_reply/<int:id>', methods=['GET', 'POST'])
 def mail_reply(id):
     token = request.args.get('token', 'invalid')
 
-    invitation = Invitation.query.filter_by(id=id).first()
+    invitation = Invitation.query.get_or_404(id)
 
     if invitation is None or invitation.token != token:
         flash('Die Einladung ist nicht gültig.', 'error')
@@ -92,11 +113,16 @@ def mail_reply(id):
                 form.populate_obj(invitation)
                 db.session.commit()
 
-                if invitation.accepted:
+                if invitation.reply == Invitation.Reply.ACCEPTED:
                     flash(f'Du hast dich und {invitation.num_friends} weitere Freunde erfolgreich angemeldet.', 'info')
                     flash(f'{invitation.num_car_seats} Fahrplätze registriert.', 'info')
-                else:
+                elif Invitation.Reply.DECLINED:
                     flash('Du hast dich erfolgreich abgemeldet.')
 
+                return redirect(url_for('event.view', id=invitation.event.id))
+
             return render_template(
-                'invitation/invitation.html', form=form, invitation=invitation)
+                'invitation/edit.html',
+                form=form,
+                invitation=invitation
+            )

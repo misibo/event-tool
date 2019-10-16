@@ -1,6 +1,12 @@
 Hallo {{invitation.user.first_name}},
 
+{% if note %}
 Du bist zu folgendem Anlass "{{invitation.event.name}}" eingeladen:
+{% else %}
+Es gibt eine Aktualisierung bezüglich des Events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{{ note }}
+{% endif %}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {{invitation.event.abstract}}
 {{invitation.event.description}}

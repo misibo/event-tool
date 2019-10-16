@@ -9,6 +9,7 @@ from flask_mail import Mail
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 from . import utils
 from logging.config import dictConfig
+from urllib.parse import urlparse
 
 dictConfig({
     'version': 1,
@@ -70,15 +71,19 @@ def if_not(value, string):
     else:
         return string
 
-@app.context_processor
-def utility_processor():
+app.jinja_env.filters['utc_to_localtime'] = utils.utc_to_localtime
+app.jinja_env.filters['localtime_to_utc'] = utils.localtime_to_utc
 
-    def merge_into(d, **kwargs):
+@app.context_processor
+def utils_processor():
+
+    def _merge_into(d, **kwargs):
         d.update(kwargs)
         return d
 
     return dict(
-        merge_into=merge_into
+        merge_into=_merge_into,
+        url_back=utils.url_back
     )
 
 

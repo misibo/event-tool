@@ -25,17 +25,18 @@ def send_single_mail(recipient, subject, text, html=None):
     msg['To'] = recipient
     msg['Subject'] = subject
     msg.attach(MIMEText(text, 'plain'))
-    
+
     if html is not None:
         msg.attach(MIMEText(html, 'html'))
-    
+
     current_app.logger.info(f'Send email to {recipient}, subject="{subject}", sender={sender}')
-    
+
     timer = time.time()
     stdout, stderr = None, None
     try:
         p = subprocess.Popen(['sendmail', "-t", "-oi"], stdin=subprocess.PIPE)
         stdout, stderr = p.communicate(input=msg.as_bytes(), timeout=10)
+    # TODO NameError: name 'TimeoutExpired' is not defined
     except TimeoutExpired:
         p.kill()
         stdout, stderr = p.communicate()

@@ -14,14 +14,19 @@ tz = pytz.timezone('Europe/Zurich')
 
 class ExtendedQuery(BaseQuery):
 
-    def order_by_request(self, attr, arg, default=''):
+    def order_by_request(self, attr, arg, default='', join=None):
         value = request.args.get(arg, default)
+        query = self
+
+        if join:
+            query = self.join(join)
+
         if value == 'asc':
-            return self.order_by(attr.asc())
+            query = self.order_by(attr.asc())
         elif value == 'asc':
-            return self.order_by(attr.desc())
-        else:
-            return self
+            query = self.order_by(attr.desc())
+
+        return query
 
     def filter_by_request(self, attr, arg, choices, t=int, join=None):
         value = request.args.get(arg, type=t)
@@ -78,7 +83,10 @@ class Choices:
 
     @classmethod
     def cast_value(self, value):
-        return int(value) if value else None
+        if isinstance(value, int):
+            return value
+        else:
+            return int(value) if value else None
 
     @classmethod
     def get_items(self):
@@ -148,6 +156,20 @@ class GroupEventRelations(db.Model):
 
 class Invitation(db.Model):
 
+    class Reply(Choices):
+
+        NONE = 0
+        ACCEPTED = 1
+        DECLINED = 2
+
+        @classmethod
+        def get_choices(self):
+            return {
+                self.NONE: 'Keine Antwort',
+                self.ACCEPTED: 'Angemeldet',
+                self.DECLINED: 'Abgemeldet'
+            }
+
     __tablename__ = 'Invitation'
     __table_args__ = (
         # avoid sending multiple invitations to same user
@@ -160,13 +182,15 @@ class Invitation(db.Model):
     token = db.Column(db.String, nullable=False)
     send_email_attempt_utc = db.Column(UtcDateTime)
     send_email_success_utc = db.Column(UtcDateTime)
-    # None => NAN, false => rejected, true => accepted
-    accepted = db.Column(db.Boolean)
+    reply = db.Column(db.Integer, default=0)
     num_friends = db.Column(db.Integer, default=0)
     num_car_seats = db.Column(db.Integer, default=0)
 
     event: "Event" = db.relationship('Event', back_populates='invitations')
     user: "User" = db.relationship('User', back_populates='invitations')
+
+    def get_reply_label(self):
+        return self.Reply.get_choice_label(self.reply)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'event', 'user', 'accepted', 'num_friends', 'num_car_seats'])

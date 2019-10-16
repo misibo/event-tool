@@ -4,23 +4,34 @@
     <title>Einladung zum Anlass - {{invitation.event.name}}</title>
 </head>
 <body>
+    {% if note %}
     <p>
         Hallo {{invitation.user.first_name}},
+        du bist zu folgendem Anlass eingeladen:
+    </p>
+    {% else %}
+    <p>
+        Hallo {{invitation.user.first_name}},
+        es gibt eine Aktualisierung bezüglich des Anlasses.
     </p>
     <p>
-        Du bist zu folgendem Anlass eingeladen:
+        <b>{{note}}</b>
     </p>
-    <p>
-        <b>{{invitation.event.name}}</b><br>
-        <i>{{invitation.event.abstract}}</i><br>
-        <i>{{invitation.event.description}}</i>
-    </p>
-    <p>
-        <b>Treffpunkt: </b> {{invitation.event.location}}<br>
-        <b>Wann: </b> {{pretty_format_date(invitation.event.start)}}<br>
-        <b>Ausrüstung: </b> {{invitation.event.equipment}}<br>
-        <b>Kosten: </b> {{invitation.event.cost}} Fr.<br>
-    </p>
+    {% endif %}
+    <hr>
+    <h1>{{invitation.event.name}}</h1>
+    <p>{{invitation.event.abstract}}</p>
+    <p>{{invitation.event.description}}</p>
+    <dl>
+        <dt>Treffpunkt</dt>
+        <dd>{{invitation.event.location}}</dd>
+        <dt>Wann</dt>
+        <dd>{{pretty_format_date(invitation.event.start)}}</dd>
+        <dt>Ausrüstung</dt>
+        <dd>{{invitation.event.equipment}}</dd>
+        <dt>Kosten</dt>
+        <dd>{{invitation.event.cost}} Fr.</dd>
+    </dl>
     <p>
         Öffne folgenden Link im Browser, um die Einladung anzunehmen: {{token_url}}<br>
         Noch nicht sicher? Kein Problem, du kannst dich ja trotzdem vorläufig anmelden.

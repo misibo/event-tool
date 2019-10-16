@@ -8,7 +8,7 @@ from . import mailing
 from .forms import GroupEditForm
 from .models import Group, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
-from .views import CreateEditView, DeleteView, ListView
+from .utils import url_back
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -46,11 +46,13 @@ def join(id):
     db.session.add(member)
     db.session.commit()
 
-    mailing.send_invitations()
+
+    # TODO send mission invitations for user who joined the new group
+    # mailing.send_invitations()
 
     flash(f'Du bist jetzt "{member.get_role_label()}"" der Gruppe "{group.name}"."', 'success')
 
-    return redirect(request.referrer or '/')
+    return redirect(url_back('group.groups'))
 
 
 @bp.route('/member/edit/<int:id>', methods=['POST'])
@@ -76,7 +78,7 @@ def member_edit(id):
     else:
         flash(f'Du bist jetzt "{member.get_role_label()}" der Gruppe "{member.group.name}".', 'success')
 
-    return redirect(request.referrer or '/')
+    return redirect(url_back('group.groups'))
 
 
 @bp.route('/member/leave/<int:id>')
@@ -97,7 +99,7 @@ def member_leave(id):
     db.session.delete(member)
     db.session.commit()
 
-    return redirect(request.referrer or '/')
+    return redirect(url_back('group.groups'))
 
 
 @bp.route('/members/<int:id>')
@@ -153,7 +155,7 @@ def create():
             db.session.add(group)
             db.session.commit()
             flash(f'Gruppe "{group.name}" erstellt.', 'success')
-            return redirect(request.referrer or url_for('group.list'))
+            return redirect(url_back('group.list'))
 
         return render_template('group/edit.html', form=form, group=group)
 
@@ -168,7 +170,7 @@ def edit(id):
         form.populate_obj(group)
         db.session.commit()
         flash(f'Gruppe "{group.name}" gespeichert.', 'success')
-        return redirect(request.referrer or url_for('group.list'))
+        return redirect(url_back('group.list'))
 
     return render_template('group/edit.html', form=form, group=group)
 

@@ -6,6 +6,7 @@ from flask import current_app, flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from PIL import Image
+from slugify import slugify
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
                      SelectField, StringField, TextAreaField, ValidationError)
@@ -19,8 +20,7 @@ from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
 from . import mailing
-from .models import Event, Group, GroupMember, User
-from slugify import slugify
+from .models import Event, Group, GroupMember, Invitation, User
 
 tz = pytz.timezone('Europe/Zurich')
 
@@ -230,7 +230,8 @@ class UserEditForm(AccountForm):
 
 
 class ConfirmRegistrationForm(FlaskForm):
-    username = StringField('Benutzername')  # read-only, needed for password-managers
+
+    username = StringField('Benutzername')
     password = PasswordField('Passwort', [DataRequired(), Length(min=8)])
     password_confirm = PasswordField('Passwort bestätigen', [DataRequired(), Length(min=8)])
 
@@ -273,6 +274,7 @@ class QueryMultiCheckboxField(QuerySelectMultipleField):
 
 
 class GroupEditForm(FlaskForm):
+
     name = StringField('Name', [DataRequired(), Length(max=100)])
     slug = StringField('Slug')
     abstract = TextAreaField('Kurzinfo')
@@ -295,6 +297,7 @@ class GroupEditForm(FlaskForm):
 
 
 class EventEditForm(FlaskForm):
+
     name = StringField('Name', [DataRequired(), Length(max=100)])
     abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
     details = TextAreaField('Details', [Length(max=10000)])
@@ -335,7 +338,8 @@ class EventEditForm(FlaskForm):
 
 
 class EditInvitationForm(FlaskForm):
-    accepted = BooleanField("Einladung akzeptieren")
+
+    reply = SelectField('Antwort', choices=Invitation.Reply.get_select_choices(), coerce=int)
     num_friends = IntegerField("Anzahl Freunde")
     num_car_seats = IntegerField("Anzahl Fahrplätze")
 
@@ -352,13 +356,15 @@ class EditInvitationForm(FlaskForm):
             return False
 
         error = False
-        if self.accepted.data is not True:
-            if self.num_friends.data not in (None, 0):
+
+        if self.reply.data != Invitation.Reply.ACCEPTED:
+            if self.num_friends.data > 0:
                 self.num_friends.errors.append(
                     'Du kannst keine Freunde einladen, wenn du dich nicht anmeldest.')
                 error = True
-            if self.num_car_seats.data not in (None, 0):
+            if self.num_car_seats.data > 0:
                 self.num_car_seats.errors.append(
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
+
         return not error

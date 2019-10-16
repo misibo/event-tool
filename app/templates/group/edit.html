@@ -16,7 +16,7 @@
                     {% endif %}
                 </div>
                 <div>
-                    <a class="uk-button uk-button-default uk-margin-right" href="{{ request.referrer or url_for('group.list') }}">Zurück</a>
+                    <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('group.list') }}">Zurück</a>
                     <input type="submit" class="uk-button uk-button-primary" value="Speichern">
                 </div>
             </div>
