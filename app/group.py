@@ -6,9 +6,9 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
 
 from . import mailing
 from .forms import GroupEditForm
-from .models import Group, GroupMember, User, db
+from .models import Group, GroupMember, User, db, GroupEventRelations, Event
 from .security import admin_required, login_required, manager_required
-from .utils import url_back
+from .utils import url_back, localtime_to_utc, tz
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -26,7 +26,21 @@ def view(slug):
     group = Group.query.\
         filter(Group.slug == slug).\
         first_or_404()
-    return render_template('group/group.html', group=group, GroupMember=GroupMember)
+
+    members = GroupMember.query.\
+        filter(GroupMember.group_id == group.id).\
+        join(GroupMember.user).\
+        order_by(GroupMember.role.desc()).\
+        order_by(User.username.asc()).\
+        all()
+
+    upcoming = Event.query.\
+            join(GroupEventRelations, (GroupEventRelations.event_id == Event.id) & (GroupEventRelations.group_id == group.id)).\
+            filter(Event.start > tz.localize(datetime.now())).\
+            order_by(Event.start.asc()).\
+            all()
+
+    return render_template('group/group.html', group=group, members=members, upcoming=upcoming, GroupMember=GroupMember)
 
 
 @bp.route('/join/<int:id>', methods=['POST'])

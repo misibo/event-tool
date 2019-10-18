@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, text2html with context %}
+{% from 'macros.html' import render_field, render_image_field, render_user_avatar, render_group_logo, text2html with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
 
@@ -12,15 +12,24 @@
             <div class="uk-text-lead">
                 {{ event.print_start_end() }}
             </div>
-            <div class="uk-flex uk-flex-center uk-margin">
-                <ul class="uk-subnav uk-subnav-divider uk-margin-remove" uk-margin>
-                    {% for user in event.get_leaders() %}
-                    <li>
-                        <a class="uk-link-reset" href="{{ url_for('user.view', username=user.username) }}">{{ user.username }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+            <dl class="uk-description-list uk-description-list-divider">
+                <dt>Leiter</dt>
+                <dd>
+                    <div class="uk-flex uk-flex-center uk-margin-small-top">
+                        {% for user in event.get_leaders() %}
+                        {{ render_user_avatar(user, resolution=48) }}
+                        {% endfor %}
+                    </div>
+                </dd>
+                <dt>Gruppen</dt>
+                <dd>
+                    <div class="uk-flex uk-flex-center uk-margin-small-top">
+                        {% for group in event.groups %}
+                        {{ render_group_logo(group, resolution=48) }}
+                        {% endfor %}
+                    </div>
+                </dd>
+            </dl>
             <p>{{ event.abstract }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
@@ -31,7 +40,7 @@
     <div id="details">
         <h3 class="uk-card-title">Details</h3>
         <p>
-            {{ text2html(event.details) }}
+            {{ event.details | if_not('Keine Details vorhanden.') }}
         </p>
         <div class="uk-card uk-card-default">
             <div class="uk-card-header">
@@ -41,28 +50,9 @@
                 {% if event.invitations %}
                 <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
                 {% for invitation in event.invitations %}
-                    {% with user = invitation.user %}
-                        <div>
-                            <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
-                                <div class="uk-width-auto">
-                                    {% if user.image %}
-                                        <img class="uk-width-small" data-src="{{ url_for('static', filename=user.image) }}" uk-img height="32" width="32">
-                                    {% else %}
-                                        <div class="uk-placeholder uk-flex uk-flex-center uk-flex-middle" style="height: 32px; width: 32px;">
-                                            <span>:D</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="uk-width-expand">
-                                    <h4 class="uk-margin-remove">{{ user.first_name }} {{ user.family_name }}</h4>
-                                    <div class="uk-text-uppercase uk-text-small">
-                                        über <a class="uk-link-reset" href="{{ url_for('user.view', username=invitation.user.username) }}">{{ invitation.group.name }}</a>
-                                        {% if invitation.accepted %}<span uk-icon="check"></span>{% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endwith %}
+                    <div>
+                        {{ render_user_avatar(invitation.user, resolution=64) }}
+                    </div>
                 {% endfor %}
                 </div>
                 {% else %}

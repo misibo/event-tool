@@ -84,7 +84,7 @@
                             {% if g.user %}
                             <li>
                                 <a href="#">
-                                    {{ render_user_avatar(g.user, 32) }}
+                                    {{ render_user_avatar(g.user, resolution=32, link=false) }}
                                 </a>
                                 <div class="uk-navbar-dropdown">
                                     <ul class="uk-nav uk-navbar-dropdown-nav">
