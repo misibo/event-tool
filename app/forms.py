@@ -368,3 +368,6 @@ class EditInvitationForm(FlaskForm):
                 error = True
 
         return not error
+
+class ConfirmForm(FlaskForm):
+    pass

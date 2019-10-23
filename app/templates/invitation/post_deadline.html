@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'macros.html' import render_field %}
 
-{% block title %}Einladung - {{invitation.name}}{% endblock %}
+{% block title %}Einladung für {{ invitation.event.name }}{% endblock %}
 
 {% block content %}
 <p>

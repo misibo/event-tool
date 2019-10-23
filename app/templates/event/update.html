@@ -7,7 +7,7 @@
 
 {% block content %}
     <form method="POST">
-        <p>Upate bezüglich des Anlasses "{{ event.name }}" an aufgelistete Benutzer mit folgender Anmerkung verschicken.</p>
+        <p class="uk-text-center">Upate bezüglich des Anlasses "{{ event.name }}" an aufgelistete Benutzer mit folgender Anmerkung verschicken.</p>
         <div>
             <label class="uk-form-label">Anmerkung</label>
             <div class="uk-form-controls">
@@ -28,7 +28,7 @@
             {% endfor %}
         </div>
         <div class="uk-flex uk-flex-center">
-            <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('event.invitations') }}">Zurück</a>
+            <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('event.invitations', id=event.id) }}">Zurück</a>
             <input class="uk-button uk-button-primary" type="submit" value="Versenden">
         </div>
     </form>

@@ -2,8 +2,9 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import (Blueprint, abort, current_app, flash, redirect,
+from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
+from sqlalchemy.sql import func
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.session import make_transient
 from werkzeug.exceptions import NotFound
@@ -31,27 +32,50 @@ def upcoming():
 @bp.route('/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
-    return render_template('event/event.html', event=event)
+    invitation = None
+
+    if g.user:
+        invitation = Invitation.query.\
+            filter(Invitation.event_id == event.id).\
+            filter(Invitation.user_id == g.user.id).\
+            first()
+
+    return render_template('event/event.html', event=event, invitation=invitation)
 
 
 @bp.route('/invitations/<int:id>', methods=['GET'])
 @manager_required
 def invitations(id):
     event = Event.query.get_or_404(id)
-    pagination = Invitation.query.\
-        join(Invitation.user).\
-        filter(Invitation.event_id == id).\
-        filter_by_request(Invitation.reply, 'filter.reply', Invitation.Reply.get_values()).\
-        order_by_request(User.first_name, 'order.first_name').\
-        order_by_request(User.family_name, 'order.family_name').\
-        paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+    pagination = None
+
+    if event.invited:
+
+        stats = db.session.query(
+                func.sum(Invitation.num_car_seats).label('car_seats'),
+                func.sum(Invitation.num_friends).label('friends'),
+                func.count(Invitation.id).label('accepted')
+            ).\
+            filter(Invitation.event_id == event.id).\
+            filter(Invitation.reply == Invitation.Reply.ACCEPTED).\
+            group_by(Invitation.num_car_seats, Invitation.num_friends).\
+            first()
+
+        pagination = Invitation.query.\
+            join(Invitation.user).\
+            filter(Invitation.event_id == id).\
+            filter_by_request(Invitation.reply, 'filter.reply', Invitation.Reply.get_values()).\
+            order_by_request(User.first_name, 'order.first_name').\
+            order_by_request(User.family_name, 'order.family_name').\
+            paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 
     return render_template(
         'event/invitations.html',
         pagination=pagination,
+        stats=stats,
+        event=event,
         args={**request.args.to_dict(), **{'id': event.id}},
-        ReplyChoices=Invitation.Reply,
-        event=event
+        ReplyChoices=Invitation.Reply
     )
 
 # def list_participants(id):
@@ -101,7 +125,7 @@ def invite(id):
         flash(f'Die Deadline zu Anmeldung von Anlass "{event.name}" ist vorbei, somit ist es sinnlos, noch Einladungen zu verschicken.', 'warning')
         return redirect(url_for('event.edit', id=event.id))
 
-    if event.invitations:
+    if event.invited:
         flash(f'Zum Anlass "{event.name}" wurden schon Einladungen versendet.', 'warning')
         return redirect(url_for('event.invitations', id=event.id))
 
@@ -121,10 +145,11 @@ def invite(id):
             token = os.urandom(16).hex()
             invitations.append(Invitation(user=user, event=event, token=token))
         event.invitations = invitations
+        event.invited = True
         db.session.commit()
 
         for inv in event.invitations:
-            token_url = request.url_root + url_for('invitation.mail_reply', id=inv.id, token=inv.token)[1:]
+            token_url = url_for('invitation.edit', id=inv.id, token=inv.token, _external=True)
             send_single_mail(
                 recipient=inv.user.email,
                 subject=inv.event.name,

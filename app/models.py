@@ -158,9 +158,9 @@ class Invitation(db.Model):
 
     class Reply(Choices):
 
-        NONE = 0
-        ACCEPTED = 1
-        DECLINED = 2
+        NONE = 1
+        ACCEPTED = 2
+        DECLINED = 3
 
         @classmethod
         def get_choices(self):
@@ -186,8 +186,17 @@ class Invitation(db.Model):
     num_friends = db.Column(db.Integer, default=0)
     num_car_seats = db.Column(db.Integer, default=0)
 
-    event: "Event" = db.relationship('Event', back_populates='invitations')
-    user: "User" = db.relationship('User', back_populates='invitations')
+    event = db.relationship('Event', back_populates='invitations')
+    user = db.relationship('User', back_populates='invitations')
+
+    def no_reply(self):
+        return self.reply == self.Reply.NONE
+
+    def accepted_reply(self):
+        return self.reply == self.Reply.ACCEPTED
+
+    def declined_reply(self):
+        return self.reply == self.Reply.DECLINED
 
     def get_reply_label(self):
         return self.Reply.get_choice_label(self.reply)
@@ -351,7 +360,7 @@ class Event(db.Model):
     cost = db.Column(db.Integer)
     created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
-    send_invitations = db.Column(db.Boolean)
+    invited = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
     background_version = db.Column(db.Integer, default=0, nullable=False)
 

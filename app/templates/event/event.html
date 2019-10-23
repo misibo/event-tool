@@ -13,22 +13,36 @@
                 {{ event.print_start_end() }}
             </div>
             <dl class="uk-description-list uk-description-list-divider">
-                <dt>Leiter</dt>
+                <dt class="uk-margin-small">Leiter</dt>
                 <dd>
-                    <div class="uk-flex uk-flex-center uk-margin-small-top">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
                         {% for user in event.get_leaders() %}
                         {{ render_user_avatar(user, resolution=48) }}
                         {% endfor %}
                     </div>
                 </dd>
-                <dt>Gruppen</dt>
+                <dt class="uk-margin-small">Gruppen</dt>
                 <dd>
-                    <div class="uk-flex uk-flex-center uk-margin-small-top">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
                         {% for group in event.groups %}
                         {{ render_group_logo(group, resolution=48) }}
                         {% endfor %}
                     </div>
                 </dd>
+                {% if invitation %}
+                <dt class="uk-margin-small">
+                    Einladung
+                </dt>
+                <dd>
+                    {% if invitation.no_reply() %}
+                        Noch keine Antwort. Annehmen oder Ablehnen?
+                    {% elif invitation.accepted_reply() %}
+                        Angenommen. Noch ablehnen?
+                    {% elif invitation.declined_reply() %}
+                        Abgelehnt. Dennoch anmelden?
+                    {% endif %}
+                </dd>
+                {% endif %}
             </dl>
             <p>{{ event.abstract }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>

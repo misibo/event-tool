@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block content %}
+{% if event.invited %}
 <form method="GET">
     <div class="uk-margin" uk-grid>
         <div>
@@ -14,11 +15,26 @@
             </h3>
         </div>
         <div class="uk-width-expand@s">
+            <span>{{ pagination.total }} Einladungen</span>
             {{ render_search(args) }}
         </div>
         <div>
-            <a href="{{ url_for('event.invite', id=event.id) }}" class="uk-button uk-button-primary">Einladen</a>
+            <a href="{{ url_for('event.update', id=event.id) }}" class="uk-button uk-button-primary">Update senden</a>
         </div>
+        <dl class="uk-description-list">
+            {% if stats %}
+            <dt>Angemeldet</dt>
+            <dd>{{ stats.friends + stats.accepted }}</dd>
+            <dt>Fahrplätze</dt>
+            <dd>{{ stats.car_seats }}</dd>
+            <dt>Fahrplätze</dt>
+            <dd>{{ stats.car_seats }}</dd>
+            {% else %}
+            </dl>
+        <div>
+            Noch keine Anmeldungen.
+        </div>
+        {% endif %}
     </div>
     <input name="page" value="{{ pagination.page }}" hidden>
     <table class="uk-table uk-table-striped">
@@ -28,6 +44,8 @@
                 <th>{{ render_order('Vorname', 'first_name', args) }}</th>
                 <th>{{ render_order('Nachname', 'family_name', args) }}</th>
                 <th>{{ render_filter('Antwort', 'reply', ReplyChoices, args) }}</th>
+                <th>Freunde</th>
+                <th>Fahrplätze</th>
                 <th>Aktion</th>
             </tr>
         </thead>
@@ -40,6 +58,8 @@
                 <td>{{ invitation.user.first_name }}</td>
                 <td>{{ invitation.user.family_name }}</td>
                 <td>{{ invitation.get_reply_label() }}</td>
+                <td>{{ invitation.num_friends }}</td>
+                <td>{{ invitation.num_car_seats }}</td>
                 <td>
                     <ul class="uk-iconnav" uk-margin>
                         <li><a uk-tooltip="Bearbeiten" href="{{ url_for('invitation.edit', id=invitation.id) }}" uk-icon="pencil"></a></li>
@@ -57,4 +77,13 @@
     </div>
     {% endif %}
 </form>
+{% else %}
+    <div class="uk-text-center">
+        <h3 class="uk-text-muted">
+            Es gibt noch keine Einladungen zum Anlass "{{event.name}}"
+        </h3>
+        <a href="{{ url_back('event.edit', id=event.id) }}" class="uk-button uk-button-default">Zurück</a>
+        <a href="{{ url_for('event.invite', id=event.id) }}" class="uk-button uk-button-primary">Einladen</a>
+    </div>
+{% endif %}
 {% endblock %}
