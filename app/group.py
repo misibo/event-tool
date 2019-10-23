@@ -5,10 +5,10 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
 from . import mailing
-from .forms import GroupEditForm
-from .models import Group, GroupMember, User, db, GroupEventRelations, Event
+from .forms import GroupEditForm, GroupMemberForm
+from .models import Event, Group, GroupEventRelations, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
-from .utils import url_back, localtime_to_utc, tz
+from .utils import localtime_to_utc, tz, url_back
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -40,7 +40,34 @@ def view(slug):
             order_by(Event.start.asc()).\
             all()
 
-    return render_template('group/group.html', group=group, members=members, upcoming=upcoming, GroupMember=GroupMember)
+    form = GroupMemberForm()
+
+    membership = None
+
+    if g.user:
+
+        for member in members:
+            if member.user_id == g.user.id:
+                membership = member
+                break
+
+        if not g.user.can_manage():
+            del(form.role.choices[2])
+
+        if membership:
+            form.role.data = membership.role
+        else:
+            form.role.choices.insert(0,(0, 'Beitreten als'))
+
+    return render_template(
+        'group/group.html',
+        group=group,
+        members=members,
+        pcoming=upcoming,
+        GroupMember=GroupMember,
+        groupmember_form=form,
+        membership=membership
+    )
 
 
 @bp.route('/join/<int:id>', methods=['POST'])
@@ -85,8 +112,6 @@ def member_edit(id):
         member.role = role
         db.session.commit()
 
-    # TODO mailing.send_invitations()
-
     if editing:
         flash(f'Mitglied "{member.user.get_fullname()}" hat jetzt die Rolle "{member.get_role_label()}" in der Gruppe "{member.group.name}".', 'success')
     else:
@@ -95,9 +120,9 @@ def member_edit(id):
     return redirect(url_back('group.groups'))
 
 
-@bp.route('/member/leave/<int:id>')
+@bp.route('/member/remove/<int:id>')
 @login_required
-def member_leave(id):
+def member_remove(id):
     member = GroupMember.query.get_or_404(id)
 
     editing = member.user_id != g.user.id

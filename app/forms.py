@@ -9,7 +9,7 @@ from PIL import Image
 from slugify import slugify
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
-                     SelectField, StringField, TextAreaField, ValidationError)
+                     SelectField, StringField, TextAreaField, ValidationError, RadioField)
 from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
 from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
@@ -55,6 +55,48 @@ class LocalDateTimeField(DateTimeField):
         """
         super(LocalDateTimeField, self).process_formdata(valuelist)
         self.data = self.tz.localize(self.data)
+
+
+class CheckboxListWidget(object):
+
+    def __init__(self, stack=True):
+        self.stack = stack
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        html = ['<div %s>' % html_params(**kwargs)]
+        for subfield in field:
+            class_ = 'uk-checkbox'
+            br = '<br>'
+            if self.stack is False:
+                br = ''
+            else:
+                class_ += ' uk-margin-small-left'
+            html.append('%s %s %s' %
+                        (subfield(class_=class_), subfield.label, br))
+        html.append('</div>')
+        return HTMLString(''.join(html))
+
+
+class RadioListWidget(object):
+
+    def __init__(self, stack=True):
+        self.stack = stack
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        html = ['<div %s>' % html_params(**kwargs)]
+        for subfield in field:
+            class_ = 'uk-radio'
+            br = '<br>'
+            if self.stack is False:
+                br = ''
+            else:
+                class_ += ' uk-margin-small-left'
+            html.append('%s %s %s' %
+                        (subfield(class_=class_), subfield.label, br))
+        html.append('</div>')
+        return HTMLString(''.join(html))
 
 
 class LoginForm(FlaskForm):
@@ -247,32 +289,6 @@ class ConfirmRegistrationForm(FlaskForm):
         return True
 
 
-class QueryMultiCheckboxField(QuerySelectMultipleField):
-
-    class CheckboxListWidget(object):
-
-        def __init__(self, stack=True):
-            self.stack = stack
-
-        def __call__(self, field, **kwargs):
-            kwargs.setdefault('id', field.id)
-            html = ['<div %s>' % html_params(**kwargs)]
-            for subfield in field:
-                class_ = 'uk-checkbox'
-                br = '<br>'
-                if self.stack is False:
-                    br = ''
-                else:
-                    class_ += ' uk-margin-small-left'
-                html.append('%s %s %s' %
-                            (subfield(class_=class_), subfield.label, br))
-            html.append('</div>')
-            return HTMLString(''.join(html))
-
-    widget = CheckboxListWidget()
-    option_widget = CheckboxInput()
-
-
 class GroupEditForm(FlaskForm):
 
     name = StringField('Name', [DataRequired(), Length(max=100)])
@@ -308,11 +324,13 @@ class EventEditForm(FlaskForm):
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
     background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
-    groups = QueryMultiCheckboxField(
+    groups = QuerySelectMultipleField(
         'Gruppen',
         [Required()],
         get_label='name',
-        query_factory=lambda: Group.query.all()
+        query_factory=lambda: Group.query.all(),
+        widget=CheckboxListWidget(),
+        option_widget=CheckboxInput()
     )
 
     def validate(self):
@@ -371,3 +389,11 @@ class EditInvitationForm(FlaskForm):
 
 class ConfirmForm(FlaskForm):
     pass
+
+class GroupMemberForm(FlaskForm):
+    role = SelectField(
+        'Rolle',
+        choices=GroupMember.Role.get_select_choices(),
+        coerce=int
+        # widget=RadioListWidget()
+    )

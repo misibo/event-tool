@@ -59,7 +59,7 @@
                 </form>
             </td>
             <td>
-                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_leave', id=group.id) }}" uk-icon="sign-out"></a>
+                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_remove', id=group.id) }}" uk-icon="sign-out"></a>
             </td>
         </tr>
         {% endfor %}

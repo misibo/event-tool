@@ -15,53 +15,25 @@
         <h1>{{ group.name }}</h1>
         <div>{{ group.abstract | if_not('Keine Kurzinfo') }}</div>
         {% if g.user %}
-        <div class="uk-margin">
-            <ul class="uk-subnav">
-                    {% with membership = g.user.query_membership(group) %}
-                    {% if membership %}
-                        <li>
-                            <form method="POST" action="{{ url_for('group.member_edit', id=membership.id) }}">
-                                <div uk-form-custom="target: > * > span:last-child">
-                                    <select name="role" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
-                                        {% for val, label in GroupMember.Role.get_choices().items() %}
-                                        <option {% if val == GroupMember.Role.LEADER and not g.user.can_manage() %}disabled{% endif %} value="{{ val }}" {% if val == membership.role %}selected=""{% endif %}>{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div>
-                                        <span uk-icon="user"></span>
-                                        <span></span>
-                                    </div>
-                                </div>
-                            </form>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('group.member_leave', id=membership.id) }}" onclick="return confirm('Bist du dir sicher?')">Verlassen</a>
-                        </li>
-                        {% if g.user.can_manage() %}
-                        <li>
-                            <a href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
-                        </li>
-                        {% endif %}
-                    {% else %}
-                        <li>
-                            <form method="POST" action="{{ url_for('group.join', id=group.id) }}">
-                                <div uk-form-custom="target: > * > span:last-child">
-                                    <select name="role" onchange="this.form.submit()">
-                                        <option value="">Beitreten als</option>
-                                        {% for val, label in GroupMember.Role.get_choices().items() %}
-                                        <option {% if val == GroupMember.Role.LEADER %}disabled{% endif %} value="{{ val }}">{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <span class="uk-link">
-                                        <span uk-icon="user"></span>
-                                        <span></span>
-                                    </span>
-                                </div>
-                            </form>
-                        </li>
-                    {% endif %}
-                    {% endwith %}
-                </ul>
+        <div class="uk-flex-center uk-flex-middle uk-margin" uk-grid>
+            <div>
+                <form class="uk-flex-inline" method="POST" action="{{ url_for('group.member_edit', id=membership.id) if membership else url_for('group.join', id=group.id) }}">
+                    <div class="uk-text-nowrap">
+                        {{ 'Du bist' if membership else 'Du bist nicht Mitglied' }}
+                        {{ groupmember_form.role(class='uk-margin-small-left uk-select uk-form-width-small uk-form-small', onchange='javascript: submit()') }}
+                    </div>
+                </form>
+            </div>
+            <div>
+                {% if membership %}
+                <a class="uk-button uk-button-text" href="{{ url_for('group.member_remove', id=membership.id) }}" onclick="return confirm('Bist du dir sicher?')">Verlassen</a>
+                {% endif %}
+            </div>
+            <div>
+                {% if g.user.can_manage() %}
+                <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
         <div class="uk-margin">
