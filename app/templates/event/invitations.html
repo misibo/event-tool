@@ -76,6 +76,7 @@
         <h3 class="uk-text-muted">Keine Einladungen gefunden</h3>
     </div>
     {% endif %}
+    {{ form.csrf_token }}
 </form>
 {% else %}
     <div class="uk-text-center">

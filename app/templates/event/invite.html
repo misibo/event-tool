@@ -39,6 +39,7 @@
     <div class="uk-flex uk-flex-center">
         <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('event.list') }}">Zurück</a>
         <form method="POST">
+            {{ form.csrf_token }}
             <input class="uk-button uk-button-primary" type="submit" value="Versenden">
         </form>
     </div>

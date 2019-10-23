@@ -31,6 +31,7 @@
             <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('event.invitations', id=event.id) }}">Zurück</a>
             <input class="uk-button uk-button-primary" type="submit" value="Versenden">
         </div>
+        {{ form.csrf_token }}
     </form>
 {% endblock %}
 

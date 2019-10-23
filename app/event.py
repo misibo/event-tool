@@ -10,16 +10,14 @@ from sqlalchemy.orm.session import make_transient
 from werkzeug.exceptions import NotFound
 
 from . import mailing
-from .forms import EventEditForm
+from .forms import EventEditForm, ConfirmForm
 from .mailing import send_single_mail
 from .models import (Choices, Event, Group, GroupEventRelations, GroupMember,
                      Invitation, User, db)
 from .security import login_required, manager_required
-from .utils import url_back
+from .utils import url_back, tz
 
 bp = Blueprint("event", __name__, url_prefix="/event")
-
-tz = pytz.timezone('Europe/Zurich')
 
 @bp.route('/')
 def upcoming():
@@ -78,48 +76,12 @@ def invitations(id):
         ReplyChoices=Invitation.Reply
     )
 
-# def list_participants(id):
-#     event = Event.query.get_or_404(id)
-
-#     if event.send_invitations:
-#         num_participants = 0
-#         num_car_seats = 0
-#         num_friends = 0
-
-#         order = {True: 0, False: 1, None: 2}
-
-#         invitations = event.invitations
-#         invitations = sorted(invitations, key=lambda x: (order[x.accepted], x.user.family_name, x.user.first_name))
-#         for inv in invitations:
-#             if inv.accepted:
-#                 num_participants += 1
-#                 if inv.num_car_seats is not None:
-#                     num_car_seats += inv.num_car_seats
-#                 if inv.num_friends is not None:
-#                     num_friends += inv.num_friends
-
-#         return render_template(
-#             'event/list_participants.html', event=event, invitations=invitations,
-#             num_participants=num_participants, num_car_seats=num_car_seats, num_friends=num_friends)
-#     else:
-#         users = set()
-
-#         for group in event.groups:
-#             for role in group.members:
-#                 users.add(role.user)
-
-#         users = sorted(users, key=lambda x: (x.family_name, x.first_name))
-
-#         return render_template(
-#             'event/list_audience.html', event=event, users=users)
-
 
 @bp.route('/invite/<int:id>', methods=['GET', 'POST'])
 @manager_required
 def invite(id):
     event = Event.query.get_or_404(id)
-
-    now = tz.localize(datetime.utcnow())
+    now = tz.localize(datetime.now())
 
     if event.deadline < now:
         flash(f'Die Deadline zu Anmeldung von Anlass "{event.name}" ist vorbei, somit ist es sinnlos, noch Einladungen zu verschicken.', 'warning')
@@ -138,7 +100,9 @@ def invite(id):
         order_by(User.username).\
         all()
 
-    if request.method == 'POST':
+    form = ConfirmForm()
+
+    if form.validate_on_submit():
 
         invitations = []
         for user in users:
@@ -164,7 +128,8 @@ def invite(id):
     return render_template(
         'event/invite.html',
         users=users,
-        event=event
+        event=event,
+        form=form
     )
 
 
@@ -172,31 +137,33 @@ def invite(id):
 @manager_required
 def update(id):
     event = Event.query.get_or_404(id)
-
     now = tz.localize(datetime.utcnow())
 
     if event.deadline < now:
         flash(f'Die Deadline zu Anmeldung von Anlass "{event.name}" ist vorbei, somit ist es sinnlos, noch Einladungen zu verschicken.', 'warning')
         return redirect(url_for('event.edit', id=event.id))
 
-    if request.method == 'POST':
+    form = ConfirmForm()
+
+    if form.validate_on_submit():
         note = request.form.get('note')
         for inv in event.invitations:
-            token_url = request.url_root + url_for('invitation.mail_reply', id=inv.id, token=inv.token)[1:]
+            token_url = url_for('invitation.edit', id=inv.id, token=inv.token, _external=True)
             send_single_mail(
                 recipient=inv.user.email,
                 subject=inv.event.name,
                 text=render_template(
-                    'mail/invitation.text',
+                    'mail/update.text',
                     invitation=inv, token_url=token_url, note=note),
                 html=render_template(
-                    'mail/invitation.html',
+                    'mail/udpate.html',
                     invitation=inv, token_url=token_url, note=note),
             )
 
     return render_template(
         'event/update.html',
-        event=event
+        event=event,
+        form=form
     )
 
 
@@ -204,6 +171,7 @@ class GroupChoices(Choices):
 
     def get_choices():
         return { g.id: g.name for g in Group.query.all() }
+
 
 @bp.route('/list')
 @manager_required
@@ -242,6 +210,7 @@ def create():
 
     return render_template('event/edit.html', form=form, event=event)
 
+
 @bp.route('/copy/<int:id>', methods=['GET'])
 @manager_required
 def copy(id):
@@ -261,6 +230,7 @@ def copy(id):
 
     flash(f'Kopie von Anlass "{name}" erstellt.', 'success')
     return redirect(url_for('event.edit', id=event.id))
+
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @manager_required
