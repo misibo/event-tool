@@ -52,7 +52,7 @@ def view(slug):
                 break
 
         if not g.user.can_manage():
-            del(form.role.choices[2])
+            del(form.role.choices[2]) # delte leader choice
 
         if membership:
             form.role.data = membership.role

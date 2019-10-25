@@ -182,7 +182,7 @@ class Invitation(db.Model):
     token = db.Column(db.String, nullable=False)
     send_email_attempt_utc = db.Column(UtcDateTime)
     send_email_success_utc = db.Column(UtcDateTime)
-    reply = db.Column(db.Integer, default=0)
+    reply = db.Column(db.Integer, default=1)
     num_friends = db.Column(db.Integer, default=0)
     num_car_seats = db.Column(db.Integer, default=0)
 
@@ -367,14 +367,6 @@ class Event(db.Model):
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
-
-    def get_leaders(self):
-        return User.query.\
-            join(User, GroupMember.user).\
-            join(Group, GroupMember.group).\
-            filter(GroupMember.role == GroupMember.Role.LEADER).\
-            filter(Group.id.in_([g.id for g in self.groups])).\
-            all()
 
     def print_start_end(self):
         if (self.start.day == self.end.day):

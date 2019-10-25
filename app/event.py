@@ -4,18 +4,18 @@ from datetime import datetime
 import pytz
 from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
-from sqlalchemy.sql import func
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, joinedload
 from sqlalchemy.orm.session import make_transient
+from sqlalchemy.sql import func
 from werkzeug.exceptions import NotFound
 
 from . import mailing
-from .forms import EventEditForm, ConfirmForm
+from .forms import ConfirmForm, EventEditForm
 from .mailing import send_single_mail
 from .models import (Choices, Event, Group, GroupEventRelations, GroupMember,
                      Invitation, User, db)
 from .security import login_required, manager_required
-from .utils import url_back, tz
+from .utils import tz, url_back
 
 bp = Blueprint("event", __name__, url_prefix="/event")
 
@@ -30,15 +30,37 @@ def upcoming():
 @bp.route('/<int:id>')
 def view(id):
     event = Event.query.get_or_404(id)
+
+    leaders = User.query.\
+        join(GroupMember, GroupMember.user_id == User.id).\
+        join(Group, Group.id == GroupMember.group_id).\
+        join(GroupEventRelations, GroupEventRelations.group_id == Group.id).\
+        join(Event, Event.id == GroupEventRelations.event_id).\
+        filter(Event.id == id).\
+        filter(GroupMember.role == GroupMember.Role.LEADER).\
+        all()
+
+    invitations = Invitation.query.options(joinedload(Invitation.user)).\
+        filter(Invitation.event_id == event.id).\
+        all()
+
+    participants = []
     invitation = None
+    logged_in = g.user is not None
 
-    if g.user:
-        invitation = Invitation.query.\
-            filter(Invitation.event_id == event.id).\
-            filter(Invitation.user_id == g.user.id).\
-            first()
+    for inv in invitations:
+        if inv.accepted_reply():
+            participants.append(inv.user)
+        if logged_in and inv.user_id == g.user.id:
+            invitation = inv
 
-    return render_template('event/event.html', event=event, invitation=invitation)
+    return render_template(
+        'event/event.html',
+        event=event,
+        leaders=leaders,
+        participants=participants,
+        invitation=invitation
+    )
 
 
 @bp.route('/invitations/<int:id>', methods=['GET'])
@@ -46,17 +68,17 @@ def view(id):
 def invitations(id):
     event = Event.query.get_or_404(id)
     pagination = None
+    stats = None
 
     if event.invited:
 
         stats = db.session.query(
-                func.sum(Invitation.num_car_seats).label('car_seats'),
-                func.sum(Invitation.num_friends).label('friends'),
+                func.coalesce(func.sum(Invitation.num_car_seats),0).label('car_seats'),
+                func.coalesce(func.sum(Invitation.num_friends),0).label('friends'),
                 func.count(Invitation.id).label('accepted')
             ).\
             filter(Invitation.event_id == event.id).\
             filter(Invitation.reply == Invitation.Reply.ACCEPTED).\
-            group_by(Invitation.num_car_seats, Invitation.num_friends).\
             first()
 
         pagination = Invitation.query.\
@@ -181,7 +203,7 @@ def list():
         order_by_request(Event.start, 'order.start').\
         order_by_request(Event.modified, 'order.modified').\
         filter_by_request(Group.id, 'filter.group', GroupChoices.get_values(), join=Event.groups).\
-        order_by_request(Event.modified, 'order.deadline').\
+        order_by_request(Event.deadline, 'order.deadline').\
         search_by_request([Event.name, Event.abstract, Event.details], 'search').\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 

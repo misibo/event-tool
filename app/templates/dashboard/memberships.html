@@ -32,7 +32,7 @@
                         </div>
                         <div class="uk-card-footer uk-flex uk-flex-between uk-flex-middle">
                             <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=membership.group.slug) }}">Ansehen</a>
-                            <a class="uk-button uk-button-text" href="{{ url_for('group.leave', id=membership.group.id) }}" onclick="return confirm('Bist du dir sicher?')">Austreten</a>
+                            <a class="uk-button uk-button-text" href="{{ url_for('group.member_remove', id=membership.group.id) }}" onclick="return confirm('Bist du dir sicher?')">Austreten</a>
                         </div>
                     </div>
                 </div>
