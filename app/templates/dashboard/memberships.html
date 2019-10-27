@@ -18,14 +18,12 @@
                     <div class="uk-card uk-card-default">
                         <div class="uk-card-header">
                             <h3 class="uk-card-title uk-margin-remove">{{ membership.group.name }}</h3>
-                            <div>
-                                <span>Du bist {{ membership.get_role_label() }}</span>
-                                {% if membership.role == membership.Role.SPECTATOR %}
-                                    <a class="uk-button uk-button-text" href="{{ url_for('group.join', id=membership.group.id) }}">Werde Teilnehmer</a>
-                                {% elif membership.role == membership.Role.MEMBER %}
-                                    <a class="uk-button uk-button-text" href="{{ url_for('group.watch', id=membership.group.id) }}">Werde Zuschauer</a>
-                                {% endif %}
-                            </div>
+                            <form class="uk-flex-inline" method="POST" action="{{ url_for('group.member_edit', id=membership.id) if membership else url_for('group.join', id=group.id) }}">
+                                <div class="uk-text-nowrap">
+                                    {{ 'Du bist' if membership else 'Du bist nicht Mitglied' }}
+                                    TODO: zeige form um mitgliedschaft zu ändern
+                                </div>
+                            </form>
                         </div>
                         <div class="uk-card-body">
                             {{ membership.group.description }}
