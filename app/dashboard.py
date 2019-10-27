@@ -1,11 +1,14 @@
+from datetime import datetime
+
 import pytz
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    url_for)
 from sqlalchemy.orm import aliased
 
 from .forms import AccountForm
-from .models import Event, Group, GroupEventRelations, GroupMember, User, db
+from .models import Event, Group, GroupEventRelations, GroupMember, User, db, Invitation
 from .security import login_required
+from .utils import tz
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -13,20 +16,34 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 @bp.route('/upcoming', methods=['GET', 'POST'])
 @login_required
 def upcoming():
-    memberships = {m.group: m for m in g.user.memberships}
     pagination = Event.query.\
-        join(Event.groups).\
-        join(aliased(Group), aliased(GroupMember)).\
-        join(User, GroupMember).\
-        filter(User.id == g.user.id).\
+        join(GroupEventRelations, GroupEventRelations.event_id == Event.id).\
+        join(Group, Group.id == GroupEventRelations.group_id).\
+        join(GroupMember, GroupMember.group_id == Group.id).\
+        filter(GroupMember.user_id == g.user.id).\
+        filter(Event.start > tz.localize(datetime.now())).\
         order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
+
+    invitations = Invitation.query.\
+        join(Event, Event.id == Invitation.event_id).\
+        filter(Invitation.user_id == g.user.id).\
+        all()
+
+    def find(items, attr, value):
+        for item in items:
+            if getattr(item, attr) == value:
+                return item
+        return None
 
     return render_template(
         'dashboard/upcoming.html',
         pagination=pagination,
-        tz=pytz.timezone('Europe/Zurich'),
-        memberships=memberships)
+        tz=tz,
+        invitations=invitations,
+        memberships=memberships,
+        find=find
+    )
 
 @bp.route('/memberships', methods=['GET', 'POST'])
 @login_required
@@ -34,7 +51,11 @@ def memberships():
     pagination = GroupMember.query.\
         filter(GroupMember.user_id == g.user.id).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
-    return render_template('dashboard/memberships.html', pagination=pagination)
+
+    return render_template(
+        'dashboard/memberships.html',
+        pagination=pagination
+    )
 
 
 @bp.route('/account', methods=['GET', 'POST'])
