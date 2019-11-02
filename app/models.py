@@ -3,9 +3,9 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import g, request, url_for
+from flask import current_app, g, request, url_for
 from flask_sqlalchemy import BaseQuery, SQLAlchemy
-from sqlalchemy import event, or_
+from sqlalchemy import or_
 from sqlalchemy.types import TypeDecorator
 
 from .image import store_background, store_favicon
@@ -14,21 +14,30 @@ tz = pytz.timezone('Europe/Zurich')
 
 class ExtendedQuery(BaseQuery):
 
-    def order_by_request(self, attr, arg, default=''):
+    def order_by_request(self, attr, arg, default='', join=None):
         value = request.args.get(arg, default)
-        if value == 'asc':
-            return self.order_by(attr.asc())
-        elif value == 'asc':
-            return self.order_by(attr.desc())
-        else:
-            return self
+        query = self
 
-    def filter_by_request(self, attr, arg, choices, type=int):
-        value = request.args.get(arg, type=type)
+        if join:
+            query = self.join(join)
+
+        if value == 'asc':
+            query = self.order_by(attr.asc())
+        elif value == 'asc':
+            query = self.order_by(attr.desc())
+
+        return query
+
+    def filter_by_request(self, attr, arg, choices, t=int, join=None):
+        value = request.args.get(arg, type=t)
+        query = self
+
+        if join:
+            query = query.join(join)
         if value and value in choices:
-            return self.filter(attr == value)
-        else:
-            return self
+            query = query.filter(attr == value)
+
+        return query
 
     def search_by_request(self, attrs, arg):
         value = request.args.get(arg)
@@ -74,7 +83,10 @@ class Choices:
 
     @classmethod
     def cast_value(self, value):
-        return int(value) if value else None
+        if isinstance(value, int):
+            return value
+        else:
+            return int(value) if value else None
 
     @classmethod
     def get_items(self):
@@ -144,6 +156,20 @@ class GroupEventRelations(db.Model):
 
 class Invitation(db.Model):
 
+    class Reply(Choices):
+
+        NONE = 1
+        ACCEPTED = 2
+        DECLINED = 3
+
+        @classmethod
+        def get_choices(self):
+            return {
+                self.NONE: 'Keine Antwort',
+                self.ACCEPTED: 'Angemeldet',
+                self.DECLINED: 'Abgemeldet'
+            }
+
     __tablename__ = 'Invitation'
     __table_args__ = (
         # avoid sending multiple invitations to same user
@@ -156,13 +182,24 @@ class Invitation(db.Model):
     token = db.Column(db.String, nullable=False)
     send_email_attempt_utc = db.Column(UtcDateTime)
     send_email_success_utc = db.Column(UtcDateTime)
-    # None => NAN, false => rejected, true => accepted
-    accepted = db.Column(db.Boolean)
+    reply = db.Column(db.Integer, default=1)
     num_friends = db.Column(db.Integer, default=0)
     num_car_seats = db.Column(db.Integer, default=0)
 
-    event: "Event" = db.relationship('Event', back_populates='invitations')
-    user: "User" = db.relationship('User', back_populates='invitations')
+    event = db.relationship('Event', back_populates='invitations')
+    user = db.relationship('User', back_populates='invitations')
+
+    def no_reply(self):
+        return self.reply == self.Reply.NONE
+
+    def accepted_reply(self):
+        return self.reply == self.Reply.ACCEPTED
+
+    def declined_reply(self):
+        return self.reply == self.Reply.DECLINED
+
+    def get_reply_label(self):
+        return self.Reply.get_choice_label(self.reply)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'event', 'user', 'accepted', 'num_friends', 'num_car_seats'])
@@ -323,27 +360,37 @@ class Event(db.Model):
     cost = db.Column(db.Integer)
     created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
-    send_invitations = db.Column(db.Boolean)
+    invited = db.Column(db.Boolean)
     deadline = db.Column(UtcDateTime)
-    thumbnail_version = db.Column(db.Integer, default=0, nullable=False)
+    background_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
         'Group', secondary=GroupEventRelations.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
-
-    def get_leaders(self):
-        return User.query.\
-            join(User, GroupMember.user).\
-            join(Group, GroupMember.group).\
-            filter(GroupMember.role == GroupMember.Role.LEADER).\
-            filter(Group.id.in_([g.id for g in self.groups])).\
-            all()
 
     def print_start_end(self):
         if (self.start.day == self.end.day):
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y")}, {self.start.astimezone(tz).strftime("%H:%M")} bis {self.end.strftime("%H:%M")}'
         else:
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
+
+    def get_folder(self):
+        folder = os.path.join('app', 'static', 'event', str(self.id))
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    def get_url(self, file, version):
+        if version:
+            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
+        else:
+            return False
+
+    def save_background(self, file):
+        store_background(file, self.get_folder(), 'background')
+        self.background_version += 1
+
+    def get_background_url(self, resolution=1920):
+        return self.get_url(f'background_{resolution}.jpg', self.background_version)
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])

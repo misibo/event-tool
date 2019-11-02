@@ -1,0 +1,87 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date with context%}
+
+{% block title %}
+    Einladungen
+{% endblock %}
+
+{% block content %}
+{% if event.invited %}
+<form method="GET">
+    <div class="uk-margin" uk-grid>
+        <div>
+            <h3 class="uk-heading-bullet">
+                <a class="uk-link-heading" href="{{ url_for('event.edit', id=event.id) }}">{{ event.name }}</a>
+            </h3>
+        </div>
+        <div class="uk-width-expand@s">
+            <span>{{ pagination.total }} Einladungen</span>
+            {{ render_search(args) }}
+        </div>
+        <div>
+            <a href="{{ url_for('event.update', id=event.id) }}" class="uk-button uk-button-primary">Update senden</a>
+        </div>
+        <dl class="uk-description-list">
+            {% if stats %}
+            <dt>Angemeldet</dt>
+            <dd>{{ stats.accepted + stats.friends }} | {{ stats.friends }} davon Freunde</dd>
+            <dt>Fahrplätze</dt>
+            <dd>{{ stats.car_seats }}</dd>
+            {% else %}
+            </dl>
+        <div>
+            Noch keine Anmeldungen.
+        </div>
+        {% endif %}
+    </div>
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <table class="uk-table uk-table-striped">
+        <thead>
+            <tr>
+                <th></th>
+                <th>{{ render_order('Vorname', 'first_name', args) }}</th>
+                <th>{{ render_order('Nachname', 'family_name', args) }}</th>
+                <th>{{ render_filter('Antwort', 'reply', ReplyChoices, args) }}</th>
+                <th>Freunde</th>
+                <th>Fahrplätze</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invitation in pagination.items %}
+            <tr>
+                <td>
+                    {{ render_user_avatar(invitation.user, resolution=32) }}
+                </td>
+                <td>{{ invitation.user.first_name }}</td>
+                <td>{{ invitation.user.family_name }}</td>
+                <td>{{ invitation.get_reply_label() }}</td>
+                <td>{{ invitation.num_friends }}</td>
+                <td>{{ invitation.num_car_seats }}</td>
+                <td>
+                    <ul class="uk-iconnav" uk-margin>
+                        <li><a uk-tooltip="Bearbeiten" href="{{ url_for('invitation.edit', id=invitation.id) }}" uk-icon="pencil"></a></li>
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if pagination.items %}
+    {{ render_pagination(pagination, 'event.invitations', args) }}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Einladungen gefunden</h3>
+    </div>
+    {% endif %}
+</form>
+{% else %}
+    <div class="uk-text-center">
+        <h3 class="uk-text-muted">
+            Es gibt noch keine Einladungen zum Anlass "{{event.name}}"
+        </h3>
+        <a href="{{ url_back('event.edit', id=event.id) }}" class="uk-button uk-button-default">Zurück</a>
+        <a href="{{ url_for('event.invite', id=event.id) }}" class="uk-button uk-button-primary">Einladen</a>
+    </div>
+{% endif %}
+{% endblock %}

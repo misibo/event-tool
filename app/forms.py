@@ -6,9 +6,10 @@ from flask import current_app, flash, g, render_template, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from PIL import Image
+from slugify import slugify
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
-                     SelectField, StringField, TextAreaField, ValidationError)
+                     SelectField, StringField, TextAreaField, ValidationError, RadioField)
 from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
 from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
@@ -19,13 +20,13 @@ from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
 from . import mailing
-from .models import Event, Group, GroupMember, User
-from slugify import slugify
+from .models import Event, Group, GroupMember, Invitation, User
 
+tz = pytz.timezone('Europe/Zurich')
 
 class LocalDateTimeField(DateTimeField):
 
-    tz = pytz.timezone('Europe/Zurich')
+    tz = tz
 
     def process_data(self, value):
         """
@@ -54,6 +55,48 @@ class LocalDateTimeField(DateTimeField):
         """
         super(LocalDateTimeField, self).process_formdata(valuelist)
         self.data = self.tz.localize(self.data)
+
+
+class CheckboxListWidget(object):
+
+    def __init__(self, stack=True):
+        self.stack = stack
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        html = ['<div %s>' % html_params(**kwargs)]
+        for subfield in field:
+            class_ = 'uk-checkbox'
+            br = '<br>'
+            if self.stack is False:
+                br = ''
+            else:
+                class_ += ' uk-margin-small-left'
+            html.append('%s %s %s' %
+                        (subfield(class_=class_), subfield.label, br))
+        html.append('</div>')
+        return HTMLString(''.join(html))
+
+
+class RadioListWidget(object):
+
+    def __init__(self, stack=True):
+        self.stack = stack
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('id', field.id)
+        html = ['<div %s>' % html_params(**kwargs)]
+        for subfield in field:
+            class_ = 'uk-radio'
+            br = '<br>'
+            if self.stack is False:
+                br = ''
+            else:
+                class_ += ' uk-margin-small-left'
+            html.append('%s %s %s' %
+                        (subfield(class_=class_), subfield.label, br))
+        html.append('</div>')
+        return HTMLString(''.join(html))
 
 
 class LoginForm(FlaskForm):
@@ -229,7 +272,8 @@ class UserEditForm(AccountForm):
 
 
 class ConfirmRegistrationForm(FlaskForm):
-    username = StringField('Benutzername')  # read-only, needed for password-managers
+
+    username = StringField('Benutzername')
     password = PasswordField('Passwort', [DataRequired(), Length(min=8)])
     password_confirm = PasswordField('Passwort bestätigen', [DataRequired(), Length(min=8)])
 
@@ -245,34 +289,8 @@ class ConfirmRegistrationForm(FlaskForm):
         return True
 
 
-# class MultiCheckboxField(SelectMultipleField):
-class QueryMultiCheckboxField(QuerySelectMultipleField):
-
-    class CheckboxListWidget(object):
-
-        def __init__(self, stack=True):
-            self.stack = stack
-
-        def __call__(self, field, **kwargs):
-            kwargs.setdefault('id', field.id)
-            html = ['<div %s>' % html_params(**kwargs)]
-            for subfield in field:
-                class_ = 'uk-checkbox'
-                br = '<br>'
-                if self.stack is False:
-                    br = ''
-                else:
-                    class_ += ' uk-margin-small-left'
-                html.append('%s %s %s' %
-                            (subfield(class_=class_), subfield.label, br))
-            html.append('</div>')
-            return HTMLString(''.join(html))
-
-    widget = CheckboxListWidget()
-    option_widget = CheckboxInput()
-
-
 class GroupEditForm(FlaskForm):
+
     name = StringField('Name', [DataRequired(), Length(max=100)])
     slug = StringField('Slug')
     abstract = TextAreaField('Kurzinfo')
@@ -295,6 +313,7 @@ class GroupEditForm(FlaskForm):
 
 
 class EventEditForm(FlaskForm):
+
     name = StringField('Name', [DataRequired(), Length(max=100)])
     abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
     details = TextAreaField('Details', [Length(max=10000)])
@@ -304,32 +323,41 @@ class EventEditForm(FlaskForm):
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
-    image = FileField('Hintergrund', validators=[FileAllowed(['png', 'jpg'])])
-    groups = QueryMultiCheckboxField(
+    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
+    groups = QuerySelectMultipleField(
         'Gruppen',
         [Required()],
         get_label='name',
-        query_factory=lambda: Group.query.all()
+        query_factory=lambda: Group.query.all(),
+        widget=CheckboxListWidget(),
+        option_widget=CheckboxInput()
     )
 
-    def populate_obj(self, event: Event):
-        event.name = self.name.data
-        event.abstract = self.abstract.data
-        event.description = self.description.data
-        event.location = self.location.data
-        event.start = self.start.data
-        event.end = self.end.data
-        event.equipment = self.equipment.data
-        event.cost = self.cost.data
-        event.deadline = self.deadline.data
-        event.groups = self.groups.data
+    def validate(self):
+        if not super(EventEditForm, self).validate():
+            return False
 
-        if self.image.data is not None:
-            upload.store_event_thumbnail(self.image.data, event)
+        error = False
+
+        if self.start.data > self.end.data:
+            self.start.errors.append('Start muss vor dem Ende sein.')
+            error = True
+
+        if self.deadline.data > self.start.data:
+            self.deadline.errors.append('Deadline muss vor dem Start sein.')
+            error = True
+
+        return not error
+
+    def populate_obj(self, event: Event):
+        super().populate_obj(event)
+        if self.background.data is not None:
+            event.save_background(self.background.data)
 
 
 class EditInvitationForm(FlaskForm):
-    accepted = BooleanField("Einladung akzeptieren")
+
+    reply = SelectField('Antwort', choices=Invitation.Reply.get_select_choices(), coerce=int)
     num_friends = IntegerField("Anzahl Freunde")
     num_car_seats = IntegerField("Anzahl Fahrplätze")
 
@@ -346,13 +374,26 @@ class EditInvitationForm(FlaskForm):
             return False
 
         error = False
-        if self.accepted.data is not True:
-            if self.num_friends.data not in (None, 0):
+
+        if self.reply.data != Invitation.Reply.ACCEPTED:
+            if self.num_friends.data > 0:
                 self.num_friends.errors.append(
                     'Du kannst keine Freunde einladen, wenn du dich nicht anmeldest.')
                 error = True
-            if self.num_car_seats.data not in (None, 0):
+            if self.num_car_seats.data > 0:
                 self.num_car_seats.errors.append(
                     'Du kannst keine Fahrplätze zur Verfügung stellen, wenn du dich nicht anmeldest.')
                 error = True
+
         return not error
+
+class ConfirmForm(FlaskForm):
+    pass
+
+class GroupMemberForm(FlaskForm):
+    role = SelectField(
+        'Rolle',
+        choices=GroupMember.Role.get_select_choices(),
+        coerce=int
+        # widget=RadioListWidget()
+    )

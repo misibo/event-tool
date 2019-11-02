@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_user_avatar %}
+
+{% block title %}
+    Einladen
+{% endblock %}
+
+{% block content %}
+    <div class="uk-text-center">
+        <p>
+            Der Anlass "{{ event.name }}" ist
+            {{ 'den Gruppen' if event.groups|length > 1 else 'der Gruppe' }}
+            {% for group in event.groups %}
+                {{ group.name }}
+                {% if not loop.last %}
+                    {% if loop.revindex > 1 %}
+                        ,
+                    {% else %}
+                        und
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            zugeordnet.
+            <br>
+            Aufgrund ihrer Mitgliedschaft in {{ 'einer oder mehreren dierse Gruppen' if event.groups|length > 1 else 'dieser Gruppe' }} werden aufgelistet Benutzer eingeladen.</p>
+    </div>
+    <div class="uk-margin-large uk-child-width-1-6 uk-flex-center" uk-grid>
+        {% for user in users %}
+        <div>
+            <div class="uk-flex uk-flex-center uk-margin-small-bottom">
+                {{ render_user_avatar(user, resolution=64) }}
+            </div>
+            <div class="uk-text-meta uk-text-center">
+                {{ user.get_fullname() }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="uk-flex uk-flex-center">
+        <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('event.list') }}">Zurück</a>
+        <form method="POST">
+            {{ form.csrf_token }}
+            <input class="uk-button uk-button-primary" type="submit" value="Versenden">
+        </form>
+    </div>
+{% endblock %}

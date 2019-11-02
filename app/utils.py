@@ -1,16 +1,29 @@
 from datetime import datetime
-
+from urllib.parse import urlparse
+from flask import url_for, request
 import pytz
 
-mytz = pytz.timezone('Europe/Zurich')
+tz = pytz.timezone('Europe/Zurich')
+
+def url_back(fallback, **kwargs):
+    referrer = urlparse(request.referrer)
+    use_fallback = False
+
+    if referrer.path in [url_for('security.login'), url_for('security.register'), request.path]:
+        use_fallback = True
+
+    if use_fallback:
+        return url_for(fallback, **kwargs)
+    else:
+        return referrer.path
 
 
 def utc_to_localtime(date):
-    return pytz.utc.localize(date).astimezone(mytz).replace(tzinfo=None)
+    return pytz.utc.localize(date).astimezone(tz).replace(tzinfo=None)
 
 
 def localtime_to_utc(date):
-    return mytz.localize(date).astimezone(pytz.utc).replace(tzinfo=None)
+    return tz.localize(date).astimezone(pytz.utc).replace(tzinfo=None)
 
 
 def pretty_format_date(localtime, long=True):

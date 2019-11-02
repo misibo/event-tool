@@ -176,7 +176,9 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_group_logo(group, resolution=32) %}
+{% macro render_group_logo(group, resolution=32, link=true, target='') %}
+{% set logo %}
+<div {{ render_tooltip(group.name) }}>
     {% if group.logo_version %}
     <img data-src="{{ group.get_logo_url(resolution=resolution) }}" uk-img>
     {% else %}
@@ -184,22 +186,40 @@
         <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ group.name[0:2] }}</div>
     </div>
     {% endif %}
+</div>
+{% endset %}
+{{ logo if not link else cover_link(logo, url_for('group.view', slug=group.slug), target=target, tooltip=group.name) }}
 {% endmacro %}
 
-{% macro render_user_avatar(user, resolution=32, class='') %}
-    {% if user.avatar_version %}
-    <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}">
-    {% else %}
-    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
-        <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
+{% macro render_user_avatar(user, resolution=32, link=true, target='', tooltip=true) %}
+{% set avatar %}
+    <div {{ render_tooltip(user.get_fullname()) }}>
+        {% if user.avatar_version %}
+        <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}">
+        {% else %}
+        <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
+            <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
+{% endset %}
+ {{ avatar if not link else cover_link(avatar, url_for('user.view', username=user.username), target=target, tooltip=user.get_fullname()) }}
 {% endmacro %}
 
-{% macro render_event_date(event, width=64, height=false) %}
-{% if not height %}{% set height = width %}{% endif %}
-<div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{height}}px; width: {{width}}px;">
-    <div class="uk-text-large uk-text-bold">{{ event.start.astimezone(TZ).strftime('%d') }}</div>
-    <div>{{ event.start.astimezone(TZ).strftime('%b') }}</div>
+{% macro cover_link(content, link='#', target='', tooltip='') %}
+<div class="uk-inline">
+    {{ content }}
+    <a {{ render_tooltip(tooltip) }} class="uk-position-cover" href="{{ link }}"></a>
+</div>
+{% endmacro %}
+
+{% macro render_tooltip(tooltip='') %}
+{% if tooltip %}uk-tooltip="{{ tooltip }}" {% endif %}
+{% endmacro %}
+
+{% macro render_event_date(event, size=64) %}
+<div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{size}}px; width: {{size}}px;">
+    <div class="uk-text-large uk-text-bold">{{ event.start.astimezone(tz).strftime('%d') }}</div>
+    <div>{{ event.start.astimezone(tz).strftime('%b') }}</div>
 </div>
 {% endmacro %}

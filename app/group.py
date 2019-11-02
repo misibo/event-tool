@@ -5,12 +5,13 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
 from . import mailing
-from .forms import GroupEditForm
-from .models import Group, GroupMember, User, db
+from .forms import GroupEditForm, GroupMemberForm
+from .models import Event, Group, GroupEventRelations, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
-from .views import CreateEditView, DeleteView, ListView
+from .utils import localtime_to_utc, tz, url_back
 
 bp = Blueprint("group", __name__, url_prefix="/group")
+
 
 @bp.route('/')
 def groups():
@@ -19,14 +20,56 @@ def groups():
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
     return render_template('group/groups.html', pagination=pagination)
 
+
 @bp.route('/<string:slug>')
 def view(slug):
     group = Group.query.\
         filter(Group.slug == slug).\
         first_or_404()
-    return render_template('group/group.html', group=group, GroupMember=GroupMember)
 
-# become group member
+    members = GroupMember.query.\
+        filter(GroupMember.group_id == group.id).\
+        join(GroupMember.user).\
+        order_by(GroupMember.role.desc()).\
+        order_by(User.username.asc()).\
+        all()
+
+    upcoming = Event.query.\
+            join(GroupEventRelations, (GroupEventRelations.event_id == Event.id) & (GroupEventRelations.group_id == group.id)).\
+            filter(Event.start > tz.localize(datetime.now())).\
+            order_by(Event.start.asc()).\
+            all()
+
+    form = GroupMemberForm()
+
+    membership = None
+
+    if g.user:
+
+        for member in members:
+            if member.user_id == g.user.id:
+                membership = member
+                break
+
+        if not g.user.can_manage():
+            del(form.role.choices[2]) # delte leader choice
+
+        if membership:
+            form.role.data = membership.role
+        else:
+            form.role.choices.insert(0,(0, 'Beitreten als'))
+
+    return render_template(
+        'group/group.html',
+        group=group,
+        members=members,
+        pcoming=upcoming,
+        GroupMember=GroupMember,
+        groupmember_form=form,
+        membership=membership
+    )
+
+
 @bp.route('/join/<int:id>', methods=['POST'])
 @login_required
 def join(id):
@@ -44,13 +87,15 @@ def join(id):
     db.session.add(member)
     db.session.commit()
 
-    mailing.send_invitations()
 
-    flash(f'Du bist jetzt {member.get_role_label()} der Gruppe {group.name}!', 'success')
+    # TODO send mission invitations for user who joined the new group
+    # mailing.send_invitations()
 
-    return redirect(request.referrer or '/')
+    flash(f'Du bist jetzt "{member.get_role_label()}"" der Gruppe "{group.name}"."', 'success')
 
-# change membership role
+    return redirect(url_back('group.groups'))
+
+
 @bp.route('/member/edit/<int:id>', methods=['POST'])
 @login_required
 def member_edit(id):
@@ -67,19 +112,17 @@ def member_edit(id):
         member.role = role
         db.session.commit()
 
-    # TODO mailing.send_invitations()
-
     if editing:
         flash(f'Mitglied "{member.user.get_fullname()}" hat jetzt die Rolle "{member.get_role_label()}" in der Gruppe "{member.group.name}".', 'success')
     else:
         flash(f'Du bist jetzt "{member.get_role_label()}" der Gruppe "{member.group.name}".', 'success')
 
-    return redirect(request.referrer or '/')
+    return redirect(url_back('group.groups'))
 
 
-@bp.route('/member/leave/<int:id>')
+@bp.route('/member/remove/<int:id>')
 @login_required
-def member_leave(id):
+def member_remove(id):
     member = GroupMember.query.get_or_404(id)
 
     editing = member.user_id != g.user.id
@@ -95,7 +138,8 @@ def member_leave(id):
     db.session.delete(member)
     db.session.commit()
 
-    return redirect(request.referrer or '/')
+    return redirect(url_back('group.groups'))
+
 
 @bp.route('/members/<int:id>')
 @manager_required
@@ -120,6 +164,7 @@ def members(id):
         GroupMemberRoles=GroupMember.Role
     )
 
+
 @bp.route('/list')
 @manager_required
 def list():
@@ -134,11 +179,11 @@ def list():
     return render_template(
         'group/list.html',
         pagination=pagination,
-        args=request.args.to_dict(),
-        tz=pytz.timezone('Europe/Zurich')
+        args=request.args.to_dict()
     )
 
-@bp.route('/create', methods=['POST'])
+
+@bp.route('/create', methods=['GET', 'POST'])
 @admin_required
 def create():
         group = Group()
@@ -148,10 +193,11 @@ def create():
             form.populate_obj(group)
             db.session.add(group)
             db.session.commit()
-            flash('Neue Gruppe {group.name} erstellt.')
-            return redirect(request.referrer or url_for('group.list'))
+            flash(f'Gruppe "{group.name}" erstellt.', 'success')
+            return redirect(url_back('group.list'))
 
         return render_template('group/edit.html', form=form, group=group)
+
 
 @bp.route('/edit/<int:id>', methods=['GET','POST'])
 @manager_required
@@ -162,10 +208,11 @@ def edit(id):
     if form.validate_on_submit():
         form.populate_obj(group)
         db.session.commit()
-        flash('Gruppe {group.name} gespeichert.')
-        return redirect(request.referrer or url_for('group.list'))
+        flash(f'Gruppe "{group.name}" gespeichert.', 'success')
+        return redirect(url_back('group.list'))
 
     return render_template('group/edit.html', form=form, group=group)
+
 
 @bp.route('/delete/<int:id>')
 @admin_required
@@ -173,40 +220,4 @@ def delete(id):
     group = Group.query.get_or_404(id)
     db.session.delete(group)
     db.session.commit()
-    flash('Gruppe {group.name} gelöscht.')
-
-
-# class GroupCreateEditView(CreateEditView):
-
-#     form = GroupEditForm
-#     model = Group
-#     template = 'group/edit.html'
-#     redirect = 'group.list'
-
-
-# class GroupDeleteView(DeleteView):
-#     model = Group
-#     redirect = 'group.list'
-
-
-# bp.add_url_rule(
-#     '/',
-#     view_func=GroupListView.as_view('list'),
-#     methods=['GET']
-# )
-# bp.add_url_rule(
-#     '/create',
-#     defaults={'id': None},
-#     view_func=GroupCreateEditView.as_view('create'),
-#     methods=['GET', 'POST']
-# )
-# bp.add_url_rule(
-#     '/edit/<int:id>',
-#     view_func=GroupCreateEditView.as_view('edit'),
-#     methods=['GET', 'POST']
-# )
-# bp.add_url_rule(
-#     '/delete/<int:id>',
-#     view_func=GroupDeleteView.as_view('delete'),
-#     methods=['GET']
-# )
+    flash(f'Gruppe "{group.name}" gelöscht.', 'danger')

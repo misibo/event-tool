@@ -3,7 +3,6 @@ from flask import Blueprint, current_app, render_template, request, flash, redir
 from .forms import UserEditForm
 from .models import User, db
 from .security import admin_required
-from .views import CreateEditView, DeleteView, ListView
 import pytz
 
 bp = Blueprint("user", __name__, url_prefix="/user")
@@ -54,7 +53,7 @@ def create():
             db.session.add(user)
             db.session.commit()
             flash(f'Neuer Benutzer {user.get_fullname()} erstellt.', 'success')
-            return redirect(request.referrer or url_for('user.list'))
+            return redirect(url_back('user.list'))
 
         return render_template('user/edit.html', form=form, user=user)
 
@@ -69,7 +68,7 @@ def edit(id):
         user.modified = tz.localize(datetime.now())
         db.session.commit()
         flash(f'Benutzer {user.get_fullname()} gespeichert.', 'success')
-        return redirect(request.referrer or url_for('user.list'))
+        return redirect(url_back('user.list'))
 
     return render_template('user/edit.html', form=form, user=user)
 

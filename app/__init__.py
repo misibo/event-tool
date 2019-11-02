@@ -9,6 +9,7 @@ from flask_mail import Mail
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 from . import utils
 from logging.config import dictConfig
+from urllib.parse import urlparse
 
 dictConfig({
     'version': 1,
@@ -50,7 +51,7 @@ app.register_blueprint(invitation.bp)
 
 
 # initizalize database
-from .models import db, User, GroupMember
+from .models import db
 db.init_app(app)
 
 with app.app_context():
@@ -70,25 +71,26 @@ def if_not(value, string):
     else:
         return string
 
+app.jinja_env.filters['utc_to_localtime'] = utils.utc_to_localtime
+app.jinja_env.filters['localtime_to_utc'] = utils.localtime_to_utc
+
 @app.context_processor
-def utility_processor():
-    def merge_into(d, **kwargs):
+def utils_processor():
+
+    def _merge_into(d, **kwargs):
         d.update(kwargs)
         return d
-    return dict(merge_into=merge_into)
+
+    return dict(
+        merge_into=_merge_into,
+        url_back=utils.url_back
+    )
 
 
 @app.context_processor
-def inject_stage_and_region():
+def timezone_processor():
     return dict(
-        tz=pytz.timezone('Europe/Zurich'),
-        UserRole=User.Role,
-        SPECTATOR=GroupMember.Role.SPECTATOR,
-        MEMBER=GroupMember.Role.MEMBER,
-        USER=User.Role.USER,
-        MANAGER=User.Role.MANAGER,
-        ADMIN=User.Role.ADMIN,
-        TZ=pytz.timezone('Europe/Zurich'),
+        tz=pytz.timezone(app.config['TIMEZONE'])
     )
 
 

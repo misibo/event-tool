@@ -1,0 +1,23 @@
+Hallo {{invitation.user.first_name}},
+
+Es gibt eine Aktualisierung bezüglich des Events
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{{ note }}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{{ invitation.event.abstract }}
+{{ invitation.event.description }}
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Treffpunkt: {{ invitation.event.location }}
+Wann: {{ pretty_format_date(invitation.event.start) }}
+Ausrüstung: {{ invitation.event.equipment }}
+Kosten: {{ invitation.event.cost }} Fr.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deine Antwort auf die Einladung ist: {{ invitation.get_reply_label() }}
+Du kannst sie noch bis {{ pretty_format_date(invitation.event.deadline) }} ändern.

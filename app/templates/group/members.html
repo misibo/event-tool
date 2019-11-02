@@ -21,10 +21,10 @@
         {{ render_search(args, form='filter_sort') }}
     </div>
     <div>
-        <a class="uk-button uk-button-default" href="{{ request.referrer }}">Zurück</a>
+        <a class="uk-button uk-button-default" href="{{ url_back('group.list') }}">Zurück</a>
     </div>
 </div>
-{% if pagination.items %}
+<input name="page" value="{{ pagination.page }}" hidden>
 <table class="uk-table uk-table-striped">
     <thead>
         <tr>
@@ -59,12 +59,13 @@
                 </form>
             </td>
             <td>
-                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_leave', id=group.id) }}" uk-icon="sign-out"></a>
+                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_remove', id=group.id) }}" uk-icon="sign-out"></a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% if pagination.items %}
 {{ render_pagination(pagination, 'group.members', args) }}
 {% else %}
 <div class="uk-text-center uk-margin">

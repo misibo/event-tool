@@ -6,7 +6,7 @@ import pytz
 from slugify import slugify
 
 from app import app
-from app.invitation import list_missing_invitations
+# from app.invitation import list_missing_invitations
 from app.models import Event, Group, GroupMember, Invitation, User, db
 
 tz = pytz.timezone('Europe/Zurich')
@@ -48,7 +48,7 @@ def create_group(name, abstract, details=''):
     return group
 
 
-def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, send_invitations, groups):
+def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, groups, invited=False):
     event = Event(
         name=name,
         abstract=abstract,
@@ -59,7 +59,7 @@ def create_event(name, abstract, details, location, start, end, equipment, cost,
         equipment=equipment,
         cost=cost,
         deadline=tz.localize(deadline),
-        send_invitations=send_invitations,
+        invited=invited,
         created=tz.localize(datetime.now()),
         modified=tz.localize(datetime.now()),
     )
@@ -134,7 +134,6 @@ with app.app_context():
             equipment='Taschenlampe',
             cost=0,
             deadline=today + timedelta(days=-4),
-            send_invitations=True,
             groups=[groups[0]],
         ),
         create_event(
@@ -175,7 +174,6 @@ with app.app_context():
             equipment='Zelt',
             cost=120,
             deadline=today + timedelta(hours=12),
-            send_invitations=True,
             groups=[groups[0], groups[1]],
         ),
         create_event(
@@ -218,7 +216,6 @@ with app.app_context():
             equipment='Wanderschuhe',
             cost=5,
             deadline=today + timedelta(days=6, hours=12),
-            send_invitations=False,
             groups=[groups[2]],
         ),
         create_event(
@@ -249,7 +246,6 @@ with app.app_context():
             equipment='Hut',
             cost=10,
             deadline=today + timedelta(days=12),
-            send_invitations=False,
             groups=[groups[0]],
         ),
     ]
@@ -272,7 +268,7 @@ with app.app_context():
 
     db.session.commit()
 
-    # Pre-populate invitations
-#    for invitation in list_missing_invitations():
-#        db.session.add(invitation)
-    db.session.commit()
+#     # Pre-populate invitations
+# #    for invitation in list_missing_invitations():
+# #        db.session.add(invitation)
+#     db.session.commit()
