@@ -39,7 +39,7 @@
                         {{ render_event_date(event) }}
                     </td>
                     <td>{{ event.name }}</td>
-                    <td class="uk-visible@m">{{ event.abstract }}</td>
+                    <td class="uk-visible@m">{{ event.abstract | markdown }}</td>
                     <td>{{ event.location }}</td>
                     <td>{{ event.start.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                     <td class="uk-visible@s">{{ event.end.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>

@@ -13,8 +13,8 @@
     </p>
     <hr>
     <h1>{{invitation.event.name}}</h1>
-    <p>{{invitation.event.abstract}}</p>
-    <p>{{invitation.event.description}}</p>
+    <p>{{invitation.event.abstract | markdown }}</p>
+    <p>{{invitation.event.description | markdown }}</p>
     <dl>
         <dt>Treffpunkt</dt>
         <dd>{{invitation.event.location}}</dd>

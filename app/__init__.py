@@ -6,6 +6,7 @@ import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for, flash, redirect
 from flask_mail import Mail
+from flaskext.markdown import Markdown
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 from . import utils
 from logging.config import dictConfig
@@ -28,6 +29,7 @@ dictConfig({
 })
 
 app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
+Markdown(app)
 
 
 # load conig

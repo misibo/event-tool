@@ -20,5 +20,6 @@ itsdangerous = "*"
 Pillow = "*"
 python-slugify="*"
 psycopg2-binary = "*"
+flask-markdown = "*"
 
 [requires]

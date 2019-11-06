@@ -43,7 +43,7 @@
                 </div>
                 {% endif %}
             </div>
-            <p>{{ event.abstract }}</p>
+            <p>{{ event.abstract | markdown }}</p>
             <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
         </div>
     </div>
@@ -53,7 +53,7 @@
     <div id="details">
         <h3 class="uk-card-title">Details</h3>
         <p>
-            {{ event.details | if_not('Keine Details vorhanden.') }}
+            {{ event.details | if_not('Keine Details vorhanden.') | markdown }}
         </p>
         <div class="uk-card uk-card-default">
             <div class="uk-card-header">

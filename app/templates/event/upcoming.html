@@ -20,7 +20,7 @@
                         <div class="uk-text-muted"><span uk-icon="location"></span> {{ event.location }}</div>
                     </div>
                     <div class="uk-card-body">
-                        <div>{{ event.abstract }}</div>
+                        <div>{{ event.abstract | markdown }}</div>
                     </div>
                     <div class="uk-card-footer">
                         <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
