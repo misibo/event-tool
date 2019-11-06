@@ -21,5 +21,6 @@ Pillow = "*"
 python-slugify="*"
 psycopg2-binary = "*"
 flask-markdown = "*"
+flask-simplemde = "*"
 
 [requires]

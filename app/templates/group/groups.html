@@ -18,7 +18,7 @@
                         <h3 class="uk-card-title uk-margin-remove">{{ group.name }}</h3>
                     </div>
                     <div class="uk-card-body">
-                        <div>{{ group.abstract }}</div>
+                        <div>{{ group.abstract | markdown }}</div>
                     </div>
                     <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-between">
                         <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=group.slug) }}">Ansehen</a>

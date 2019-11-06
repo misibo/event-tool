@@ -33,7 +33,7 @@
             <tr>
                 <td> {{ render_group_logo(group) }}</td>
                 <td>{{ group.name }}</td>
-                <td class="uk-table-expand">{{ group.abstract }}</td>
+                <td class="uk-table-expand">{{ group.abstract | markdown }}</td>
                 <td>{{ group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
                     <ul class="uk-iconnav">

@@ -6,6 +6,7 @@ import pytz
 import itsdangerous
 from flask import Flask, current_app, render_template, request, url_for, flash, redirect
 from flask_mail import Mail
+from flask_simplemde import SimpleMDE
 from flaskext.markdown import Markdown
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
 from . import utils
@@ -30,7 +31,7 @@ dictConfig({
 
 app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
 Markdown(app)
-
+SimpleMDE(app)
 
 # load conig
 app.config.from_object('config')  # load ./config.py

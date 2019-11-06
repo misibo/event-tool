@@ -13,7 +13,7 @@
 <div class="uk-position-relative" uk-height-viewport="offset-top: true">
     <div class="uk-position-large uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-flex-column">
         <h1>{{ group.name }}</h1>
-        <div>{{ group.abstract | if_not('Keine Kurzinfo') }}</div>
+        <div>{{ group.abstract | if_not('Keine Kurzinfo') | markdown }}</div>
         {% if g.user %}
         <div class="uk-flex-center uk-flex-middle uk-margin" uk-grid>
             <div>
@@ -52,7 +52,7 @@
                         <h3 class="uk-card-title">Details</h3>
                     </div>
                     <div class="uk-card-body">
-                        {{ group.details | if_not("Nicht vorhanden.") }}
+                        {{ group.details | if_not("Nicht vorhanden.") | markdown }}
                     </div>
                     {% if group.flyer_version %}
                     <div class="uk-card-footer">
