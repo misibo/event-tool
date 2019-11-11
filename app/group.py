@@ -5,7 +5,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
 from . import mailing
-from .forms import GroupEditForm, GroupMemberForm
+from .forms import GroupEditForm, GroupMemberForm, ConfirmDeleteGroupForm
 from .models import Event, Group, GroupEventRelations, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
 from .utils import localtime_to_utc, tz, url_back
@@ -120,7 +120,7 @@ def member_edit(id):
     return redirect(url_back('group.groups'))
 
 
-@bp.route('/member/remove/<int:id>')
+@bp.route('/member/remove/<int:id>', methods=['POST'])
 @login_required
 def member_remove(id):
     member = GroupMember.query.get_or_404(id)
@@ -214,10 +214,17 @@ def edit(id):
     return render_template('group/edit.html', form=form, group=group)
 
 
-@bp.route('/delete/<int:id>')
+@bp.route('/delete/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def delete(id):
     group = Group.query.get_or_404(id)
-    db.session.delete(group)
-    db.session.commit()
-    flash(f'Gruppe "{group.name}" gelöscht.', 'danger')
+    form = ConfirmDeleteGroupForm()
+
+    if form.validate_on_submit():
+        if 'confirm' in request.form:
+            db.session.delete(group)
+            db.session.commit()
+            flash(f'Die Gruppe {group.name} wurde gelöscht.', 'success')
+        return redirect(url_for('group.list'))
+
+    return render_template('group/delete.html', form=form, group=group)

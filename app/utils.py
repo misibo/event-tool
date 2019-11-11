@@ -1,6 +1,6 @@
 from datetime import datetime
 from urllib.parse import urlparse
-from flask import url_for, request
+from flask import url_for, request, current_app
 import pytz
 
 tz = pytz.timezone('Europe/Zurich')
@@ -11,6 +11,8 @@ def url_back(fallback, **kwargs):
 
     if referrer.path in [url_for('security.login'), url_for('security.register'), request.path]:
         use_fallback = True
+
+    current_app.logger.info(f"{fallback} {use_fallback} {[url_for('security.login'), url_for('security.register'), request.path]}")
 
     if use_fallback:
         return url_for(fallback, **kwargs)

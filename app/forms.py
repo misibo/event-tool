@@ -355,6 +355,18 @@ class EventEditForm(FlaskForm):
             event.save_background(self.background.data)
 
 
+class ConfirmDeleteEventForm(FlaskForm):
+    pass
+
+
+class ConfirmDeleteGroupForm(FlaskForm):
+    pass
+
+
+class ConfirmDeleteUserForm(FlaskForm):
+    pass
+
+
 class EditInvitationForm(FlaskForm):
 
     reply = SelectField('Antwort', choices=Invitation.Reply.get_select_choices(), coerce=int)

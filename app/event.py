@@ -10,7 +10,7 @@ from sqlalchemy.sql import func
 from werkzeug.exceptions import NotFound
 
 from . import mailing
-from .forms import ConfirmForm, EventEditForm
+from .forms import ConfirmForm, EventEditForm, ConfirmDeleteEventForm
 from .mailing import send_single_mail
 from .models import (Choices, Event, Group, GroupEventRelations, GroupMember,
                      Invitation, User, db)
@@ -270,11 +270,17 @@ def edit(id):
     return render_template('event/edit.html', form=form, event=event)
 
 
-@bp.route('/delete/<int:id>', methods=['GET'])
+@bp.route('/delete/<int:id>', methods=['GET', 'POST'])
 @manager_required
 def delete(id):
     event = Event.query.get_or_404(id)
-    flash(f'Anlass "{event.name}" gelöscht.', 'danger')
-    db.session.delete(event)
-    db.session.commit()
-    return redirect(url_back('event.list'))
+    form = ConfirmDeleteEventForm()
+
+    if form.validate_on_submit():
+        if 'confirm' in request.form:
+            db.session.delete(event)
+            db.session.commit()
+            flash(f'{event.name} wurde gelöscht.', 'success')
+        return redirect(url_for('event.list'))
+
+    return render_template('event/delete.html', form=form, event=event)

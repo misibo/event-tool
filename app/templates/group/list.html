@@ -41,7 +41,7 @@
                         <li><a uk-tooltip="Ansicht" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank" uk-icon="link"></a></li>
                         <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a></li>
                         {% if g.user.is_admin() %}
-                        <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=group.id) }}" onclick="return confirm('Bist du dir sicher?')" uk-icon="trash"></a></li>
+                        <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a></li>
                         {% endif %}
                     </ul>
                 </td>

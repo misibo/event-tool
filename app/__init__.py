@@ -29,6 +29,7 @@ dictConfig({
     }
 })
 
+
 app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
 Markdown(app)
 SimpleMDE(app)

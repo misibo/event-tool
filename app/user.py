@@ -1,13 +1,16 @@
-from flask import Blueprint, current_app, render_template, request, flash, redirect
+from flask import Blueprint, current_app, render_template, request, flash, redirect, url_for
 
-from .forms import UserEditForm
+from .forms import UserEditForm, ConfirmDeleteUserForm
 from .models import User, db
 from .security import admin_required
+from .utils import url_back
+from datetime import datetime
 import pytz
 
 bp = Blueprint("user", __name__, url_prefix="/user")
 
 tz = pytz.timezone('Europe/Zurich')
+
 
 @bp.route('/<string:username>')
 def view(username):
@@ -15,6 +18,7 @@ def view(username):
         filter(User.username == username).\
         first_or_404()
     return render_template('user/user.html', user=user)
+
 
 @bp.route('/list')
 @admin_required
@@ -40,6 +44,7 @@ def list():
             UserRoles=User.Role
         )
 
+
 @bp.route('/create', methods=['GET', 'POST'])
 @admin_required
 def create():
@@ -57,6 +62,7 @@ def create():
 
         return render_template('user/edit.html', form=form, user=user)
 
+
 @bp.route('/edit/<int:id>', methods=['GET','POST'])
 @admin_required
 def edit(id):
@@ -72,10 +78,19 @@ def edit(id):
 
     return render_template('user/edit.html', form=form, user=user)
 
-@bp.route('/delete/<int:id>')
+
+@bp.route('/delete/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def delete(id):
     user = User.query.get_or_404(id)
-    flash(f'Benutzer {user.get_fullname()} gelöscht.', 'danger')
-    db.session.delete(user)
-    db.session.commit()
+    form = ConfirmDeleteUserForm()
+
+    if form.validate_on_submit():
+        if 'confirm' in request.form:
+            db.session.delete(user)
+            db.session.commit()
+            flash(f'Benutzer {user.username} wurde gelöscht.', 'success')
+
+        return redirect(url_for('user.list'))
+
+    return render_template('user/delete.html', form=form, user=user)

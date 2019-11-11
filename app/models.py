@@ -148,6 +148,7 @@ class GroupMember(db.Model):
     def get_role_label(self):
         return self.Role.get_choice_label(self.role)
 
+
 class GroupEventRelations(db.Model):
     __tablename__ = 'GroupEventRelations'
     group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
