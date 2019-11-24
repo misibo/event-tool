@@ -25,7 +25,9 @@
                         </div>
                         <div class="uk-card-footer uk-flex uk-flex-between uk-flex-middle">
                             <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=membership.group.slug) }}">Ansehen</a>
-                            <a class="uk-button uk-button-text" href="{{ url_for('groupmember.remove', id=membership.group_id) }}">Austreten</a>
+                            {% if g.user.can_manage() %}
+                                <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=membership.group.id) }}">Bearbeiten</a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -16,7 +16,7 @@
         <div class="uk-card-body">
             <div uk-grid>
                 <div class="uk-width-1-3@m">
-                    {{ render_image_field(form.image) }}
+                    {{ render_image_field(form.avatar) }}
                     {{ render_field(form.username, class='uk-input') }}
                     {{ render_field(form.email, class='uk-input', disabled=True) }}
                 </div>
@@ -29,7 +29,7 @@
                             {{ render_field(form.family_name, class='uk-input') }}
                         </div>
                         <div>
-                            {{ render_field(form.birthday, class='uk-input') }}
+                            {{ render_field(form.birthday, class='uk-input', placeholder='dd.mm.yy') }}
                         </div>
                         <div>
                             {{ render_field(form.mobile_phone, class='uk-input') }}

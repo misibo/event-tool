@@ -234,9 +234,6 @@
             Du bist nicht Mitglied.
             <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.join', id=group.id) }}">Beitreten</a>
         {% endif %}
-        {% if g.user.can_manage() %}
-            <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
-        {% endif %}
     </div>
 {% endmacro %}
 

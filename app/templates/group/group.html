@@ -14,6 +14,11 @@
     <div class="uk-position-large uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-flex-column">
         <h1>{{ group.name }}</h1>
         <div>{{ group.abstract | if_not('Keine Kurzinfo') | markdown }}</div>
+        <div>
+            {% if g.user.can_manage() %}
+                <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Gruppe bearbeiten</a>
+            {% endif %}
+        </div>
         {% if g.user %}
         <div class="uk-flex-center uk-flex-middle uk-margin" uk-grid>
             {{ render_groupmember_actions(membership, group) }}

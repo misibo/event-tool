@@ -1,9 +1,9 @@
-{% extends 'layout.html' %}
+{% extends 'form.html' %}
 {% from 'macros.html' import render_field %}
 
 {% block title %}Neue E-Mail Adresse{% endblock %}
 
-{% block content %}
+{% block form %}
 <form class="uk-form-stacked" method="POST">
     {{ render_field(form.old_email, class='uk-input', readonly=True) }}
     {{ render_field(form.new_email, class='uk-input') }}

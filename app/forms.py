@@ -9,7 +9,8 @@ from PIL import Image
 from slugify import slugify
 from werkzeug.utils import secure_filename
 from wtforms import (BooleanField, DateField, HiddenField, PasswordField,
-                     SelectField, StringField, TextAreaField, ValidationError, RadioField)
+                     RadioField, SelectField, StringField, TextAreaField,
+                     ValidationError)
 from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
 from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
@@ -21,8 +22,8 @@ from wtforms.widgets.core import CheckboxInput
 
 from . import mailing
 from .models import Event, Group, GroupMember, Invitation, User
+from .utils import tz, now
 
-tz = pytz.timezone('Europe/Zurich')
 
 class LocalDateTimeField(DateTimeField):
 
@@ -224,7 +225,7 @@ class AccountForm(RegisterForm):
 
     def populate_obj(self, user: User):
         super().populate_obj(user)
-        user.modified = timezone.localize(datetime.now())
+        user.modified = now
         user.birthday = self.birthday.data
         user.mobile_phone = self.mobile_phone.data
         user.street = self.street.data

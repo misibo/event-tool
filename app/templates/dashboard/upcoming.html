@@ -66,8 +66,8 @@
     </div>
     {% else %}
     <div class="uk-text-center uk-text-large uk-margin">
-        <p class="uk-text-muted">Du bist in keiner Gruppe Mitglied.</p>
-        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Werde Mitglied</a>
+        <p class="uk-text-muted">Keine Anlässe gefunden.</p>
+        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Trete neuen Gruppen bei</a>
     </div>
     {% endif %}
     {{ render_pagination(pagination, 'dashboard.upcoming')}}
