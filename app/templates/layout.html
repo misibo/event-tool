@@ -13,6 +13,7 @@
 </head>
 
 <body>
+
     <div id="offcanvas" uk-offcanvas="mode: push; overlay: true">
         <div class="uk-offcanvas-bar">
             <button class="uk-offcanvas-close" type="button" uk-close></button>
@@ -53,18 +54,17 @@
         </div>
     </div>
 
-    <div {% block attrs %}{% endblock %}>
-
-        <div class="uk-hidden@s uk-navbar-container uk-navbar-transparent" uk-navbar>
+    <div>
+        <div class="uk-hidden@s uk-navbar-container" uk-navbar>
             <div class="uk-navbar-left">
                 <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle href="#offcanvas"></a>
             </div>
             <div class="uk-navbar-center">
-                {% block logo %}<a class="uk-navbar-item uk-logo" href="#">E-T</a>{% endblock %}
+                {% block logo %}<a class="uk-navbar-item uk-logo" href="#">EvenTool</a>{% endblock %}
             </div>
         </div>
 
-        <div class="uk-visible@s uk-navbar-container uk-navbar-transparent">
+        <div class="uk-visible@s uk-navbar-container">
             <div class="uk-container">
                 <nav uk-navbar>
                     <div class="uk-navbar-left">
@@ -75,13 +75,7 @@
                     <div class="uk-navbar-center">
                         {{ self.logo() }}
                     </div>
-
                     <div class="uk-navbar-right">
-                        {% if g.user %}
-                        <div class="uk-navbar-item">
-
-                        </div>
-                        {% endif %}
                         <ul class="uk-navbar-nav">
                             {% if g.user %}
                             <li>
@@ -94,18 +88,18 @@
                                     </ul>
                                 </div>
                             </li>
-                                {% if g.user.can_manage() %}
-                                <li>
-                                    <a href="#">
-                                        Verwalten
-                                    </a>
-                                    <div class="uk-navbar-dropdown">
-                                        <ul class="uk-nav uk-navbar-dropdown-nav">
-                                            {{ self.menu_manage() }}
-                                        </ul>
-                                    </div>
-                                </li>
-                                {% endif %}
+                            {% if g.user.can_manage() %}
+                            <li>
+                                <a href="#">
+                                    Verwalten
+                                </a>
+                                <div class="uk-navbar-dropdown">
+                                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                                        {{ self.menu_manage() }}
+                                    </ul>
+                                </div>
+                            </li>
+                            {% endif %}
                             {% else %}
                                 {{ self.menu_user() }}
                             {% endif %}
@@ -114,15 +108,20 @@
                 </nav>
             </div>
         </div>
-        {% block hero %}
-            <div class="uk-margin uk-text-center">
-                <h1>{{ self.title() }}</h1>
-            </div>
-        {% endblock %}
     </div>
-    <div class="uk-section uk-section-default">
+
+    {% block hero %}{% endblock %}
+
+    <div class="uk-section uk-section-muted" uk-height-viewport="expand: true">
         <div class="uk-container">
             {% block content %}Content{% endblock %}
         </div>
     </div>
+
+    <div class="uk-section uk-section-secondary">
+        <div class="uk-container">
+            &copy; EventTool 2019, created by MISIBO
+        </div>
+    </div>
+
 </body>

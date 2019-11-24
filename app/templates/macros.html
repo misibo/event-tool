@@ -237,3 +237,13 @@
     </div>
 {% endmacro %}
 
+{% macro render_hero(content, src) %}
+    <div class="uk-light uk-background-cover uk-background-blend-overlay uk-background-secondary" data-src="{{ src }}" uk-img>
+        <div class="uk-flex uk-flex-middle uk-flex-center" uk-height-viewport="offset-bottom: 80px">
+            <div class="uk-overlay uk-width-4-5@s uk-width-2-3@m uk-width-1-2@l">
+                {{ content }}
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+

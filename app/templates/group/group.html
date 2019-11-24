@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar, render_groupmember_actions with context %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar, render_groupmember_actions, render_hero with context %}
 {% block title %}{{ group.name }}{% endblock %}
 {% block logo %}
 <div class="uk-navbar-item uk-logo">
@@ -10,25 +10,26 @@
 {% block attrs %}class="uk-background-cover" data-src="{{ group.get_background_url() }}" uk-img{% endblock %}
 
 {% block hero %}
-<div class="uk-position-relative" uk-height-viewport="offset-top: true">
-    <div class="uk-position-large uk-position-cover uk-overlay uk-overlay-default uk-flex uk-flex-center uk-flex-middle uk-flex-column">
-        <h1>{{ group.name }}</h1>
-        <div>{{ group.abstract | if_not('Keine Kurzinfo') | markdown }}</div>
-        <div>
-            {% if g.user.can_manage() %}
-                <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Gruppe bearbeiten</a>
-            {% endif %}
-        </div>
-        {% if g.user %}
-        <div class="uk-flex-center uk-flex-middle uk-margin" uk-grid>
-            {{ render_groupmember_actions(membership, group) }}
-        </div>
+{% set content %}
+<div class="uk-text-center">
+    <h1>{{ group.name }}</h1>
+    {{ group.abstract | if_not('Keine Kurzinfo') | markdown }}
+    {% if g.user %}
+    <div>
+        {% if g.user.can_manage() %}
+            <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Gruppe bearbeiten</a>
         {% endif %}
-        <div class="uk-margin">
-            <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
-        </div>
+    </div>
+    <hr>
+    {{ render_groupmember_actions(membership, group) }}
+    <hr>
+    {% endif %}
+    <div class="uk-margin">
+        <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
     </div>
 </div>
+{% endset %}
+{{ render_hero(content, group.get_background_url()) }}
 {% endblock %}
 
 {% block content %}

@@ -6,7 +6,8 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template,
 from sqlalchemy.orm import aliased
 
 from .forms import AccountForm
-from .models import Event, Group, GroupEventRelations, GroupMember, User, db, Invitation
+from .models import (Event, Group, GroupEventRelations, GroupMember,
+                     Invitation, User, db)
 from .security import login_required
 from .utils import tz
 
