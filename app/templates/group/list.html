@@ -37,7 +37,7 @@
                 <td>{{ group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
                     <ul class="uk-iconnav">
-                        <li><a uk-tooltip="Mitglieder" href="{{ url_for('group.members', id=group.id) }}" uk-icon="users"></a></li>
+                        <li><a uk-tooltip="Mitglieder" href="{{ url_for('groupmember.members', id=group.id) }}" uk-icon="users"></a></li>
                         <li><a uk-tooltip="Ansicht" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank" uk-icon="link"></a></li>
                         <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a></li>
                         {% if g.user.is_admin() %}

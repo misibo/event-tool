@@ -38,35 +38,20 @@
     <tbody>
         {% for member in pagination.items %}
         <tr>
-            <td>
-                {{ render_user_avatar(member.user, resolution=32) }}
-            </td>
+            <td>{{ render_user_avatar(member.user, resolution=32) }}</td>
             <td>{{ member.user.first_name }}</td>
             <td>{{ member.user.family_name }}</td>
+            <td>{{ member.get_role_label() }}</td>
             <td>
-                <form method="POST" action="{{ url_for('group.member_edit', id=member.id) }}">
-                    <div uk-form-custom="target: > * > span:last-child">
-                        <select name="role" onchange="this.form.submit()">
-                            {% for val, label in member.Role.get_choices().items() %}
-                            <option value="{{ val }}" {% if val == member.role %}selected=""{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                        <span>
-                            <span></span>
-                            <span uk-icon="pencil"></span>
-                        </span>
-                    </div>
-                </form>
-            </td>
-            <td>
-                <a uk-tooltip="Entfernen" href="{{ url_for('group.member_remove', id=group.id) }}" uk-icon="sign-out"></a>
+                <a uk-tooltip="Bearbeiten" href="{{ url_for('groupmember.edit', id=member.id) }}" uk-icon="pencil"></a>
+                <a uk-tooltip="Entfernen" href="{{ url_for('groupmember.remove', id=member.id) }}" uk-icon="sign-out"></a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% if pagination.items %}
-{{ render_pagination(pagination, 'group.members', args) }}
+{{ render_pagination(pagination, 'groupmember.members', args) }}
 {% else %}
 <div class="uk-text-center uk-margin">
     <h3 class="uk-text-muted">Keine Mitglieder gefunden</h3>

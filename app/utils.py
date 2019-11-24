@@ -5,6 +5,8 @@ import pytz
 
 tz = pytz.timezone('Europe/Zurich')
 
+now = pytz.utc.localize(datetime.utcnow())
+
 def url_back(fallback, **kwargs):
     referrer = urlparse(request.referrer)
     use_fallback = False

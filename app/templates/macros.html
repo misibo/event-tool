@@ -223,3 +223,20 @@
     <div>{{ event.start.astimezone(tz).strftime('%b') }}</div>
 </div>
 {% endmacro %}
+
+{% macro render_groupmember_actions(member, group) %}
+    <div>
+        {% if member %}
+            Du bist {{ member.get_role_label() }}
+            <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.edit', id=member.id)}}">Ändern</a>
+            <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.remove', id=member.id)}}">Verlassen</a>
+        {% else %}
+            Du bist nicht Mitglied.
+            <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.join', id=group.id) }}">Beitreten</a>
+        {% endif %}
+        {% if g.user.can_manage() %}
+            <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
+        {% endif %}
+    </div>
+{% endmacro %}
+

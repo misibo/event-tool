@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar with context %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar, render_groupmember_actions with context %}
 {% block title %}{{ group.name }}{% endblock %}
 {% block logo %}
 <div class="uk-navbar-item uk-logo">
@@ -16,26 +16,7 @@
         <div>{{ group.abstract | if_not('Keine Kurzinfo') | markdown }}</div>
         {% if g.user %}
         <div class="uk-flex-center uk-flex-middle uk-margin" uk-grid>
-            <div>
-                <form class="uk-flex-inline" method="POST" action="{{ url_for('group.member_edit', id=membership.id) if membership else url_for('group.join', id=group.id) }}">
-                    <div class="uk-text-nowrap">
-                        {{ 'Du bist' if membership else 'Du bist nicht Mitglied' }}
-                        {{ groupmember_form.role(class='uk-margin-small-left uk-select uk-form-width-small uk-form-small', onchange='javascript: submit()') }}
-                    </div>
-                </form>
-            </div>
-            <div>
-                {% if membership %}
-                <form action="{{ url_for('group.member_remove', id=membership.id) }}" method="post">
-                    <button class="uk-button uk-button-text" type="submit" name="leave">Verlassen</button>
-                </form>
-                {% endif %}
-            </div>
-            <div>
-                {% if g.user.can_manage() %}
-                <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Bearbeiten</a>
-                {% endif %}
-            </div>
+            {{ render_groupmember_actions(membership, group) }}
         </div>
         {% endif %}
         <div class="uk-margin">

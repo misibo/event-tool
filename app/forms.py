@@ -403,9 +403,13 @@ class ConfirmForm(FlaskForm):
     pass
 
 class GroupMemberForm(FlaskForm):
+
     role = SelectField(
         'Rolle',
         choices=GroupMember.Role.get_select_choices(),
         coerce=int
-        # widget=RadioListWidget()
     )
+
+    def adapt_role_choices(self, can_manage):
+        if not can_manage:
+            del(self.role.choices[2])

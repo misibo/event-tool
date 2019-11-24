@@ -45,11 +45,12 @@ app.add_template_global(utils.pretty_format_date, 'pretty_format_date')
 
 
 # register blueprints
-from . import event, group, invitation, security, user, dashboard
+from . import event, group, groupmember, invitation, security, user, dashboard
 app.register_blueprint(security.bp)
 app.register_blueprint(dashboard.bp)
 app.register_blueprint(user.bp)
 app.register_blueprint(group.bp)
+app.register_blueprint(groupmember.bp)
 app.register_blueprint(event.bp)
 app.register_blueprint(invitation.bp)
 
