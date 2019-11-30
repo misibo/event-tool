@@ -32,6 +32,14 @@
 {{ render_hero(content, group.get_background_url()) }}
 {% endblock %}
 
+{% block top %}
+<div class="uk-section uk-section-secondary">
+    <div class="uk-container uk-container-xsmall">
+        {{ group.details | if_not('Keine Details vorhanden.') | markdown }}
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
     <div id="details">
         <div class="uk-child-width-1-2@m" uk-grid>

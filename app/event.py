@@ -12,7 +12,7 @@ from werkzeug.exceptions import NotFound
 from . import mailing
 from .forms import ConfirmForm, EventEditForm, ConfirmDeleteEventForm
 from .mailing import send_single_mail
-from .models import (Choices, Event, Group, GroupEventRelations, GroupMember,
+from .models import (Choices, Event, Group, GroupEventRelation, GroupMember,
                      Invitation, User, db)
 from .security import login_required, manager_required
 from .utils import tz, url_back
@@ -34,8 +34,8 @@ def view(id):
     leaders = User.query.\
         join(GroupMember, GroupMember.user_id == User.id).\
         join(Group, Group.id == GroupMember.group_id).\
-        join(GroupEventRelations, GroupEventRelations.group_id == Group.id).\
-        join(Event, Event.id == GroupEventRelations.event_id).\
+        join(GroupEventRelation, GroupEventRelation.group_id == Group.id).\
+        join(Event, Event.id == GroupEventRelation.event_id).\
         filter(Event.id == id).\
         filter(GroupMember.role == GroupMember.Role.LEADER).\
         all()
@@ -116,8 +116,8 @@ def invite(id):
     users = User.query.\
         join(GroupMember, GroupMember.user_id == User.id).\
         join(Group, Group.id == GroupMember.group_id).\
-        join(GroupEventRelations, GroupEventRelations.group_id == Group.id).\
-        join(Event, Event.id == GroupEventRelations.event_id).\
+        join(GroupEventRelation, GroupEventRelation.group_id == Group.id).\
+        join(Event, Event.id == GroupEventRelation.event_id).\
         filter(Event.id == id).\
         order_by(User.username).\
         all()

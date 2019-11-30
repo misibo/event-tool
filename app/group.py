@@ -6,7 +6,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
 
 from . import mailing
 from .forms import GroupEditForm, GroupMemberForm, ConfirmDeleteGroupForm
-from .models import Event, Group, GroupEventRelations, GroupMember, User, db
+from .models import Event, Group, GroupEventRelation, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
 from .utils import localtime_to_utc, tz, url_back
 
@@ -35,7 +35,7 @@ def view(slug):
         all()
 
     upcoming = Event.query.\
-            join(GroupEventRelations, (GroupEventRelations.event_id == Event.id) & (GroupEventRelations.group_id == group.id)).\
+            join(GroupEventRelation, (GroupEventRelation.event_id == Event.id) & (GroupEventRelation.group_id == group.id)).\
             filter(Event.start > tz.localize(datetime.now())).\
             order_by(Event.start.asc()).\
             all()

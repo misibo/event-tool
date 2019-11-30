@@ -149,8 +149,8 @@ class GroupMember(db.Model):
         return self.Role.get_choice_label(self.role)
 
 
-class GroupEventRelations(db.Model):
-    __tablename__ = 'GroupEventRelations'
+class GroupEventRelation(db.Model):
+    __tablename__ = 'GroupEventRelation'
     group_id = db.Column(db.ForeignKey('Group.id'), primary_key=True)
     event_id = db.Column(db.ForeignKey('Event.id'), primary_key=True)
 
@@ -366,7 +366,7 @@ class Event(db.Model):
     background_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
-        'Group', secondary=GroupEventRelations.__table__, back_populates='events')
+        'Group', secondary=GroupEventRelation.__table__, back_populates='events')
     invitations = db.relationship('Invitation', back_populates='event')
 
     def print_start_end(self):
@@ -415,7 +415,7 @@ class Group(db.Model):
 
     members = db.relationship('GroupMember', back_populates='group')
     events = db.relationship('Event',
-        secondary=GroupEventRelations.__table__,
+        secondary=GroupEventRelation.__table__,
         back_populates='groups',
         lazy='dynamic')
 

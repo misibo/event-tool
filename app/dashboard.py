@@ -6,7 +6,7 @@ from flask import (Blueprint, current_app, flash, g, redirect, render_template,
 from sqlalchemy.orm import aliased
 
 from .forms import AccountForm
-from .models import (Event, Group, GroupEventRelations, GroupMember,
+from .models import (Event, Group, GroupEventRelation, GroupMember,
                      Invitation, User, db)
 from .security import login_required
 from .utils import tz
@@ -18,8 +18,8 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 @login_required
 def upcoming():
     pagination = Event.query.\
-        join(GroupEventRelations, GroupEventRelations.event_id == Event.id).\
-        join(Group, Group.id == GroupEventRelations.group_id).\
+        join(GroupEventRelation, GroupEventRelation.event_id == Event.id).\
+        join(Group, Group.id == GroupEventRelation.group_id).\
         join(GroupMember, GroupMember.group_id == Group.id).\
         filter(GroupMember.user_id == g.user.id).\
         filter(Event.start > tz.localize(datetime.now())).\

@@ -13,6 +13,7 @@
         <div class="uk-text-lead">
             {{ event.print_start_end() }}
         </div>
+
         {{ event.abstract | markdown }}
 
         <hr>
@@ -46,6 +47,14 @@
     </div>
     {% endset %}
     {{ render_hero(content, event.get_background_url())}}
+{% endblock %}
+
+{% block top %}
+<div class="uk-section uk-section-secondary">
+    <div class="uk-container uk-container-xsmall">
+        {{ event.details | markdown }}
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}

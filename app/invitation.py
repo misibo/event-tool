@@ -22,8 +22,8 @@ bp = Blueprint("invitation", __name__, url_prefix="/invitation")
 #     # from User, Event, "Group"
 #     # inner join GroupMember
 #     #     on GroupMember.user_id = User.id and GroupMember.group_id = "Group".id
-#     # inner join GroupEventRelations
-#     #     on GroupEventRelations.event_id = Event.id and GroupEventRelations.group_id = "Group".id
+#     # inner join GroupEventRelation
+#     #     on GroupEventRelation.event_id = Event.id and GroupEventRelation.group_id = "Group".id
 #     # left join Invitation
 #     #     on Invitation.user_id = User.id and Invitation.event_id == Event.id
 #     # where Event.send_invitations
