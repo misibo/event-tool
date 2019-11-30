@@ -1,0 +1,82 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date with context%}
+
+{% block title %}
+    Teilnehmer
+{% endblock %}
+
+{% block content %}
+<form method="GET">
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <div class="uk-text-center">
+        <h2>
+            Teilnehmer für Anlass
+            <a class="uk-link-toggle" href="#"><span class="uk-link-heading">{{ event.name }}</span></a>
+        </h2>
+    </div>
+    <div class="uk-grid-divider" uk-grid>
+        {% if stats %}
+        <div class="uk-flex-first uk-flex-last@m uk-width-1-4@m">
+            <h4>Anmeldungen</h4>
+            {{ stats.accepted + stats.friends }} | {{ stats.friends }} davon Freunde
+            <h4>Fahrplätze</h4>
+            {{ stats.car_seats }}
+        </div>
+        {% endif %}
+        <div class="uk-width-expand">
+            <div class="uk-margin" uk-grid>
+                <div class="uk-width-expand@s">
+                    {{ render_search(args) }}
+                </div>
+                <div>
+                    <a href="{{ url_for('mail.event_invite', id=event.id) }}" class="uk-button uk-button-default">Einladen</a>
+                    <a href="{{ url_for('mail.event_update', id=event.id) }}" class="uk-button uk-button-default">Update</a>
+                </div>
+            </div>
+            <div class="uk-overflow-auto">
+                <table class="uk-table uk-table-striped uk-table-small">
+                    <thead>
+                        <tr>
+                            <th class="uk-visible@s">ID</th>
+                            <th class="uk-visible@s"></th>
+                            <th>{{ render_order('Vorname', 'first_name', args) }}</th>
+                            <th class="uk-visible@s">{{ render_order('Nachname', 'family_name', args) }}</th>
+                            <th>{{ render_filter('Status', 'registration_status', RegistrationStatusChoices, args) }}</th>
+                            <th>Freunde</th>
+                            <th>Fahr<br>plätze</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participant in pagination.items %}
+                        <tr>
+                            <td class="uk-visible@s">{{ participant.id }}</td>
+                            <td class="uk-visible@s">
+                                {{ render_user_avatar(participant.user, resolution=32) }}
+                            </td>
+                            <td>{{ participant.user.first_name }}</td>
+                            <td class="uk-visible@s">{{ participant.user.family_name }}</td>
+                            <td>{{ participant.get_registration_status_label() }}</td>
+                            <td>{{ participant.num_friends }}</td>
+                            <td>{{ participant.num_car_seats }}</td>
+                            <td>
+                                <ul class="uk-iconnav" uk-margin>
+                                    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('participant.edit', id=participant.id) }}" uk-icon="pencil"></a></li>
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% if pagination.items %}
+    {{ render_pagination(pagination, 'participant.list', args) }}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Teilnehmer gefunden.</h3>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

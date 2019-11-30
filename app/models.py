@@ -155,25 +155,25 @@ class GroupEventRelation(db.Model):
     event_id = db.Column(db.ForeignKey('Event.id'), primary_key=True)
 
 
-class Invitation(db.Model):
+class Participant(db.Model):
 
-    class Reply(Choices):
+    class RegistrationStatus(Choices):
 
-        NONE = 1
-        ACCEPTED = 2
-        DECLINED = 3
+        INVITED = 1
+        REGISTERED = 2
+        UNREGISTRED = 3
 
         @classmethod
         def get_choices(self):
             return {
-                self.NONE: 'Keine Antwort',
-                self.ACCEPTED: 'Angemeldet',
-                self.DECLINED: 'Abgemeldet'
+                self.INVITED: 'Eingeladen',
+                self.REGISTERED: 'Angemeldet',
+                self.UNREGISTRED: 'Abgemeldet'
             }
 
-    __tablename__ = 'Invitation'
+    __tablename__ = 'Participant'
     __table_args__ = (
-        # avoid sending multiple invitations to same user
+        # avoid sending multiple participants to same user
         db.UniqueConstraint('event_id', 'user_id'),
     )
 
@@ -183,27 +183,18 @@ class Invitation(db.Model):
     token = db.Column(db.String, nullable=False)
     send_email_attempt_utc = db.Column(UtcDateTime)
     send_email_success_utc = db.Column(UtcDateTime)
-    reply = db.Column(db.Integer, default=1)
+    registration_status = db.Column(db.Integer, default=1)
     num_friends = db.Column(db.Integer, default=0)
     num_car_seats = db.Column(db.Integer, default=0)
 
-    event = db.relationship('Event', back_populates='invitations')
-    user = db.relationship('User', back_populates='invitations')
+    event = db.relationship('Event', back_populates='participants')
+    user = db.relationship('User', back_populates='participants')
 
-    def no_reply(self):
-        return self.reply == self.Reply.NONE
-
-    def accepted_reply(self):
-        return self.reply == self.Reply.ACCEPTED
-
-    def declined_reply(self):
-        return self.reply == self.Reply.DECLINED
-
-    def get_reply_label(self):
-        return self.Reply.get_choice_label(self.reply)
+    def get_registration_status_label(self):
+        return self.RegistrationStatus.get_choice_label(self.registration_status)
 
     def __repr__(self):
-        return auto_repr(self, ['id', 'event', 'user', 'accepted', 'num_friends', 'num_car_seats'])
+        return auto_repr(self, ['id', 'event', 'user', 'registration_status', 'num_friends', 'num_car_seats'])
 
     def __str__(self):
         return repr(self)
@@ -265,34 +256,7 @@ class User(db.Model):
 
     # relations
     memberships = db.relationship('GroupMember', back_populates='user', cascade="all, delete-orphan")
-    invitations = db.relationship('Invitation', back_populates='user', cascade="all, delete-orphan")
-
-    def query_membership_for_event(self, event):
-        return GroupMember.query.\
-            join(GroupMember.user).\
-            join(GroupMember.group).\
-            join(Group.events).\
-            filter(User.id == self.id).\
-            filter(Event.id == event.id).\
-            order_by(GroupMember.role.desc()).\
-            first()
-
-    def query_membership(self, group):
-        return GroupMember.query.\
-            join(GroupMember.user).\
-            join(GroupMember.group).\
-            filter(User.id == self.id).\
-            filter(Group.id == group.id).\
-            order_by(GroupMember.role.desc()).\
-            first()
-
-    def query_invitation_for_event(self, event):
-        return Invitation.query.\
-            join(Invitation.user).\
-            join(Invitation.event).\
-            filter(Event.id == event.id).\
-            filter(User.id == self.id).\
-            first()
+    participants = db.relationship('Participant', back_populates='user', cascade="all, delete-orphan")
 
     def get_role_label(self):
         return self.Role.get_choice_label(self.role)
@@ -349,6 +313,19 @@ class User(db.Model):
 
 
 class Event(db.Model):
+
+    class RegistrationType(Choices):
+
+        LOCKED = 1
+        OPEN = 2
+
+        @classmethod
+        def get_choices(self):
+            return {
+                self.LOCKED: 'Geschlossen',
+                self.OPEN: 'Offen',
+            }
+
     __tablename__ = 'Event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -361,13 +338,14 @@ class Event(db.Model):
     cost = db.Column(db.Integer)
     created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
-    invited = db.Column(db.Boolean)
+    registration_start = db.Column(UtcDateTime)
+    regitration_type = db.Column(db.SmallInteger)
     deadline = db.Column(UtcDateTime)
     background_version = db.Column(db.Integer, default=0, nullable=False)
 
     groups = db.relationship(
         'Group', secondary=GroupEventRelation.__table__, back_populates='events')
-    invitations = db.relationship('Invitation', back_populates='event')
+    participants = db.relationship('Participant', back_populates='event')
 
     def print_start_end(self):
         if (self.start.day == self.end.day):
@@ -450,23 +428,3 @@ class Group(db.Model):
 
     def get_flyer_url(self):
         return self.get_url(f'flyer.pdf', self.flyer_version)
-
-    def get_upcoming_events(self):
-        return self.events.\
-            filter(Event.start >= pytz.utc.localize(datetime.utcnow())).\
-            order_by(Event.start.asc()).\
-            all()
-
-    def get_membership_of_authenticated_user(self):
-        return GroupMember.query.\
-                filter(GroupMember.user_id == g.user.id).\
-                filter(GroupMember.group_id == self.id).\
-                first()
-
-    def get_members_ordered_by_role(self):
-        return GroupMember.query.\
-            join(User, GroupMember.user).\
-            join(Group, GroupMember.group).\
-            filter(Group.id == self.id).\
-            order_by(GroupMember.role.desc()).\
-            all()

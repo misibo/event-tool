@@ -7,7 +7,7 @@ from sqlalchemy.orm import aliased
 
 from .forms import AccountForm
 from .models import (Event, Group, GroupEventRelation, GroupMember,
-                     Invitation, User, db)
+                     Participant, User, db)
 from .security import login_required
 from .utils import tz
 
@@ -26,9 +26,9 @@ def upcoming():
         order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 
-    invitations = Invitation.query.\
-        join(Event, Event.id == Invitation.event_id).\
-        filter(Invitation.user_id == g.user.id).\
+    participants = Participant.query.\
+        join(Event, Event.id == Participant.event_id).\
+        filter(Participant.user_id == g.user.id).\
         all()
 
     def find(items, attr, value):
@@ -41,7 +41,7 @@ def upcoming():
         'dashboard/upcoming.html',
         pagination=pagination,
         tz=tz,
-        invitations=invitations,
+        participants=participants,
         memberships=memberships,
         find=find
     )

@@ -1,0 +1,16 @@
+Hallo {{participant.user.first_name}},
+
+Du bist zu folgendem Anlass "{{participant.event.name}}" eingeladen:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{{participant.event.abstract}}
+{{participant.event.description}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Treffpunkt: {{participant.event.location}}
+Wann: {{pretty_format_date(participant.event.start)}}
+Ausrüstung: {{participant.event.equipment}}
+Kosten: {{participant.event.cost}} Fr.
+
+Öffne folgenden Link im Browser, um die Einladung anzunehmen: {{token_url}}.
+Noch nicht sicher? Kein Problem, du kannst dich ja trotzdem vorläufig anmelden.
+Es ist jederzeit möglich, dich denselben den Link wieder abzumelden, bis am {{pretty_format_date(participant.event.deadline)}}.

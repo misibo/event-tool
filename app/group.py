@@ -4,7 +4,7 @@ import pytz
 from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
-from . import mailing
+from . import mail
 from .forms import GroupEditForm, GroupMemberForm, ConfirmDeleteGroupForm
 from .models import Event, Group, GroupEventRelation, GroupMember, User, db
 from .security import admin_required, login_required, manager_required

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Aktualisierung zum Anlass - {{participant.event.name}}</title>
+</head>
+<body>
+    <p>
+        Hallo {{participant.user.first_name}},
+        es gibt eine Aktualisierung bezüglich des Anlasses.
+    </p>
+    <p>
+        <b>{{note}}</b>
+    </p>
+    <hr>
+    <h1>{{participant.event.name}}</h1>
+    <p>{{participant.event.abstract | markdown }}</p>
+    <p>{{participant.event.description | markdown }}</p>
+    <dl>
+        <dt>Treffpunkt</dt>
+        <dd>{{participant.event.location}}</dd>
+        <dt>Wann</dt>
+        <dd>{{pretty_format_date(participant.event.start)}}</dd>
+        <dt>Ausrüstung</dt>
+        <dd>{{participant.event.equipment}}</dd>
+        <dt>Kosten</dt>
+        <dd>{{participant.event.cost}} Fr.</dd>
+    </dl>
+    <p>
+        Deine Antwort auf die Einladung ist: {{ participant.get_reply_label() }}
+        Du kannst sie noch bis {{ pretty_format_date(participant.event.deadline) }} ändern.
+    </p>
+</body>
+</html>

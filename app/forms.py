@@ -20,8 +20,8 @@ from wtforms.validators import (DataRequired, Email, Length, NumberRange,
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
-from . import mailing
-from .models import Event, Group, GroupMember, Invitation, User
+from . import mail
+from .models import Event, Group, GroupMember, Participant, User
 from .utils import tz, now
 
 
@@ -367,10 +367,13 @@ class ConfirmDeleteGroupForm(FlaskForm):
 class ConfirmDeleteUserForm(FlaskForm):
     pass
 
+class ConfirmForm(FlaskForm):
+    pass
 
-class EditInvitationForm(FlaskForm):
 
-    reply = SelectField('Antwort', choices=Invitation.Reply.get_select_choices(), coerce=int)
+class EditParticipantForm(FlaskForm):
+
+    registration_status = SelectField('Teilnahmestatus', choices=Participant.RegistrationStatus.get_select_choices(), coerce=int)
     num_friends = IntegerField("Anzahl Freunde")
     num_car_seats = IntegerField("Anzahl Fahrplätze")
 
@@ -383,12 +386,12 @@ class EditInvitationForm(FlaskForm):
             raise ValidationError('Anzahl Fahrplätze muss grösser oder gleich 0 sein.')
 
     def validate(self):
-        if not super(EditInvitationForm, self).validate():
+        if not super(EditParticipantForm, self).validate():
             return False
 
         error = False
 
-        if self.reply.data != Invitation.Reply.ACCEPTED:
+        if self.registration_status.data != Participant.RegistrationStatus.REGISTERED:
             if self.num_friends.data > 0:
                 self.num_friends.errors.append(
                     'Du kannst keine Freunde einladen, wenn du dich nicht anmeldest.')
@@ -399,9 +402,6 @@ class EditInvitationForm(FlaskForm):
                 error = True
 
         return not error
-
-class ConfirmForm(FlaskForm):
-    pass
 
 class GroupMemberForm(FlaskForm):
 
@@ -414,3 +414,6 @@ class GroupMemberForm(FlaskForm):
     def adapt_role_choices(self, can_manage):
         if not can_manage:
             del(self.role.choices[2])
+
+class EventMailForm(FlaskForm):
+    annotation = TextAreaField()

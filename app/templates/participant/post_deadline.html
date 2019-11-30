@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'macros.html' import render_field %}
 
-{% block title %}Einladung für {{ invitation.event.name }}{% endblock %}
+{% block title %}Einladung für {{ participant.event.name }}{% endblock %}
 
 {% block content %}
 <p>
@@ -9,13 +9,13 @@
 </p>
 <p>
     <b>Angemeldet: </b>
-    {% if invitation.accepted %}
+    {% if participant.accepted %}
     Ja
     {% else %}
     Nein
     {% endif %}
     <br>
-    <b>Anzahl Freunde: </b>{{invitation.num_friends}}<br>
-    <b>Anzahl Fahrplätze: </b>{{invitation.num_car_seats}}<br>
+    <b>Anzahl Freunde: </b>{{participant.num_friends}}<br>
+    <b>Anzahl Fahrplätze: </b>{{participant.num_car_seats}}<br>
 </p>
 {% endblock %}

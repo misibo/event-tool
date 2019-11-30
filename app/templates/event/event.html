@@ -35,11 +35,11 @@
                 </div>
             </div>
         </div>
-        {% if invitation %}
+        {% if participant %}
         <hr>
         <div class="uk-tile uk-tile-default">
-            Einladung: {{ invitation.get_reply_label() }}
-            <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('invitation.edit', id=invitation.edit) }}">Ändern</a>
+            Einladung: {{ participant.get_reply_label() }}
+            <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('participant.edit', id=participant.edit) }}">Ändern</a>
         </div>
         {% endif %}
         <hr>

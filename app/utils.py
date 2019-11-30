@@ -29,6 +29,20 @@ def utc_to_localtime(date):
 def localtime_to_utc(date):
     return tz.localize(date).astimezone(pytz.utc).replace(tzinfo=None)
 
+def format_datetime(datetime, format):
+    return datetime.astimezone(tz).strftime(format)
+
+def shortdate(datetime):
+    return format_datetime(datetime, '%d.%m.%y')
+
+def shortdatetime(datetime):
+    return format_datetime(datetime, '%d.%m.%y %H:%M')
+
+def longdate(datetime):
+    return format_datetime(datetime, '%a %d. %b %Y')
+
+def longdatetime(datetime):
+    return format_datetime(datetime, '%a %d. %b %Y %H:%M')
 
 def pretty_format_date(localtime, long=True):
     if long:
