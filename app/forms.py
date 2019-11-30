@@ -323,7 +323,9 @@ class EventEditForm(FlaskForm):
     end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
-    deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
+    registration_start = LocalDateTimeField('Anmeldestart', format='%d.%m.%y %H:%M')
+    deadline = LocalDateTimeField('Anmeldeschluss', format='%d.%m.%y %H:%M')
+    registration_type = SelectField('Anmeldetyp', choices=Event.RegistrationType.get_select_choices(), default=Event.RegistrationType.OPEN, coerce=int)
     background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
     groups = QuerySelectMultipleField(
         'Gruppen',
@@ -350,7 +352,7 @@ class EventEditForm(FlaskForm):
 
         return not error
 
-    def populate_obj(self, event: Event):
+    def populate_obj(self, event):
         super().populate_obj(event)
         if self.background.data is not None:
             event.save_background(self.background.data)

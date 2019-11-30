@@ -14,27 +14,8 @@
             {{ event.print_start_end() }}
         </div>
 
-        {{ event.abstract | markdown }}
+        <p>{{ event.abstract }}</p>
 
-        <hr>
-        <div class="uk-grid-divider uk-flex-center" uk-grid>
-            <div>
-                <h3>Leiter</h3>
-                <div class="uk-grid-small uk-flex-center" uk-grid>
-                    {% for leader in leaders %}
-                    {{ render_user_avatar(leader, resolution=48) }}
-                    {% endfor %}
-                </div>
-            </div>
-            <div>
-                <h3>Gruppen</h3>
-                <div class="uk-grid-small uk-flex-center" uk-grid>
-                    {% for group in event.groups %}
-                    {{ render_group_logo(group, resolution=48) }}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
         {% if participant %}
         <hr>
         <div class="uk-tile uk-tile-default">
@@ -50,7 +31,7 @@
 {% endblock %}
 
 {% block top %}
-<div class="uk-section uk-section-secondary">
+<div id="details" class="uk-section uk-section-secondary">
     <div class="uk-container uk-container-xsmall">
         {{ event.details | markdown }}
     </div>
@@ -58,31 +39,59 @@
 {% endblock %}
 
 {% block content %}
-    <div id="details">
-        <h3 class="uk-card-title">Details</h3>
-        <p>
-            {{ event.details | if_not('Keine Details vorhanden.') | markdown }}
-        </p>
-        <div class="uk-card uk-card-default">
-            <div class="uk-card-header">
-                <h3 class="uk-card-title">Teilnehmer</h3>
-            </div>
-            <div class="uk-card-body">
-                {% if participants %}
-                <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
-                {% for participant in participants %}
-                    <div>
-                        {{ render_user_avatar(participant, resolution=64) }}
+    <div class="uk-flex-center" uk-grid>
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Gruppen</h3>
+                </div>
+                <div class="uk-card-body">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
+                        {% for group in event.groups %}
+                        {{ render_group_logo(group, resolution=48) }}
+                        {% endfor %}
                     </div>
-                {% endfor %}
                 </div>
-                {% else %}
-                <div class="uk-text-center uk-margin">
-                    <h3 class="uk-text-muted">Keine Teilnehmer</h3>
-                </div>
-                {% endif %}
             </div>
         </div>
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Leiter</h3>
+                </div>
+                <div class="uk-card-body">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
+                        {% for leader in leaders %}
+                        {{ render_user_avatar(leader, resolution=48) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if participants %}
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Teilnehmer</h3>
+                </div>
+                <div class="uk-card-body">
+                    {% if participants %}
+                    <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
+                    {% for participant in participants %}
+                        <div>
+                            {{ render_user_avatar(participant, resolution=64) }}
+                        </div>
+                    {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="uk-text-center uk-margin">
+                        <h3 class="uk-text-muted">Keine Teilnehmer</h3>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
 

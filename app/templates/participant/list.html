@@ -6,14 +6,14 @@
 {% endblock %}
 
 {% block content %}
+<div class="uk-text-center">
+    <h2>
+        Teilnehmer für Anlass
+        <a class="uk-link-toggle" href="{{ url_for('event.view', id=event.id)}}"><span class="uk-link-heading">{{ event.name }}</span></a>
+    </h2>
+</div>
 <form method="GET">
     <input name="page" value="{{ pagination.page }}" hidden>
-    <div class="uk-text-center">
-        <h2>
-            Teilnehmer für Anlass
-            <a class="uk-link-toggle" href="#"><span class="uk-link-heading">{{ event.name }}</span></a>
-        </h2>
-    </div>
     <div class="uk-grid-divider" uk-grid>
         {% if stats %}
         <div class="uk-flex-first uk-flex-last@m uk-width-1-4@m">
