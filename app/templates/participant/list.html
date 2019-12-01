@@ -12,6 +12,19 @@
         <a class="uk-link-toggle" href="{{ url_for('event.view', id=event.id)}}"><span class="uk-link-heading">{{ event.name }}</span></a>
     </h2>
 </div>
+<div class="uk-alert-primary" uk-alert>
+    Anmeldestart ist am {{ event.registration_start | longdatetime }}.
+    {% if event.is_registration_allowed() %}
+        Personen können sich schon für den Anlass anmelden.
+    {% else %}
+        Personen können sich noch nicht anmelden. Mit einem Infomail würde die Anmeldung gestartet werden.
+    {% endif %}
+</div>
+{% if event.is_deadline_over() %}
+<div class="uk-alert-warning" uk-alert>
+    Deadline zur Anmeldung ist schon vorbei. Es kann sich niemand mehr für den Anlass anmelden. Du kannst die Deadline noch <a href="{{ url_for('event.edit', id=event.id) }}">ändern</a>
+</div>
+{% endif %}
 <form method="GET">
     <input name="page" value="{{ pagination.page }}" hidden>
     <div class="uk-grid-divider" uk-grid>
@@ -29,8 +42,7 @@
                     {{ render_search(args) }}
                 </div>
                 <div>
-                    <a href="{{ url_for('mail.event_invite', id=event.id) }}" class="uk-button uk-button-default">Einladen</a>
-                    <a href="{{ url_for('mail.event_update', id=event.id) }}" class="uk-button uk-button-default">Update</a>
+                    <a href="{{ url_for('mail.event_info', id=event.id) }}" class="uk-button uk-button-primary">Infomail</a>
                 </div>
             </div>
             <div class="uk-overflow-auto">

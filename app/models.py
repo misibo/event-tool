@@ -9,6 +9,7 @@ from sqlalchemy import or_
 from sqlalchemy.types import TypeDecorator
 
 from .image import store_background, store_favicon
+from .utils import now
 
 tz = pytz.timezone('Europe/Zurich')
 
@@ -190,6 +191,15 @@ class Participant(db.Model):
     event = db.relationship('Event', back_populates='participants')
     user = db.relationship('User', back_populates='participants')
 
+    def is_invited(self):
+        return self.registration_status == self.RegistrationStatus.INVITED
+
+    def is_registered(self):
+        return self.registration_status == self.RegistrationStatus.REGISTERED
+
+    def is_unregistered(self):
+        return self.registration_status == self.RegistrationStatus.UNREGISTRED
+
     def get_registration_status_label(self):
         return self.RegistrationStatus.get_choice_label(self.registration_status)
 
@@ -347,7 +357,16 @@ class Event(db.Model):
         'Group', secondary=GroupEventRelation.__table__, back_populates='events')
     participants = db.relationship('Participant', back_populates='event')
 
-    def print_start_end(self):
+    def is_upcoming(self):
+        return self.start > now
+
+    def is_registration_allowed(self):
+        return self.registration_start and self.registration_start < now
+
+    def is_deadline_over(self):
+        return self.deadline and self.deadline < now
+
+    def print_duration(self):
         if (self.start.day == self.end.day):
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y")}, {self.start.astimezone(tz).strftime("%H:%M")} bis {self.end.strftime("%H:%M")}'
         else:

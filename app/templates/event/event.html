@@ -1,29 +1,45 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_user_avatar, render_group_logo, render_hero with context %}
+{% from 'macros.html' import render_field, render_image_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
-
-{% block attrs %}class="uk-background-cover" data-src="{{ event.get_background_url() }}" uk-img{% endblock %}
 
 {% block hero %}
     {% set content %}
     <div class="uk-text-center">
         <h1>{{ event.name }}</h1>
 
-        <div class="uk-text-lead">
-            {{ event.print_start_end() }}
+        <div class="uk-text-lead uk-text-bold">
+            {{ event.print_duration() }}
         </div>
 
         <p>{{ event.abstract }}</p>
 
-        {% if participant %}
-        <hr>
-        <div class="uk-tile uk-tile-default">
-            Einladung: {{ participant.get_reply_label() }}
-            <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('participant.edit', id=participant.edit) }}">Ändern</a>
+        {% if event.is_upcoming() %}
+        <hr class="uk-divider-small">
+        <div class="uk-form-label uk-margin-small-bottom">
+            Anlass startet in
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_countdown(event.start) }}
         </div>
         {% endif %}
-        <hr>
+
+        {% if g.user and g.user.can_manage() %}
+        <hr class="uk-divider-small">
+        <div class="uk-form-label uk-margin-small-bottom">
+            Verwalten
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_manage_event_nav(event.id) }}
+        </div>
+        {% endif %}
+
+        {% if participant %}
+        <hr class="uk-divider-small">
+        Du bist {{ participant.get_registration_status_label() }}
+        <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('participant.edit', id=participant.edit) }}">Ändern</a>
+        {% endif %}
+        <hr class="uk-divider-small">
         <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
     </div>
     {% endset %}

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date with context%}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date, render_manage_event_nav with context%}
 
 {% block title %}
     Anlässe
@@ -55,12 +55,7 @@
                             </ul>
                         </td>
                     <td>
-                        <ul class="uk-iconnav" uk-margin>
-                            <li><a uk-tooltip="Teilnehmer" href="{{ url_for('participant.list', id=event.id) }}" uk-icon="users"></a></li>
-                            <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=event.id) }}" uk-icon="pencil"></a></li>
-                            <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=event.id) }}" uk-icon="copy"></a></li>
-                            <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=event.id) }}" uk-icon="trash"></a></li>
-                        </ul>
+                        {{ render_manage_event_nav(event.id) }}
                     </td>
                 </tr>
                 {% endfor %}

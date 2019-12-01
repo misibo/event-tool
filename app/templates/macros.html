@@ -227,11 +227,15 @@
 {% macro render_groupmember_actions(member, group) %}
     <div>
         {% if member %}
-            Du bist {{ member.get_role_label() }}
+            <div class="uk-form-label uk-margin-small-bottom">
+                Du bist {{ member.get_role_label() }}
+            </div>
             <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.edit', id=member.id)}}">Ändern</a>
             <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.remove', id=member.id)}}">Verlassen</a>
         {% else %}
-            Du bist nicht Mitglied.
+            <div class="uk-form-label uk-margin-small-bottom">
+                Du bist nicht Mitglied.
+            </div>
             <a class="uk-button uk-button-small uk-button-default uk-margin-small-left" href="{{ url_for('groupmember.join', id=group.id) }}">Beitreten</a>
         {% endif %}
     </div>
@@ -245,5 +249,48 @@
             </div>
         </div>
     </div>
+{% endmacro %}
+
+{% macro render_countdown(datetime) %}
+<div class="uk-grid-small uk-child-width-auto" uk-grid uk-countdown="date: {{ datetime.isoformat() }}">
+    <div>
+        <div class="uk-countdown-number uk-countdown-days"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Tage</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-hours"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Stunden</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-minutes"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Minuten</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-seconds"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Sekunden</div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_manage_event_nav(id) %}
+<ul class="uk-iconnav" uk-margin>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.event_info', id=id) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('participant.list', id=id) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=id) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=id) }}" uk-icon="copy"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=id) }}" uk-icon="trash"></a></li>
+</ul>
+{% endmacro %}
+
+{% macro render_manage_group_nav(id) %}
+<ul class="uk-iconnav" uk-margin>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.group_info', id=id) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('groupmember.members', id=id) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=id) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=id) }}" uk-icon="trash"></a></li>
+</ul>
 {% endmacro %}
 

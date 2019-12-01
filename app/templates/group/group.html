@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar, render_groupmember_actions, render_hero with context %}
+{% from 'macros.html' import render_field, render_image_field, render_event_date, render_user_avatar, render_groupmember_actions, render_hero, render_manage_group_nav with context %}
 {% block title %}{{ group.name }}{% endblock %}
 {% block logo %}
 <div class="uk-navbar-item uk-logo">
@@ -13,17 +13,21 @@
 {% set content %}
 <div class="uk-text-center">
     <h1>{{ group.name }}</h1>
-    {{ group.abstract | if_not('Keine Kurzinfo') | markdown }}
+    <p>{{ group.abstract }}</p>
     {% if g.user %}
-    <div>
-        {% if g.user.can_manage() %}
-            <a class="uk-button uk-button-text" href="{{ url_for('group.edit', id=group.id) }}">Gruppe bearbeiten</a>
-        {% endif %}
-    </div>
-    <hr>
-    {{ render_groupmember_actions(membership, group) }}
-    <hr>
+    {% if g.user.can_manage() %}
+        <hr class="uk-divider-small">
+        <div class="uk-form-label uk-margin-small-bottom">
+            Verwalten
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_manage_group_nav(group.id) }}
+        </div>
     {% endif %}
+    <hr class="uk-divider-small">
+    {{ render_groupmember_actions(membership, group) }}
+    {% endif %}
+    <hr class="uk-divider-small">
     <div class="uk-margin">
         <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
     </div>
@@ -33,7 +37,7 @@
 {% endblock %}
 
 {% block top %}
-<div class="uk-section uk-section-secondary">
+<div id="details" class="uk-section uk-section-secondary">
     <div class="uk-container uk-container-xsmall">
         {{ group.details | if_not('Keine Details vorhanden.') | markdown }}
     </div>
@@ -75,7 +79,7 @@
                                     <div class="uk-width-expand">
                                         <h4 class="uk-margin-remove">{{ event.name }}</h4>
                                         <div class="uk-text-muted">
-                                            {{ event.print_start_end() }}
+                                            {{ event.print_duration() }}
                                         </div>
                                         <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                                     </div>
