@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    url_for)
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, joinedload
 
 from .forms import AccountForm
 from .models import (Event, Group, GroupEventRelation, GroupMember,
@@ -50,6 +50,7 @@ def upcoming():
 @login_required
 def memberships():
     pagination = GroupMember.query.\
+        options(joinedload(GroupMember.group)).\
         filter(GroupMember.user_id == g.user.id).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 

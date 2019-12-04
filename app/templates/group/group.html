@@ -25,7 +25,12 @@
         </div>
     {% endif %}
     <hr class="uk-divider-small">
-    {{ render_groupmember_actions(membership, group) }}
+    <div class="uk-form-label uk-margin-small-bottom">
+        Mitgliedschaft
+    </div>
+    <div class="uk-flex uk-flex-center">
+        {{ render_groupmember_actions(membership, group) }}
+    </div>
     {% endif %}
     <hr class="uk-divider-small">
     <div class="uk-margin">
