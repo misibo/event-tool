@@ -195,7 +195,7 @@
 {% set avatar %}
     <div {{ render_tooltip(user.get_fullname()) }}>
         {% if user.avatar_version %}
-        <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}">
+        <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}" uk-img>
         {% else %}
         <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
             <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
