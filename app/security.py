@@ -8,7 +8,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, session, url_for)
 from itsdangerous import BadSignature
 
-from . import mailing
+from . import mail
 from .forms import (ChangeEmailForm, ChangePasswordForm,
                     ConfirmPasswordResetForm, ConfirmRegistrationForm,
                     LoginForm, RegisterForm, ResetPasswordForm)
@@ -93,7 +93,7 @@ def register():
         confirm_url = request.url_root + url_for('security.confirm', token=token)[1:]
         current_app.logger.info(f'{form.email.data,} can confirmed by {confirm_url}')
 
-        mailing.send_single_mail(
+        mail.send_single_mail(
             recipient=form.email.data,
             subject="Registrierung",
             text=render_template(
@@ -228,7 +228,7 @@ def reset_password():
         current_app.logger.info(
             f'The password of {username} is reset by {confirm_url}')
 
-        mailing.send_single_mail(
+        mail.send_single_mail(
             recipient=email,
             subject='Passwort zurücksetzen',
             text=render_template('mail/reset_password.text',
@@ -309,7 +309,7 @@ def change_email():
         # current_app.logger.info(
         #     f'New email address is activated by {confirm_url}')
 
-        mailing.send_single_mail(
+        mail.send_single_mail(
             recipient=user.email_change_request,
             subject='E-Mail-Adresse ändern',
             text=render_template('mail/change_email.text',

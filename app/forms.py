@@ -20,8 +20,8 @@ from wtforms.validators import (DataRequired, Email, Length, NumberRange,
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
 
-from . import mailing
-from .models import Event, Group, GroupMember, Invitation, User
+from . import mail
+from .models import Event, Group, GroupMember, Participant, User
 from .utils import tz, now
 
 
@@ -323,7 +323,9 @@ class EventEditForm(FlaskForm):
     end = LocalDateTimeField('Ende', format='%d.%m.%y %H:%M')
     equipment = TextAreaField('Ausrüstung', [Optional()])
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
-    deadline = LocalDateTimeField('Deadline für Anmeldung', format='%d.%m.%y %H:%M')
+    registration_start = LocalDateTimeField('Anmeldestart', format='%d.%m.%y %H:%M', validators=[Optional()])
+    deadline = LocalDateTimeField('Anmeldeschluss', format='%d.%m.%y %H:%M')
+    registration_type = SelectField('Anmeldetyp', choices=Event.RegistrationType.get_select_choices(), default=Event.RegistrationType.OPEN, coerce=int)
     background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
     groups = QuerySelectMultipleField(
         'Gruppen',
@@ -350,7 +352,7 @@ class EventEditForm(FlaskForm):
 
         return not error
 
-    def populate_obj(self, event: Event):
+    def populate_obj(self, event):
         super().populate_obj(event)
         if self.background.data is not None:
             event.save_background(self.background.data)
@@ -367,10 +369,13 @@ class ConfirmDeleteGroupForm(FlaskForm):
 class ConfirmDeleteUserForm(FlaskForm):
     pass
 
+class ConfirmForm(FlaskForm):
+    pass
 
-class EditInvitationForm(FlaskForm):
 
-    reply = SelectField('Antwort', choices=Invitation.Reply.get_select_choices(), coerce=int)
+class EditParticipantForm(FlaskForm):
+
+    registration_status = SelectField('Teilnahmestatus', choices=Participant.RegistrationStatus.get_select_choices(), coerce=int)
     num_friends = IntegerField("Anzahl Freunde")
     num_car_seats = IntegerField("Anzahl Fahrplätze")
 
@@ -383,12 +388,12 @@ class EditInvitationForm(FlaskForm):
             raise ValidationError('Anzahl Fahrplätze muss grösser oder gleich 0 sein.')
 
     def validate(self):
-        if not super(EditInvitationForm, self).validate():
+        if not super(EditParticipantForm, self).validate():
             return False
 
         error = False
 
-        if self.reply.data != Invitation.Reply.ACCEPTED:
+        if self.registration_status.data != Participant.RegistrationStatus.REGISTERED:
             if self.num_friends.data > 0:
                 self.num_friends.errors.append(
                     'Du kannst keine Freunde einladen, wenn du dich nicht anmeldest.')
@@ -399,9 +404,6 @@ class EditInvitationForm(FlaskForm):
                 error = True
 
         return not error
-
-class ConfirmForm(FlaskForm):
-    pass
 
 class GroupMemberForm(FlaskForm):
 
@@ -414,3 +416,7 @@ class GroupMemberForm(FlaskForm):
     def adapt_role_choices(self, can_manage):
         if not can_manage:
             del(self.role.choices[2])
+
+class EventMailForm(FlaskForm):
+    event_details = TextAreaField('Details des Anlasses anpassen')
+    annotation = TextAreaField('Anmerkung')

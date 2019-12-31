@@ -3,15 +3,27 @@
 
 {% block title %}Anlass {{ 'bearbeiten' if event.id else 'erstellen' }}{% endblock %}
 
+{% block head %}
+{{ simplemde.css }}
+{{ simplemde.js }}
+{% endblock %}
+
 {% block content %}
+<div class="uk-text-center">
+    <h2>
+        {{ self.title() }}
+    </h2>
+</div>
 <form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
+    {{ form.csrf_token }}
     <div class="uk-grid-divider" uk-grid>
         <div class="uk-width-1-1">
             <div uk-grid>
                 <div class="uk-width-expand@s">
                     {% if event.id %}
-                    <h3 class="uk-heading-bullet">
+                    <h3>
                         <a class="uk-link-heading" href="{{ url_for('event.view', id=event.id) }}" target="_blank">{{ event.name }}</a>
+                        <span class="uk-text-muted uk-text-small">ID: {{event.id}}</span>
                     </h3>
                     {% endif %}
                 </div>
@@ -34,20 +46,26 @@
                     {{ render_field(form.end, class='uk-input', placeholder='dd.mm.yy hh:mm') }}
                 </div>
             </div>
-            {{ render_field(form.abstract, class='uk-textarea', rows=3, placeholder="Kurzinfo ...") }}
+            {{ render_field(form.abstract, class='uk-textarea', rows=5, placeholder="Kurzinfo ...") }}
             {{ render_field(form.details, class='uk-textarea', rows=10, placeholder="Details ...") }}
+            {{ simplemde.load_id("details") }}
             {{ render_field(form.equipment, class='uk-textarea', rows=3, placeholder="Mitnehmen...") }}
         </div>
         <div class="uk-width-1-3@m">
             {{ render_image_field(form.background, event.get_background_url()) }}
             {{ render_field(form.cost, class='uk-input', min=0, step=1, placeholder='Fr.') }}
+            {{ render_field(form.registration_start, class='uk-input', placeholder='dd.mm.yy hh:mm') }}
+            <div class="uk-alert-warning" uk-alert>
+                Anmeldestart wird auch gesetzt, wenn Einladungen für den Anlass versendet werden.
+            </div>
             {{ render_field(form.deadline, class='uk-input', placeholder='dd.mm.yy hh:mm') }}
+            {{ render_field(form.registration_type, class='uk-select') }}
+            <div class="uk-alert-primary" uk-alert>
+                Bei "Offen" können alle Mitglieder der Gruppen, welche dem Anlass zugeordnet sind, daran teilnehmen. "Geschlossen" erlaubt nur eingeladene Mitglieder.
+            </div>
             {{ render_field(form.groups) }}
         </div>
     </div>
-    {{ form.csrf_token }}
 </form>
 
-{{ simplemde.load_id("abstract") }}
-{{ simplemde.load_id("details") }}
 {% endblock %}

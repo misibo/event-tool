@@ -25,8 +25,8 @@ def join(id):
         db.session.add(member)
         db.session.commit()
 
-        # TODO send mission invitations for user who joined the new group
-        # mailing.send_invitations()
+        # TODO send mission participants for user who joined the new group
+        # mail.send_participants()
 
         flash(f'Du bist jetzt "{member.get_role_label()}"" der Gruppe "{group.name}"."', 'success')
 

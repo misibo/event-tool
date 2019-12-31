@@ -1,14 +1,13 @@
 from datetime import datetime
 
-import pytz
 from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
-from . import mailing
+from . import mail
 from .forms import GroupEditForm, GroupMemberForm, ConfirmDeleteGroupForm
-from .models import Event, Group, GroupEventRelations, GroupMember, User, db
+from .models import Event, Group, GroupEventRelation, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
-from .utils import localtime_to_utc, tz, url_back
+from .utils import url_back, now
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -35,8 +34,8 @@ def view(slug):
         all()
 
     upcoming = Event.query.\
-            join(GroupEventRelations, (GroupEventRelations.event_id == Event.id) & (GroupEventRelations.group_id == group.id)).\
-            filter(Event.start > tz.localize(datetime.now())).\
+            join(GroupEventRelation, (GroupEventRelation.event_id == Event.id) & (GroupEventRelation.group_id == group.id)).\
+            filter(Event.start > now).\
             order_by(Event.start.asc()).\
             all()
 
@@ -86,6 +85,8 @@ def create():
 
         if form.validate_on_submit():
             form.populate_obj(group)
+            group.created = now
+            group.modified = now
             db.session.add(group)
             db.session.commit()
             flash(f'Gruppe "{group.name}" erstellt.', 'success')
@@ -102,6 +103,7 @@ def edit(id):
 
     if form.validate_on_submit():
         form.populate_obj(group)
+        group.modified = now
         db.session.commit()
         flash(f'Gruppe "{group.name}" gespeichert.', 'success')
         return redirect(url_back('group.list'))

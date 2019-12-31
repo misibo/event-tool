@@ -6,8 +6,8 @@ import pytz
 from slugify import slugify
 
 from app import app
-# from app.invitation import list_missing_invitations
-from app.models import Event, Group, GroupMember, Invitation, User, db
+# from app.participant import list_missing_participants
+from app.models import Event, Group, GroupMember, Participant, User, db
 
 tz = pytz.timezone('Europe/Zurich')
 random.seed(42)
@@ -59,7 +59,6 @@ def create_event(name, abstract, details, location, start, end, equipment, cost,
         equipment=equipment,
         cost=cost,
         deadline=tz.localize(deadline),
-        invited=invited,
         created=tz.localize(datetime.now()),
         modified=tz.localize(datetime.now()),
     )
@@ -267,8 +266,3 @@ with app.app_context():
             db.session.add(role)
 
     db.session.commit()
-
-#     # Pre-populate invitations
-# #    for invitation in list_missing_invitations():
-# #        db.session.add(invitation)
-#     db.session.commit()

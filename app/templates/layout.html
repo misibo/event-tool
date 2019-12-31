@@ -8,109 +8,110 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.1.7/js/uikit-icons.min.js"></script>
     {% include 'message_flashing.html' %}
-    {{ simplemde.css }}
-    {{ simplemde.js }}
+    {% block head %}{% endblock %}
 </head>
 
 <body>
-
-    <div id="offcanvas" uk-offcanvas="mode: push; overlay: true">
-        <div class="uk-offcanvas-bar">
-            <button class="uk-offcanvas-close" type="button" uk-close></button>
-            <ul class="uk-nav uk-nav-primary">
-                <li class="uk-nav-header">Seiten</li>
-                {% block menu_public %}
-                {{ render_menu_item('Start', 'index') }}
-                {{ render_menu_item('Nächstens', 'event.upcoming') }}
-                {{ render_menu_item('Gruppen', 'group.groups') }}
-                {% endblock %}
-                <li class="uk-nav-header">Benutzer</li>
-                {% if g.user %}
-                    <li>
-                        <div class="uk-margin-top uk-margin-bottom">
-                            {{ render_user_avatar(g.user, 128)}}
-                        </div>
-                    </li>
-                    {% block menu_account %}
-                        <li><a class="uk-link-reset">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</a></li>
-                        {{ render_menu_item('Dashboard', 'dashboard.upcoming') }}
-                        {{ render_menu_item('Abmelden', 'security.logout') }}
-                    {% endblock %}
-                {% else %}
-                    {% block menu_user %}
-                        {{ render_menu_item('Anmelden', 'security.login') }}
-                        {{ render_menu_item('Registrieren', 'security.register') }}
-                    {% endblock %}
-                {% endif %}
-                {% if g.user and g.user.can_manage() %}
-                <li class="uk-nav-header">Verwalten</li>
-                {% block menu_manage %}
-                    {{ render_menu_item('Gruppen', 'group.list') }}
-                    {{ render_menu_item('Anlässe', 'event.list') }}
-                    {{ render_menu_item('Benutzer', 'user.list') }}
-                {% endblock %}
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-
     <div>
-        <div class="uk-hidden@s uk-navbar-container" uk-navbar>
-            <div class="uk-navbar-left">
-                <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle href="#offcanvas"></a>
-            </div>
-            <div class="uk-navbar-center">
-                {% block logo %}<a class="uk-navbar-item uk-logo" href="#">EvenTool</a>{% endblock %}
+        <div id="offcanvas" uk-offcanvas="mode: push; overlay: true">
+            <div class="uk-offcanvas-bar">
+                <button class="uk-offcanvas-close" type="button" uk-close></button>
+                <ul class="uk-nav uk-nav-primary">
+                    <li class="uk-nav-header">Seiten</li>
+                    {% block menu_public %}
+                    {{ render_menu_item('Start', 'index') }}
+                    {{ render_menu_item('Nächstens', 'event.upcoming') }}
+                    {{ render_menu_item('Gruppen', 'group.groups') }}
+                    {% endblock %}
+                    <li class="uk-nav-header">Benutzer</li>
+                    {% if g.user %}
+                        <li>
+                            <div class="uk-margin-top uk-margin-bottom">
+                                {{ render_user_avatar(g.user, 128)}}
+                            </div>
+                        </li>
+                        {% block menu_account %}
+                            <li><a class="uk-link-reset">Willkommen, {{ g.user.first_name }} {{ g.user.family_name }}</a></li>
+                            {{ render_menu_item('Dashboard', 'dashboard.upcoming') }}
+                            {{ render_menu_item('Abmelden', 'security.logout') }}
+                        {% endblock %}
+                    {% else %}
+                        {% block menu_user %}
+                            {{ render_menu_item('Anmelden', 'security.login') }}
+                            {{ render_menu_item('Registrieren', 'security.register') }}
+                        {% endblock %}
+                    {% endif %}
+                    {% if g.user and g.user.can_manage() %}
+                    <li class="uk-nav-header">Verwalten</li>
+                    {% block menu_manage %}
+                        {{ render_menu_item('Gruppen', 'group.list') }}
+                        {{ render_menu_item('Anlässe', 'event.list') }}
+                        {{ render_menu_item('Benutzer', 'user.list') }}
+                    {% endblock %}
+                    {% endif %}
+                </ul>
             </div>
         </div>
+        <div>
+            <div class="uk-hidden@s uk-navbar-container" uk-navbar>
+                <div class="uk-navbar-left">
+                    <a class="uk-navbar-toggle" uk-navbar-toggle-icon uk-toggle href="#offcanvas"></a>
+                </div>
+                <div class="uk-navbar-center">
+                    {% block logo %}<a class="uk-navbar-item uk-logo" href="#">EvenTool</a>{% endblock %}
+                </div>
+            </div>
 
-        <div class="uk-visible@s uk-navbar-container">
-            <div class="uk-container">
-                <nav uk-navbar>
-                    <div class="uk-navbar-left">
-                        <ul class="uk-navbar-nav">
-                            {{ self.menu_public() }}
-                        </ul>
-                    </div>
-                    <div class="uk-navbar-center">
-                        {{ self.logo() }}
-                    </div>
-                    <div class="uk-navbar-right">
-                        <ul class="uk-navbar-nav">
-                            {% if g.user %}
-                            <li>
-                                <a href="#">
-                                    {{ render_user_avatar(g.user, resolution=32, link=false) }}
-                                </a>
-                                <div class="uk-navbar-dropdown">
-                                    <ul class="uk-nav uk-navbar-dropdown-nav">
-                                        {{ self.menu_account() }}
-                                    </ul>
-                                </div>
-                            </li>
-                            {% if g.user.can_manage() %}
-                            <li>
-                                <a href="#">
-                                    Verwalten
-                                </a>
-                                <div class="uk-navbar-dropdown">
-                                    <ul class="uk-nav uk-navbar-dropdown-nav">
-                                        {{ self.menu_manage() }}
-                                    </ul>
-                                </div>
-                            </li>
-                            {% endif %}
-                            {% else %}
-                                {{ self.menu_user() }}
-                            {% endif %}
-                        </ul>
-                    </div>
-                </nav>
+            <div class="uk-visible@s uk-navbar-container">
+                <div class="uk-container">
+                    <nav uk-navbar>
+                        <div class="uk-navbar-left">
+                            <ul class="uk-navbar-nav">
+                                {{ self.menu_public() }}
+                            </ul>
+                        </div>
+                        <div class="uk-navbar-center">
+                            {{ self.logo() }}
+                        </div>
+                        <div class="uk-navbar-right">
+                            <ul class="uk-navbar-nav">
+                                {% if g.user %}
+                                <li>
+                                    <a href="#">
+                                        {{ render_user_avatar(g.user, resolution=32, link=false) }}
+                                    </a>
+                                    <div class="uk-navbar-dropdown">
+                                        <ul class="uk-nav uk-navbar-dropdown-nav">
+                                            {{ self.menu_account() }}
+                                        </ul>
+                                    </div>
+                                </li>
+                                {% if g.user.can_manage() %}
+                                <li>
+                                    <a href="#">
+                                        Verwalten
+                                    </a>
+                                    <div class="uk-navbar-dropdown">
+                                        <ul class="uk-nav uk-navbar-dropdown-nav">
+                                            {{ self.menu_manage() }}
+                                        </ul>
+                                    </div>
+                                </li>
+                                {% endif %}
+                                {% else %}
+                                    {{ self.menu_user() }}
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
 
     {% block hero %}{% endblock %}
+
+    {% block top %}{% endblock %}
 
     <div class="uk-section uk-section-muted" uk-height-viewport="expand: true">
         <div class="uk-container">

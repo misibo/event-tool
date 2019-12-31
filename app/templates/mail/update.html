@@ -1,33 +1,49 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <title>Aktualisierung zum Anlass - {{invitation.event.name}}</title>
-</head>
-<body>
-    <p>
-        Hallo {{invitation.user.first_name}},
-        es gibt eine Aktualisierung bezüglich des Anlasses.
-    </p>
-    <p>
-        <b>{{note}}</b>
-    </p>
-    <hr>
-    <h1>{{invitation.event.name}}</h1>
-    <p>{{invitation.event.abstract | markdown }}</p>
-    <p>{{invitation.event.description | markdown }}</p>
-    <dl>
-        <dt>Treffpunkt</dt>
-        <dd>{{invitation.event.location}}</dd>
-        <dt>Wann</dt>
-        <dd>{{pretty_format_date(invitation.event.start)}}</dd>
-        <dt>Ausrüstung</dt>
-        <dd>{{invitation.event.equipment}}</dd>
-        <dt>Kosten</dt>
-        <dd>{{invitation.event.cost}} Fr.</dd>
-    </dl>
-    <p>
-        Deine Antwort auf die Einladung ist: {{ invitation.get_reply_label() }}
-        Du kannst sie noch bis {{ pretty_format_date(invitation.event.deadline) }} ändern.
-    </p>
-</body>
-</html>
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_user_avatar %}
+
+{% block title %}
+    Update
+{% endblock %}
+
+{% block content %}
+    <div class="uk-text-center">
+        <h2>
+            Update für Anlass
+            <a class="uk-link-toggle" href="{{ url_for('event.view', id=event.id) }}">
+                <span class="uk-link-heading">{{ event.name }}</span>
+            </a>
+        </h2>
+        Eingeladene, angemeldete und abgemeldete Benutzer werden erhalten das Update.
+    </div>
+
+    {% if event.participants %}
+    <form method="POST">
+        {{ form.csrf_token }}
+        <div class="uk-margin">
+            {{ form.annotation(class='uk-textarea', rows=5, placeholder='Anmerkung') }}
+        </div>
+        <div class="uk-margin-large uk-child-width-1-6 uk-flex-center" uk-grid>
+            {% for participant in event.participants %}
+            <div>
+                <div class="uk-flex uk-flex-center uk-margin-small-bottom">
+                    {{ render_user_avatar(participant.user, resolution=64) }}
+                </div>
+                <div class="uk-text-meta uk-text-center">
+                    {{ participant.user.get_fullname() }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="uk-flex uk-flex-center">
+            <a class="uk-button uk-button-default uk-margin-right" href="{{ url_back('participant.list', id=event.id) }}">Zurück</a>
+            <input class="uk-button uk-button-primary" type="submit" value="Versenden">
+        </div>
+    </form>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Benutzer gefunden.</h3>
+    </div>
+    {% endif %}
+
+{% endblock %}
+

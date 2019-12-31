@@ -45,14 +45,15 @@ app.add_template_global(utils.pretty_format_date, 'pretty_format_date')
 
 
 # register blueprints
-from . import event, group, groupmember, invitation, security, user, dashboard
+from . import event, group, groupmember, participant, security, user, dashboard, mail
 app.register_blueprint(security.bp)
 app.register_blueprint(dashboard.bp)
 app.register_blueprint(user.bp)
 app.register_blueprint(group.bp)
 app.register_blueprint(groupmember.bp)
 app.register_blueprint(event.bp)
-app.register_blueprint(invitation.bp)
+app.register_blueprint(participant.bp)
+app.register_blueprint(mail.bp)
 
 
 # initizalize database
@@ -78,6 +79,10 @@ def if_not(value, string):
 
 app.jinja_env.filters['utc_to_localtime'] = utils.utc_to_localtime
 app.jinja_env.filters['localtime_to_utc'] = utils.localtime_to_utc
+app.jinja_env.filters['shortdate'] = utils.shortdate
+app.jinja_env.filters['longdate'] = utils.longdate
+app.jinja_env.filters['shortdatetime'] = utils.shortdatetime
+app.jinja_env.filters['longdatetime'] = utils.longdatetime
 
 @app.context_processor
 def utils_processor():

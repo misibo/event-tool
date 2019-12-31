@@ -1,79 +1,113 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_user_avatar, render_group_logo, render_hero with context %}
+{% from 'macros.html' import render_field, render_image_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
-
-{% block attrs %}class="uk-background-cover" data-src="{{ event.get_background_url() }}" uk-img{% endblock %}
 
 {% block hero %}
     {% set content %}
     <div class="uk-text-center">
         <h1>{{ event.name }}</h1>
 
-        <div class="uk-text-lead">
-            {{ event.print_start_end() }}
+        <div class="uk-text-lead uk-text-bold">
+            {{ event.print_duration() }}
         </div>
-        {{ event.abstract | markdown }}
 
-        <hr>
-        <div class="uk-grid-divider uk-flex-center" uk-grid>
-            <div>
-                <h3>Leiter</h3>
-                <div class="uk-grid-small uk-flex-center" uk-grid>
-                    {% for leader in leaders %}
-                    {{ render_user_avatar(leader, resolution=48) }}
-                    {% endfor %}
-                </div>
-            </div>
-            <div>
-                <h3>Gruppen</h3>
-                <div class="uk-grid-small uk-flex-center" uk-grid>
-                    {% for group in event.groups %}
-                    {{ render_group_logo(group, resolution=48) }}
-                    {% endfor %}
-                </div>
-            </div>
+        <p>{{ event.abstract }}</p>
+
+        {% if event.is_upcoming() %}
+        <hr class="uk-divider-small">
+        <div class="uk-form-label uk-margin-small-bottom">
+            Anlass startet in
         </div>
-        {% if invitation %}
-        <hr>
-        <div class="uk-tile uk-tile-default">
-            Einladung: {{ invitation.get_reply_label() }}
-            <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('invitation.edit', id=invitation.edit) }}">Ändern</a>
+        <div class="uk-flex uk-flex-center">
+            {{ render_countdown(event.start) }}
         </div>
         {% endif %}
-        <hr>
+
+        {% if g.user and g.user.can_manage() %}
+        <hr class="uk-divider-small">
+        <div class="uk-form-label uk-margin-small-bottom">
+            Verwalten
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_manage_event_nav(event.id) }}
+        </div>
+        {% endif %}
+
+        {% if participant %}
+        <hr class="uk-divider-small">
+        Du bist {{ participant.get_registration_status_label() }}
+        <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('participant.edit', id=participant.edit) }}">Ändern</a>
+        {% endif %}
+        <hr class="uk-divider-small">
         <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
     </div>
     {% endset %}
     {{ render_hero(content, event.get_background_url())}}
 {% endblock %}
 
+{% block top %}
+<div id="details" class="uk-section uk-section-secondary">
+    <div class="uk-container uk-container-xsmall">
+        {{ event.details | markdown }}
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
-    <div id="details">
-        <h3 class="uk-card-title">Details</h3>
-        <p>
-            {{ event.details | if_not('Keine Details vorhanden.') | markdown }}
-        </p>
-        <div class="uk-card uk-card-default">
-            <div class="uk-card-header">
-                <h3 class="uk-card-title">Teilnehmer</h3>
-            </div>
-            <div class="uk-card-body">
-                {% if participants %}
-                <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
-                {% for participant in participants %}
-                    <div>
-                        {{ render_user_avatar(participant, resolution=64) }}
+    <div class="uk-flex-center" uk-grid>
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Gruppen</h3>
+                </div>
+                <div class="uk-card-body">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
+                        {% for group in event.groups %}
+                        {{ render_group_logo(group, resolution=48) }}
+                        {% endfor %}
                     </div>
-                {% endfor %}
                 </div>
-                {% else %}
-                <div class="uk-text-center uk-margin">
-                    <h3 class="uk-text-muted">Keine Teilnehmer</h3>
-                </div>
-                {% endif %}
             </div>
         </div>
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Leiter</h3>
+                </div>
+                <div class="uk-card-body">
+                    <div class="uk-grid-small uk-flex-center" uk-grid>
+                        {% for leader in leaders %}
+                        {{ render_user_avatar(leader, resolution=48) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if participants %}
+        <div>
+            <div class="uk-card uk-card-default">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title">Teilnehmer</h3>
+                </div>
+                <div class="uk-card-body">
+                    {% if participants %}
+                    <div class="uk-grid-small uk-child-width-1-2 uk-child-width-1-1@m uk-child-width-1-2@l" uk-grid>
+                    {% for participant in participants %}
+                        <div>
+                            {{ render_user_avatar(participant, resolution=64) }}
+                        </div>
+                    {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="uk-text-center uk-margin">
+                        <h3 class="uk-text-muted">Keine Teilnehmer</h3>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
 

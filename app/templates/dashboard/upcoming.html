@@ -28,7 +28,7 @@
                                     </ul>
                                 </div>
                             </div>
-                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="calendar"></span> {{ event.print_start_end() }}</div>
+                            <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="calendar"></span> {{ event.print_duration() }}</div>
                             <div class="uk-text-muted"><span class="uk-margin-right" uk-icon="location"></span> {{ event.location }}</div>
                         </div>
                         <div class="uk-card-body">
@@ -38,19 +38,19 @@
                             <ul class="uk-subnav">
                                 <li><a href="{{ url_for('event.view', id=event.id) }}">Ansehen</a></li>
                                 {% if g.user.can_manage() %}
-                                <li><a href="{{ url_for('event.invitations', id=event.id) }}">Teilnehmerliste</a></li>
+                                <li><a href="{{ url_for('participant.list', id=event.id) }}">Teilnehmerliste</a></li>
                                 {% endif %}
-                                {% with invitation = find(invitations, 'event_id', event.id) %}
-                                {% if invitation %}
+                                {% with participant = find(participants, 'event_id', event.id) %}
+                                {% if participant %}
                                     <li>
-                                        {% if invitation.no_reply() %}
+                                        {% if participant.no_reply() %}
                                         Du hast noch nicht auf die Einladung geantwortet.
-                                        {% elif invitation.accepted_reply() %}
-                                        Du nimmst teil, hast {{ invitation.num_friends }} Freunde angemeldet und {{invitation.num_car_seats }} Autoplätze angeboten.
-                                        {% elif invitation.declind_reply() %}
+                                        {% elif participant.accepted_reply() %}
+                                        Du nimmst teil, hast {{ participant.num_friends }} Freunde angemeldet und {{participant.num_car_seats }} Autoplätze angeboten.
+                                        {% elif participant.declind_reply() %}
                                         Du nimmst nicht teil.
                                         {% endif %}
-                                        <a href="{{ url_for('invitation.edit', id=invitation.id) }}">Antwort bearbeiten</a>
+                                        <a href="{{ url_for('participant.edit', id=participant.id) }}">Antwort bearbeiten</a>
                                     </li>
                                 {% else %}
                                     <li><span>Einladung noch nicht verschickt.</span></li>

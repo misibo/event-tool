@@ -3,11 +3,11 @@ from datetime import datetime
 import pytz
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    url_for)
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, joinedload
 
 from .forms import AccountForm
-from .models import (Event, Group, GroupEventRelations, GroupMember,
-                     Invitation, User, db)
+from .models import (Event, Group, GroupEventRelation, GroupMember,
+                     Participant, User, db)
 from .security import login_required
 from .utils import tz
 
@@ -18,17 +18,17 @@ bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 @login_required
 def upcoming():
     pagination = Event.query.\
-        join(GroupEventRelations, GroupEventRelations.event_id == Event.id).\
-        join(Group, Group.id == GroupEventRelations.group_id).\
+        join(GroupEventRelation, GroupEventRelation.event_id == Event.id).\
+        join(Group, Group.id == GroupEventRelation.group_id).\
         join(GroupMember, GroupMember.group_id == Group.id).\
         filter(GroupMember.user_id == g.user.id).\
         filter(Event.start > tz.localize(datetime.now())).\
         order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 
-    invitations = Invitation.query.\
-        join(Event, Event.id == Invitation.event_id).\
-        filter(Invitation.user_id == g.user.id).\
+    participants = Participant.query.\
+        join(Event, Event.id == Participant.event_id).\
+        filter(Participant.user_id == g.user.id).\
         all()
 
     def find(items, attr, value):
@@ -41,7 +41,7 @@ def upcoming():
         'dashboard/upcoming.html',
         pagination=pagination,
         tz=tz,
-        invitations=invitations,
+        participants=participants,
         memberships=memberships,
         find=find
     )
@@ -50,6 +50,7 @@ def upcoming():
 @login_required
 def memberships():
     pagination = GroupMember.query.\
+        options(joinedload(GroupMember.group)).\
         filter(GroupMember.user_id == g.user.id).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 

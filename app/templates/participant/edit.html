@@ -1,7 +1,7 @@
 {% extends 'form.html' %}
 {% from 'macros.html' import render_field %}
 
-{% block title %}Einladung für Anlass "{{invitation.event.name}}"{% endblock %}
+{% block title %}Einladung für Anlass "{{participant.event.name}}"{% endblock %}
 
 {% block form %}
 <form class="uk-form-stacked" method="POST">
@@ -12,7 +12,7 @@
     {{ form.csrf_token }}
 
     <div class="uk-margin-large-top">
-        <a class="uk-button uk-button-default" href="{{ url_back('event.invitations', id=invitation.event.id) if editing else url_back('event.view', id=invitation.event.id) }} ">Zurück</a>
+        <a class="uk-button uk-button-default" href="{{ url_back('participant.list', id=participant.event.id) if editing else url_back('event.view', id=participant.event.id) }} ">Zurück</a>
         <input type="submit" class="uk-button uk-button-primary" value="Speichern">
     </div>
 </form>

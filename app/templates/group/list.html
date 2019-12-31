@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_order, render_search, render_group_logo %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_group_logo, render_manage_group_nav %}
 
 {% block title %}
     Gruppen
@@ -36,14 +36,7 @@
                 <td class="uk-table-expand">{{ group.abstract | markdown }}</td>
                 <td>{{ group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
                 <td>
-                    <ul class="uk-iconnav">
-                        <li><a uk-tooltip="Mitglieder" href="{{ url_for('groupmember.members', id=group.id) }}" uk-icon="users"></a></li>
-                        <li><a uk-tooltip="Ansicht" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank" uk-icon="link"></a></li>
-                        <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=group.id) }}" uk-icon="pencil"></a></li>
-                        {% if g.user.is_admin() %}
-                        <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=group.id) }}" uk-icon="trash"></a></li>
-                        {% endif %}
-                    </ul>
+                    {{ render_manage_group_nav(group.id) }}
                 </td>
             </tr>
             {% endfor %}
