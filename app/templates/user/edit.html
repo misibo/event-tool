@@ -49,7 +49,7 @@
             </div>
         </div>
         <div class="uk-width-1-3@m">
-            {{ render_image_field(form.avatar, user.get_avatar_url()) }}
+            {{ render_image_field(form.avatar, user.get_avatar_url(), "image/png") }}
             {{ render_field(form.username, class='uk-input') }}
             {{ render_field(form.email, class='uk-input') }}
             {{ render_field(form.new_password, class='uk-input') }}

@@ -25,6 +25,18 @@ from .models import Event, Group, GroupMember, Participant, User
 from .utils import tz, now
 
 
+def LogoFileField(title):
+    return FileField(f"{title} (PNG)")
+
+
+def PhotographyFileField(title):
+    return FileField(f"{title} (JPEG)")
+
+
+def FlyerFileField(title):
+    return FileField(f"{title} (PDF)")
+
+
 class LocalDateTimeField(DateTimeField):
 
     tz = tz
@@ -208,7 +220,7 @@ class RegisterForm(FlaskForm):
 
 class AccountForm(RegisterForm):
 
-    avatar = FileField('Profilbild', [FileAllowed(['png', 'jpg'])])
+    avatar = LogoFileField('Profilbild')
     birthday = DateField('Geburtstag', [Optional()], format='%d.%m.%y')
     mobile_phone = TelField('Handynummer', [Optional()])
     street = StringField('Strasse', [Optional()])
@@ -296,9 +308,9 @@ class GroupEditForm(FlaskForm):
     slug = StringField('Slug')
     abstract = TextAreaField('Kurzinfo')
     details = TextAreaField('Details')
-    logo = FileField('Logo', validators=[FileAllowed(['png'])])
-    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
-    flyer = FileField('Flyer', validators=[FileAllowed(['pdf'])])
+    logo = LogoFileField('Logo')
+    background = PhotographyFileField('Hintergrund')
+    flyer = FlyerFileField('Flyer')
 
     def populate_obj(self, group):
         group.name = self.name.data
@@ -326,7 +338,7 @@ class EventEditForm(FlaskForm):
     registration_start = LocalDateTimeField('Anmeldestart', format='%d.%m.%y %H:%M', validators=[Optional()])
     deadline = LocalDateTimeField('Anmeldeschluss', format='%d.%m.%y %H:%M')
     registration_type = SelectField('Anmeldetyp', choices=Event.RegistrationType.get_select_choices(), default=Event.RegistrationType.OPEN, coerce=int)
-    background = FileField('Hintergrund', validators=[FileAllowed(['jpg'])])
+    background = PhotographyFileField('Hintergrund')
     groups = QuerySelectMultipleField(
         'Gruppen',
         [Required()],

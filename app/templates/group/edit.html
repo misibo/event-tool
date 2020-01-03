@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_image_field, render_pdf_field %}
+{% from 'macros.html' import render_field, render_image_field, render_document_field %}
 
 {% block title %}Gruppe {{ 'bearbeiten' if group.id else 'erstellen' }}{% endblock %}
 
@@ -34,9 +34,9 @@
             {{ form.details(class='uk-textarea uk-margin', rows=10, placeholder="Details ...") }}
         </div>
         <div class="uk-width-1-3@m">
-            {{ render_image_field(form.logo, group.get_logo_url(), accept='image/png') }}
-            {{ render_image_field(form.background, group.get_background_url(), accept='image/jpg') }}
-            {{ render_pdf_field(form.flyer, group.get_flyer_url()) }}
+            {{ render_image_field(form.logo, group.get_logo_url(), "image/png") }}
+            {{ render_image_field(form.background, group.get_background_url(), "image/jpeg") }}
+            {{ render_document_field(form.flyer, group.get_flyer_url(), "application/pdf") }}
         </div>
     </div>
     {{ form.csrf_token }}

@@ -29,29 +29,29 @@
 </div>
 {% endmacro %}
 
-{% macro render_pdf_field(field, url) %}
+{% macro render_document_field(field, url, accept) %}
 <div class="uk-margin">
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
         {% if url %}
-        <span uk-icon="icon: file-pdf"></span><a class="uk-button uk-button-text uk-margin-small-left" href="{{ url }}" target="_blank">Öffnen</a>
+            <span uk-icon="icon: file-pdf"></span><a class="uk-button uk-button-text uk-margin-small-left" href="{{ url }}" target="_blank">Öffnen</a>
         {% endif %}
-        {{ render_file_field(field, accept="application/pdf", **kwargs) }}
+        {{ render_file_field(field, accept=accept, **kwargs) }}
         {{ render_field_errors(field) }}
     </div>
 </div>
 {% endmacro %}
 
-{% macro render_image_field(field, url) %}
+{% macro render_image_field(field, url, accept) %}
 <div class="uk-margin">
     {{ field.label(class_='uk-form-label') }}
     <div class="uk-form-controls">
         {% if url %}
-        <div data-src="{{ url }}" uk-img
-            class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
-        </div>
+            <div data-src="{{ url }}" uk-img
+                class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
+            </div>
         {% endif %}
-        {{ render_file_field(field, **kwargs) }}
+        {{ render_file_field(field, accept=accept, **kwargs) }}
         {{ render_field_errors(field) }}
     </div>
 </div>
