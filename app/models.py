@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 import pytz
-from flask import current_app, g, request, url_for
+from flask import current_app, g, request, url_for, flash
 from flask_sqlalchemy import BaseQuery, SQLAlchemy
 from sqlalchemy import or_
 from sqlalchemy.types import TypeDecorator
@@ -309,8 +309,13 @@ class User(db.Model):
             return False
 
     def save_avatar(self, file):
-        store_favicon(file, self.get_folder(), 'avatar')
-        self.avatar_version += 1
+        try:
+            store_favicon(file, self.get_folder(), 'avatar')
+        except Exception as e:
+            flash("Der Avatar wurde nicht ersetzt, da das Datei-Format nicht unterstützt wird.", "warning")
+            current_app.logger.exception(e)
+        else:
+            self.avatar_version += 1
 
     def get_avatar_url(self, resolution=256):
         return self.get_url(f'avatar_{resolution}.png', self.avatar_version)
@@ -384,8 +389,13 @@ class Event(db.Model):
             return False
 
     def save_background(self, file):
-        store_background(file, self.get_folder(), 'background')
-        self.background_version += 1
+        try:
+            store_background(file, self.get_folder(), 'background')
+        except Exception as e:
+            flash("Das Hintergrund-Bild wurde nicht ersetzt, da das Datei-Format nicht unterstützt wird.", "warning")
+            current_app.logger.exception(e)
+        else:
+            self.background_version += 1
 
     def get_background_url(self, resolution=1920):
         return self.get_url(f'background_{resolution}.jpg', self.background_version)
@@ -428,12 +438,22 @@ class Group(db.Model):
             return False
 
     def save_logo(self, file):
-        store_favicon(file, self.get_folder(), 'logo')
-        self.logo_version += 1
+        try:
+            store_favicon(file, self.get_folder(), 'logo')
+        except Exception as e:
+            flash("Das Logo wurde nicht ersetzt, da das Datei-Format nicht unterstützt wird.", "warning")
+            current_app.logger.exception(e)
+        else:
+            self.logo_version += 1
 
     def save_background(self, file):
-        store_background(file, self.get_folder(), 'background')
-        self.background_version += 1
+        try:
+            store_background(file, self.get_folder(), 'background')
+        except Exception as e:
+            flash("Das Hintergrund-Bild der Gruppe wurde nicht ersetzt, da das Datei-Format nicht unterstützt wird.", "warning")
+            current_app.logger.exception(e)
+        else:
+            self.background_version += 1
 
     def save_flyer(self, pdf):
         pdf.save(os.path.join(self.get_folder(), 'flyer.pdf'))

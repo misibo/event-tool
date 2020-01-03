@@ -1,6 +1,8 @@
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
+from flask import flash
 
 import os
+
 
 def crop_center(image, new_width, new_height):
     width, height = image.size   # Get dimensions
@@ -12,6 +14,7 @@ def crop_center(image, new_width, new_height):
 
     # Crop the center of the image
     return image.crop((left, top, right, bottom))
+
 
 def crop_to_ratio(image, ratio):
     w, h = image.size
@@ -34,6 +37,7 @@ def store_favicon(file, folder, filename):
     for (s) in [32, 48, 64, 128, 256]:
         image.resize((s,s), resample=Image.LANCZOS).\
             save(os.path.join(folder, f'{filename}_{s}.png'))
+
 
 def store_background(file, folder, filename):
     image = Image.open(file.stream)
