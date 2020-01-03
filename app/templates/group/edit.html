@@ -3,6 +3,11 @@
 
 {% block title %}Gruppe {{ 'bearbeiten' if group.id else 'erstellen' }}{% endblock %}
 
+{% block head %}
+{{ simplemde.css }}
+{{ simplemde.js }}
+{% endblock %}
+
 {% block content %}
 <form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
     <div class="uk-grid-divider" uk-grid>
@@ -30,8 +35,8 @@
                     {{ render_field(form.slug, class='uk-input') }}
                 </div>
             </div>
-            {{ form.abstract(class='uk-textarea uk-margin', rows=10, placeholder="Kurzbeschreibung ...") }}
-            {{ form.details(class='uk-textarea uk-margin', rows=10, placeholder="Details ...") }}
+            {{ render_field(form.abstract, class='uk-textarea uk-margin', rows=10, placeholder="Kurzinfo ...") }}
+            {{ render_field(form.details, class='uk-textarea uk-margin', rows=10, placeholder="Details ...") }}
         </div>
         <div class="uk-width-1-3@m">
             {{ render_image_field(form.logo, group.get_logo_url(), "image/png") }}
