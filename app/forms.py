@@ -15,7 +15,8 @@ from wtforms.ext.sqlalchemy.fields import (QuerySelectField,
                                            QuerySelectMultipleField)
 from wtforms.fields.html5 import (DateTimeField, EmailField, IntegerField,
                                   TelField)
-from wtforms.validators import (DataRequired, Email, Length, NumberRange,
+import wtforms.validators
+from wtforms.validators import (Email, Length, NumberRange,
                                 Optional, Required)
 from wtforms.widgets import HTMLString, html_params
 from wtforms.widgets.core import CheckboxInput
@@ -23,6 +24,13 @@ from wtforms.widgets.core import CheckboxInput
 from . import mail
 from .models import Event, Group, GroupMember, Participant, User
 from .utils import tz, now
+from flask_babel import gettext
+
+
+def DataRequired():
+    # Note: the "message" parameter to DataRequired is ignored by browsers that support HTML5.
+    # It's not trivial to override the default.
+    return wtforms.validators.DataRequired()
 
 
 def LogoFileField(title):
