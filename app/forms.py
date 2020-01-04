@@ -259,6 +259,7 @@ class AccountForm(RegisterForm):
 class UserEditForm(AccountForm):
 
     id = HiddenField()
+    url_back = HiddenField()
     role = SelectField('Rolle', choices=User.Role.get_select_choices(), coerce=int)
     new_password = PasswordField('Neues Passwort', [Optional(), Length(min=8)])
     new_password_confirm = PasswordField('Passwort bestätigen')
@@ -312,6 +313,7 @@ class ConfirmRegistrationForm(FlaskForm):
 
 class GroupEditForm(FlaskForm):
 
+    url_back = HiddenField()
     name = StringField('Name', [DataRequired(), Length(max=100)])
     slug = StringField('Slug')
     abstract = TextAreaField('Kurzinfo')
@@ -335,6 +337,7 @@ class GroupEditForm(FlaskForm):
 
 class EventEditForm(FlaskForm):
 
+    url_back = HiddenField()
     name = StringField('Name', [DataRequired(), Length(max=100)])
     abstract = TextAreaField('Kurzinfo', [Length(max=10000)])
     details = TextAreaField('Details', [Length(max=10000)])
@@ -378,23 +381,13 @@ class EventEditForm(FlaskForm):
             event.save_background(self.background.data)
 
 
-class ConfirmDeleteEventForm(FlaskForm):
-    pass
-
-
-class ConfirmDeleteGroupForm(FlaskForm):
-    pass
-
-
-class ConfirmDeleteUserForm(FlaskForm):
-    pass
-
 class ConfirmForm(FlaskForm):
-    pass
+    url_back = HiddenField()
 
 
 class EditParticipantForm(FlaskForm):
 
+    url_back = HiddenField()
     registration_status = SelectField('Teilnahmestatus', choices=Participant.RegistrationStatus.get_select_choices(), coerce=int)
     num_friends = IntegerField("Anzahl Freunde")
     num_car_seats = IntegerField("Anzahl Fahrplätze")

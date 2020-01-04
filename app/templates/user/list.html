@@ -12,7 +12,7 @@ Benutzer
             {{ render_search(args) }}
         </div>
         <div>
-            <a href="{{ url_for('user.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
+            <a href="{{ url_for('user.create', url_back=request.url) }}" class="uk-button uk-button-primary">Hinzufügen</a>
         </div>
     </div>
     <input name="page" value="{{ pagination.page }}" hidden>
@@ -46,9 +46,9 @@ Benutzer
                     <td>{{ user.get_role_label() }}</td>
                     <td>
                         <ul class="uk-iconnav" uk-margin>
-                            <li><a href="{{ url_for('user.view', username=user.username) }}" target="_blank" uk-icon="link"></a></li>
-                            <li><a href="{{ url_for('user.edit', id=user.id) }}" uk-icon="pencil"></a></li>
-                            <li><a  href="{{ url_for('user.delete', id=user.id) }}" uk-icon="trash"></a></li>
+                            <li><a href="{{ url_for('user.view', username=user.username, url_back=request.url) }}" target="_blank" uk-icon="link"></a></li>
+                            <li><a href="{{ url_for('user.edit', id=user.id, url_back=request.url) }}" uk-icon="pencil"></a></li>
+                            <li><a  href="{{ url_for('user.delete', id=user.id, url_back=request.url) }}" uk-icon="trash"></a></li>
                         </ul>
                     </td>
                 </tr>

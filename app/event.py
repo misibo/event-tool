@@ -9,7 +9,7 @@ from sqlalchemy.sql import func
 from werkzeug.exceptions import NotFound
 
 from . import mail
-from .forms import EventEditForm, ConfirmDeleteEventForm
+from .forms import EventEditForm, ConfirmForm
 from .mail import send_single_mail
 from .models import (Choices, Event, Group, GroupEventRelation, GroupMember,
                      Participant, User, db)
@@ -91,7 +91,7 @@ def list():
 @manager_required
 def create():
     event = Event()
-    form = EventEditForm(obj=event)
+    form = EventEditForm(obj=event, url_back=url_back())
 
     if form.validate_on_submit():
         form.populate_obj(event)
@@ -100,7 +100,7 @@ def create():
         db.session.add(event)
         db.session.commit()
         flash(f'Anlass "{event.name}" erstellt.', 'success')
-        return redirect(url_back('event.list'))
+        return redirect(url_for('event.edit', id=event.id, url_back=form.url_back.data))
 
     return render_template('event/edit.html', form=form, event=event)
 
@@ -123,21 +123,21 @@ def copy(id):
     db.session.commit()
 
     flash(f'Kopie von Anlass "{name}" erstellt.', 'success')
-    return redirect(url_for('event.edit', id=event.id))
+    return redirect(url_for('event.edit', id=event.id, url_back=url_back()))
 
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @manager_required
 def edit(id):
     event = Event.query.get_or_404(id)
-    form = EventEditForm(obj=event)
+    form = EventEditForm(obj=event, url_back=url_back())
 
     if form.validate_on_submit():
         form.populate_obj(event)
         event.modified = now
         db.session.commit()
         flash(f'Anlass "{event.name}" gespeichert.', 'success')
-        return redirect(url_back('event.list'))
+        return redirect(url_for('event.edit', id=event.id, url_back=form.url_back.data))
 
     return render_template('event/edit.html', form=form, event=event)
 
@@ -146,13 +146,13 @@ def edit(id):
 @manager_required
 def delete(id):
     event = Event.query.get_or_404(id)
-    form = ConfirmDeleteEventForm()
+    form = ConfirmForm(url_back=url_back())
 
     if form.validate_on_submit():
         if 'confirm' in request.form:
             db.session.delete(event)
             db.session.commit()
             flash(f'{event.name} wurde gelöscht.', 'success')
-        return redirect(url_for('event.list'))
+        return redirect(form.url_back.data)
 
     return render_template('event/delete.html', form=form, event=event)

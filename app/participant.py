@@ -108,7 +108,7 @@ def edit(id=0, token=''):
 
     if participant.event.deadline < tz.localize(datetime.now()):
         flash('Die Deadline, um auf die Einladung für Anlass "{participant.event.name}" ist vorüber!')
-        return redirect(url_back('participant.list') if editing else url_back('event.view', id=participant.event.id))
+        return redirect(url_back(url_for('participant.list')) if editing else url_back(url_for('event.view', id=participant.event.id)))
 
     form = EditParticipantForm(obj=participant)
 

@@ -4,7 +4,7 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 
 from . import mail
-from .forms import GroupEditForm, GroupMemberForm, ConfirmDeleteGroupForm
+from .forms import GroupEditForm, GroupMemberForm, ConfirmForm
 from .models import Event, Group, GroupEventRelation, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
 from .utils import url_back, now
@@ -80,33 +80,35 @@ def list():
 @bp.route('/create', methods=['GET', 'POST'])
 @admin_required
 def create():
-        group = Group()
-        form = GroupEditForm(obj=group)
+    group = Group()
+    form = GroupEditForm(obj=group, url_back=url_back())
 
-        if form.validate_on_submit():
-            form.populate_obj(group)
-            group.created = now
-            group.modified = now
-            db.session.add(group)
-            db.session.commit()
-            flash(f'Gruppe "{group.name}" erstellt.', 'success')
-            return redirect(url_back('group.list'))
+    if form.validate_on_submit():
+        form.populate_obj(group)
+        group.created = now
+        group.modified = now
+        db.session.add(group)
+        db.session.commit()
+        flash(f'Gruppe "{group.name}" erstellt.', 'success')
+        # return redirect(form.url_back.data)
+        return redirect(url_for("group.edit", id=group.id, url_back=form.url_back.data))
 
-        return render_template('group/edit.html', form=form, group=group)
+    return render_template('group/edit.html', form=form, group=group)
 
 
 @bp.route('/edit/<int:id>', methods=['GET','POST'])
 @manager_required
 def edit(id):
     group = Group.query.get_or_404(id)
-    form = GroupEditForm(obj=group)
+    form = GroupEditForm(obj=group, url_back=url_back())
 
     if form.validate_on_submit():
         form.populate_obj(group)
         group.modified = now
         db.session.commit()
         flash(f'Gruppe "{group.name}" gespeichert.', 'success')
-        return redirect(url_back('group.list'))
+        # return redirect(form.url_back.data)
+        return redirect(url_for("group.edit", id=group.id, url_back=form.url_back.data))
 
     return render_template('group/edit.html', form=form, group=group)
 
@@ -114,14 +116,15 @@ def edit(id):
 @bp.route('/delete/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def delete(id):
+    current_app.logger.info(f'REQUEST: {request.args}')
     group = Group.query.get_or_404(id)
-    form = ConfirmDeleteGroupForm()
+    form = ConfirmForm(url_back=url_back())
 
     if form.validate_on_submit():
         if 'confirm' in request.form:
             db.session.delete(group)
             db.session.commit()
-            flash(f'Die Gruppe {group.name} wurde gelöscht.', 'success')
-        return redirect(url_for('group.list'))
+            flash(f'Die Gruppe {group.name} wurde gelöscht.', 'warning')
+        return redirect(form.url_back.data)
 
     return render_template('group/delete.html', form=form, group=group)

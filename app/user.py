@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, request, flash, redirect, url_for
 
-from .forms import UserEditForm, ConfirmDeleteUserForm
+from .forms import UserEditForm, ConfirmForm
 from .models import User, db
 from .security import admin_required
 from .utils import url_back
@@ -48,33 +48,33 @@ def list():
 @bp.route('/create', methods=['GET', 'POST'])
 @admin_required
 def create():
-        user = User()
-        form = UserEditForm(obj=user)
+    user = User()
+    form = UserEditForm(obj=user, url_back=url_back())
 
-        if form.validate_on_submit():
-            form.populate_obj(user)
-            user.registered = tz.localize(datetime.now())
-            user.modified = tz.localize(datetime.now())
-            db.session.add(user)
-            db.session.commit()
-            flash(f'Neuer Benutzer {user.get_fullname()} erstellt.', 'success')
-            return redirect(url_back('user.list'))
+    if form.validate_on_submit():
+        form.populate_obj(user)
+        user.registered = tz.localize(datetime.now())
+        user.modified = tz.localize(datetime.now())
+        db.session.add(user)
+        db.session.commit()
+        flash(f'Neuer Benutzer {user.get_fullname()} erstellt.', 'success')
+        return redirect(url_for('user.edit', id=user.id, url_back=form.url_back.data))
 
-        return render_template('user/edit.html', form=form, user=user)
+    return render_template('user/edit.html', form=form, user=user)
 
 
 @bp.route('/edit/<int:id>', methods=['GET','POST'])
 @admin_required
 def edit(id):
     user = User.query.get_or_404(id)
-    form = UserEditForm(obj=user)
+    form = UserEditForm(obj=user, url_back=url_back())
 
     if form.validate_on_submit():
         form.populate_obj(user)
         user.modified = tz.localize(datetime.now())
         db.session.commit()
         flash(f'Benutzer {user.get_fullname()} gespeichert.', 'success')
-        return redirect(url_back('user.list'))
+        return redirect(url_for('user.edit', id=user.id, url_back=form.url_back.data))
 
     return render_template('user/edit.html', form=form, user=user)
 
@@ -83,7 +83,7 @@ def edit(id):
 @admin_required
 def delete(id):
     user = User.query.get_or_404(id)
-    form = ConfirmDeleteUserForm()
+    form = ConfirmForm(url_back=url_back())
 
     if form.validate_on_submit():
         if 'confirm' in request.form:
@@ -91,6 +91,6 @@ def delete(id):
             db.session.commit()
             flash(f'Benutzer {user.username} wurde gelöscht.', 'success')
 
-        return redirect(url_for('user.list'))
+        return redirect(form.url_back.data)
 
     return render_template('user/delete.html', form=form, user=user)

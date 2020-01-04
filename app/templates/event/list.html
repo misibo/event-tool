@@ -12,7 +12,7 @@
             {{ render_search(args) }}
         </div>
         <div>
-            <a href="{{ url_for('event.create') }}" class="uk-button uk-button-primary">Hinzufügen</a>
+            <a href="{{ url_for('event.create', url_back=request.url) }}" class="uk-button uk-button-primary">Hinzufügen</a>
         </div>
     </div>
     <input name="page" value="{{ pagination.page }}" hidden>

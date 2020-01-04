@@ -7,19 +7,23 @@ tz = pytz.timezone('Europe/Zurich')
 
 now = pytz.utc.localize(datetime.utcnow())
 
-def url_back(fallback, **kwargs):
-    referrer = urlparse(request.referrer)
-    use_fallback = False
+def url_back(fallback=None):
+    # Get return-URL from query parameters
+    url_back = request.args.get("url_back")
 
-    if referrer.path in [url_for('security.login'), url_for('security.register'), request.path]:
-        use_fallback = True
+    # Get fallback if "url_back"-parameter is not set
+    if not url_back:
+        if fallback:
+            url_back = fallback
+            current_app.logger.warning(f"Parameter 'url_back' not defined in query: ({request.url}). Falling back to default: ({url_back}).")
+        elif request.referrer and request.method == "GET":
+            url_back = request.referrer
+            current_app.logger.warning(f"Parameter 'url_back' not defined in query: ({request.url}). Falling back to referrer: ({url_back}).")
+        else:
+            url_back = request.url
+            current_app.logger.warning(f"Parameter 'url_back' not defined in query: ({request.url}). Falling back to current page: ({url_back}).")
 
-    current_app.logger.info(f"{fallback} {use_fallback} {[url_for('security.login'), url_for('security.register'), request.path]}")
-
-    if use_fallback:
-        return url_for(fallback, **kwargs)
-    else:
-        return referrer.path
+    return url_back
 
 
 def utc_to_localtime(date):

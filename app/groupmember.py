@@ -60,7 +60,7 @@ def edit(id):
         else:
             flash(f'Du bist jetzt "{member.get_role_label()}" der Gruppe "{member.group.name}".', 'success')
 
-        return redirect(url_back('group.groups'))
+        return redirect(url_back(url_for('group.groups')))
 
     return render_template('groupmember/edit.html', form=form, member=member)
 
@@ -84,7 +84,7 @@ def remove(id):
             flash(f'Du hast die Gruppe "{member.group.name}" verlassen.', 'warning')
         db.session.delete(member)
         db.session.commit()
-        return redirect(url_back('group.groups'))
+        return redirect(url_back(url_for('group.groups')))
 
     return render_template('groupmember/remove.html', member=member, form=form)
 

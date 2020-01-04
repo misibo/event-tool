@@ -21,7 +21,7 @@
         {{ render_search(args, form='filter_sort') }}
     </div>
     <div>
-        <a class="uk-button uk-button-default" href="{{ url_back('group.list') }}">Zurück</a>
+        <a class="uk-button uk-button-default" href="{{ url_back(url_for('group.list')) }}">Zurück</a>
     </div>
 </div>
 <input name="page" value="{{ pagination.page }}" hidden>

@@ -277,20 +277,20 @@
 
 {% macro render_manage_event_nav(id) %}
 <ul class="uk-iconnav" uk-margin>
-    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.event_info', id=id) }}" uk-icon="mail"></a></li>
-    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('participant.list', id=id) }}" uk-icon="users"></a></li>
-    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=id) }}" uk-icon="file-edit"></a></li>
-    <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=id) }}" uk-icon="copy"></a></li>
-    <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=id) }}" uk-icon="trash"></a></li>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.event_info', id=id, url_back=request.url) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('participant.list', id=id, url_back=request.url) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=id, url_back=request.url) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=id, url_back=request.url) }}" uk-icon="copy"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=id, url_back=request.url) }}" uk-icon="trash"></a></li>
 </ul>
 {% endmacro %}
 
 {% macro render_manage_group_nav(id) %}
 <ul class="uk-iconnav" uk-margin>
-    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.group_info', id=id) }}" uk-icon="mail"></a></li>
-    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('groupmember.members', id=id) }}" uk-icon="users"></a></li>
-    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=id) }}" uk-icon="file-edit"></a></li>
-    <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=id) }}" uk-icon="trash"></a></li>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.group_info', id=id, url_back=request.url) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('groupmember.members', id=id, url_back=request.url) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=id, url_back=request.url) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=id, url_back=request.url) }}" uk-icon="trash"></a></li>
 </ul>
 {% endmacro %}
 
