@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav, render_participant_actions with context %}
+{% from 'macros.html' import render_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav, render_participant_actions, render_event_duration with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
 
@@ -9,35 +9,35 @@
         <h1>{{ event.name }}</h1>
 
         <div class="uk-text-lead uk-text-bold">
-            {{ event.print_duration() }}
+            {{ render_event_duration(event, 'uk-text-primary', 'uk-text-italic') }}
         </div>
 
         <p>{{ event.abstract }}</p>
 
-        {% if event.is_upcoming() %}
         <hr class="uk-divider-small">
-        <div class="uk-form-label uk-margin-small-bottom">
-            Anlass startet in
+        <div class="uk-text-primary uk-margin-small-bottom">
+            Zugeordnete Gruppen
         </div>
-        <div class="uk-flex uk-flex-center">
-            {{ render_countdown(event.start) }}
+        <div class="uk-grid-small uk-flex-center" uk-grid>
+            {% for group in event.groups %}
+                {{ render_group_logo(group, 32) }}
+            {% endfor %}
         </div>
-        {% endif %}
 
         {% if g.user and g.user.can_manage() %}
         <hr class="uk-divider-small">
-        <div class="uk-form-label uk-margin-small-bottom">
-            Verwalten
-        </div>
-        <div class="uk-flex uk-flex-center">
-            {{ render_manage_event_nav(event.id) }}
-        </div>
-        <hr class="uk-divider-small">
-        <div class="uk-form-label uk-margin-small-bottom">
+        <div class="uk-text-primary uk-margin-small-bottom">
             Teilnahme
         </div>
         <div class="uk-flex uk-flex-center">
             {{ render_participant_actions(participant, event) }}
+        </div>
+        <hr class="uk-divider-small">
+        <div class="uk-text-primary uk-margin-small-bottom">
+            Verwalten
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_manage_event_nav(event.id) }}
         </div>
         {% endif %}
         <hr class="uk-divider-small">
@@ -48,6 +48,18 @@
 {% endblock %}
 
 {% block top %}
+
+{% if event.is_upcoming() %}
+<div id="countdown" class="uk-section uk-section-muted uk-section-small">
+    <div class="uk-text-secondary uk-text-center uk-margin-small-bottom">
+        Anlass startet in
+    </div>
+    <div class="uk-flex uk-flex-center">
+        {{ render_countdown(event.start) }}
+    </div>
+</div>
+{% endif %}
+
 <div id="details" class="uk-section uk-section-secondary">
     <div class="uk-container uk-container-xsmall">
         {{ event.details | markdown }}
@@ -57,20 +69,6 @@
 
 {% block content %}
     <div class="uk-flex-center" uk-grid>
-        <div>
-            <div class="uk-card uk-card-default">
-                <div class="uk-card-header">
-                    <h3 class="uk-card-title">Gruppen</h3>
-                </div>
-                <div class="uk-card-body">
-                    <div class="uk-grid-small uk-flex-center" uk-grid>
-                        {% for group in event.groups %}
-                        {{ render_group_logo(group, resolution=48) }}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
         <div>
             <div class="uk-card uk-card-default">
                 <div class="uk-card-header">

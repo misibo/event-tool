@@ -21,8 +21,8 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 @bp.route('/')
 def upcoming():
     pagination = Event.query.\
-        order_by(Event.start.asc()).\
         filter(Event.start > now).\
+        order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
     return render_template('event/upcoming.html', pagination=pagination)
 

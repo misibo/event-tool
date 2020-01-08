@@ -329,18 +329,6 @@ class User(db.Model):
 
 class Event(db.Model):
 
-    class RegistrationType(Choices):
-
-        LOCKED = 1
-        OPEN = 2
-
-        @classmethod
-        def get_choices(self):
-            return {
-                self.LOCKED: 'Geschlossen',
-                self.OPEN: 'Offen',
-            }
-
     __tablename__ = 'Event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -354,7 +342,6 @@ class Event(db.Model):
     created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
     registration_start = db.Column(UtcDateTime)
-    registration_type = db.Column(db.SmallInteger)
     deadline = db.Column(UtcDateTime)
     background_version = db.Column(db.Integer, default=0, nullable=False)
 
@@ -365,11 +352,8 @@ class Event(db.Model):
     def is_upcoming(self):
         return self.start > now
 
-    def is_registration_started(self):
+    def has_registration_started(self):
         return self.registration_start and self.registration_start < now
-
-    def is_registration_type_open(self):
-        return self.registration_type == self.RegistrationType.OPEN
 
     def is_deadline_over(self):
         return self.deadline and self.deadline < now

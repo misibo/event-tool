@@ -302,15 +302,11 @@
             <li><a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('participant.edit', id=participant.id)}}"></a></li>
         </ul>
         {% else  %}
-            {% if event.is_registration_started() %}
-                {% if event.is_registration_type_open() %}
+            {% if event.has_registration_started() %}
                 <span>Deine Teilnahme ist noch unklar</span>
                 <ul class="uk-iconnav">
                     <li><a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('participant.participate', id=event.id) }}"></a></li>
                 </ul>
-                {% else  %}
-                <span>Anmeldung nur über Mail möglich.</span>
-                {% endif %}
             {% elif event.registration_start  %}
             <span>Anmeldung ab dem {{ event.registration_start | shortdatetime }}.</span>
             {% else %}
@@ -318,4 +314,16 @@
             {% endif %}
         {% endif %}
     </div>
+{% endmacro %}
+
+{% macro render_event_duration(event, cls_date='', cls_time='') %}
+    {% set start_date, start_time, end_date, end_time = event.start.astimezone(tz).strftime("%d.%m.%y"), event.start.astimezone(tz).strftime("%H:%M"), event.end.astimezone(tz).strftime("%d.%m.%y"), event.end.astimezone(tz).strftime("%H:%M") %}
+    {% if event.start.day == event.end.day %}
+        <span class="{{ cls_date }}">{{ start_date }}</span>,
+        <span class="{{ cls_time }}">{{ start_time }}</span>
+        bis <span class="{{ cls_time }}">{{ end_time }}</span>
+    {% else %}
+        <span class="{{ cls_date }}">{{ start_date }}</span> <span class="{{ cls_time }}">{{ start_time }}</span>
+        bis <span class="{{ cls_date }}">{{ end_date }}</span> <span class="{{ cls_time }}">{{ end_time }}</span>
+    {% endif %}
 {% endmacro %}
