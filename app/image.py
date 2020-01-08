@@ -1,4 +1,4 @@
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 from flask import flash
 
 import os

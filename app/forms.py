@@ -24,7 +24,6 @@ from wtforms.widgets.core import CheckboxInput
 from . import mail
 from .models import Event, Group, GroupMember, Participant, User
 from .utils import tz, now
-from flask_babel import gettext
 
 
 def DataRequired():
