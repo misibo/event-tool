@@ -293,3 +293,29 @@
         {% endif %}
     </div>
 {% endmacro %}
+
+{% macro render_participant_actions(participant, event) %}
+    <div class="uk-flex">
+        {% if participant %}
+        <span class="uk-margin-small-right">Du bist {{ participant.get_registration_status_label() }}.</span>
+        <ul class="uk-iconnav">
+            <li><a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('participant.edit', id=participant.id)}}"></a></li>
+        </ul>
+        {% else  %}
+            {% if event.is_registration_started() %}
+                {% if event.is_registration_type_open() %}
+                <span>Deine Teilnahme ist noch unklar</span>
+                <ul class="uk-iconnav">
+                    <li><a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('participant.participate', id=event.id) }}"></a></li>
+                </ul>
+                {% else  %}
+                <span>Anmeldung nur über Mail möglich.</span>
+                {% endif %}
+            {% elif event.registration_start  %}
+            <span>Anmeldung ab dem {{ event.registration_start | shortdatetime }}.</span>
+            {% else %}
+            <span>Anmeldung noch nicht möglich.</span>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endmacro %}

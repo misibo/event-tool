@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav with context %}
+{% from 'macros.html' import render_field, render_user_avatar, render_group_logo, render_hero, render_countdown, render_manage_event_nav, render_participant_actions with context %}
 
 {% block title %}{{ event.name }}{% endblock %}
 
@@ -32,12 +32,13 @@
         <div class="uk-flex uk-flex-center">
             {{ render_manage_event_nav(event.id) }}
         </div>
-        {% endif %}
-
-        {% if participant %}
         <hr class="uk-divider-small">
-        Du bist {{ participant.get_registration_status_label() }}
-        <a class="uk-button uk-button-default uk-button-small uk-margin-small-left" href="{{ url_for('participant.edit', id=participant.edit) }}">Ändern</a>
+        <div class="uk-form-label uk-margin-small-bottom">
+            Teilnahme
+        </div>
+        <div class="uk-flex uk-flex-center">
+            {{ render_participant_actions(participant, event) }}
+        </div>
         {% endif %}
         <hr class="uk-divider-small">
         <a class="uk-margin-top uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>

@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import os
 import pytz
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    request, url_for)
@@ -8,49 +8,10 @@ from sqlalchemy.sql import func
 
 from .forms import EditParticipantForm
 from .models import Event, Group, GroupMember, Participant, User, db
-from .security import manager_required
+from .security import manager_required, login_required
 from .utils import tz, url_back, now
 
 bp = Blueprint("participant", __name__, url_prefix="/event")
-
-
-# def list_missing_participants():
-#     """Create model instances for missing participants, but does not submit them to database.
-#     """
-#     import os
-#     # result = db.engine.execute("""
-#     # select User.id, Event.id
-#     # from User, Event, "Group"
-#     # inner join GroupMember
-#     #     on GroupMember.user_id = User.id and GroupMember.group_id = "Group".id
-#     # inner join GroupEventRelation
-#     #     on GroupEventRelation.event_id = Event.id and GroupEventRelation.group_id = "Group".id
-#     # left join Participant
-#     #     on Participant.user_id = User.id and Participant.event_id == Event.id
-#     # where Event.send_participants
-#     #     and Participant.id is null
-#     #     and :utcnow <= Event.deadline
-#     # group by User.id, Event.id
-#     # """, dict(utcnow=datetime.utcnow()))
-
-#     Participant2 = aliased(Participant)
-#     result = db.session.query(User, Event) \
-#         .join(GroupMember.user) \
-#         .join(GroupMember.group) \
-#         .join(Group.events) \
-#         .join(Participant, Participant.user_id == User.id, isouter=True) \
-#         .join(Participant2, Participant2.event_id == Event.id, isouter=True) \
-#         .filter(Event.send_participants) \
-#         .filter(Participant.id == None) \
-#         .filter(pytz.utc.localize(datetime.utcnow()) <= Event.deadline) \
-#         .group_by(User.id, Event.id) \
-#         .all()
-
-#     participants = []
-#     for user, event in result:
-#         token = os.urandom(16).hex()
-#         participants.append(Participant(user=user, event=event, token=token))
-#     return participants
 
 @bp.route('/<int:id>/participant/list', methods=['GET'])
 @manager_required
@@ -85,12 +46,44 @@ def list(id):
         RegistrationStatusChoices=Participant.RegistrationStatus
     )
 
+@bp.route('/<int:id>/participate', methods=['GET', 'POST'])
+@login_required
+def participate(id):
+    event = Event.query.get_or_404(id)
+    form = EditParticipantForm()
+    participant = Participant(
+        event=event
+    )
+
+    if form.validate_on_submit():
+        participant.user = g.user
+        participant.token = os.urandom(16).hex()
+        form.populate_obj(participant)
+        db.session.add(participant)
+        db.session.commit()
+
+        flash(f'Deine Teilnahmestatus für den Anlass "{event.name}" ist: "{participant.get_registration_status_label()}"')
+        if participant.is_registered():
+            flash(f'Du hast {participant.num_friends} Freunde angemeldet und {participant.num_car_seats} Fahrplätze angeboten.')
+        return redirect(url_for('event.view', id=event.id))
+
+    form.registration_status.data = Participant.RegistrationStatus.REGISTERED
+    del(form.registration_status.choices[0])
+
+    return render_template(
+        'participant/edit.html',
+        form=form,
+        participant=participant,
+        editing=False
+    )
 
 @bp.route('/participant/<string:token>/edit', methods=['GET', 'POST'])
 @bp.route('/participant/<int:id>/edit', methods=['GET', 'POST'])
 def edit(id=0, token=''):
     editing = False
-    query = Participant.query.options(joinedload(Participant.user), joinedload(Participant.event))
+    query = Participant.query.\
+        options(joinedload(Participant.user), joinedload(Participant.event))
+
     if token:
         participant = query.\
             filter(Participant.token == token).\
@@ -106,7 +99,7 @@ def edit(id=0, token=''):
     if editing and not g.user.can_manage():
         return flask.abort(403)
 
-    if participant.event.deadline < tz.localize(datetime.now()):
+    if participant.event.deadline < now:
         flash('Die Deadline, um auf die Einladung für Anlass "{participant.event.name}" ist vorüber!')
         return redirect(url_back(url_for('participant.list')) if editing else url_back(url_for('event.view', id=participant.event.id)))
 

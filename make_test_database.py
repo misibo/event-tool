@@ -8,8 +8,7 @@ from slugify import slugify
 from app import app
 # from app.participant import list_missing_participants
 from app.models import Event, Group, GroupMember, Participant, User, db
-
-tz = pytz.timezone('Europe/Zurich')
+from app.utils import tz, now
 random.seed(42)
 
 
@@ -24,9 +23,9 @@ def create_user(first_name, family_name, role=User.Role.USER):
         username=username,
         first_name=first_name,
         family_name=family_name,
-        registered=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now()),
-        last_login=tz.localize(datetime.now()),
+        registered=now,
+        modified=now,
+        last_login=now,
         email=email,
         role=role,
     )
@@ -41,14 +40,14 @@ def create_group(name, abstract, details=''):
         abstract=abstract,
         details=details,
         slug=slugify(name),
-        created=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now())
+        created=now,
+        modified=now
     )
     db.session.add(group)
     return group
 
 
-def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, groups, invited=False):
+def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, groups, registration_start, registration_type=Event.RegistrationType.OPEN):
     event = Event(
         name=name,
         abstract=abstract,
@@ -58,9 +57,11 @@ def create_event(name, abstract, details, location, start, end, equipment, cost,
         end=tz.localize(end),
         equipment=equipment,
         cost=cost,
+        registration_start=tz.localize(registration_start),
+        registration_type=registration_type,
         deadline=tz.localize(deadline),
-        created=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now()),
+        created=now,
+        modified=now,
     )
     for group in groups:
         event.groups.append(group)
@@ -132,6 +133,7 @@ with app.app_context():
             end=today + timedelta(days=-2, hours=22),
             equipment='Taschenlampe',
             cost=0,
+            registration_start=today + timedelta(days=-3),
             deadline=today + timedelta(days=-4),
             groups=[groups[0]],
         ),
@@ -172,6 +174,7 @@ with app.app_context():
             end=today + timedelta(hours=24),
             equipment='Zelt',
             cost=120,
+            registration_start=today + timedelta(hours=-1),
             deadline=today + timedelta(hours=12),
             groups=[groups[0], groups[1]],
         ),
@@ -214,6 +217,7 @@ with app.app_context():
             end=today + timedelta(days=7, hours=26),
             equipment='Wanderschuhe',
             cost=5,
+            registration_start=today + timedelta(days=4, hours=12),
             deadline=today + timedelta(days=6, hours=12),
             groups=[groups[2]],
         ),
@@ -244,6 +248,7 @@ with app.app_context():
             end=today + timedelta(days=14, hours=20, minutes=15),
             equipment='Hut',
             cost=10,
+            registration_start=today + timedelta(days=10),
             deadline=today + timedelta(days=12),
             groups=[groups[0]],
         ),
