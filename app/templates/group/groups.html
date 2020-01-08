@@ -1,31 +1,41 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_pagination, render_group_logo %}
+{% from 'macros.html' import render_pagination, render_group_logo, render_manage_group_nav %}
 
 {% block title %}Gruppen{% endblock %}
 
 {% block content %}
-<div class="uk-child-width-1-1 uk-grid-divider" uk-grid>
+<div class="uk-child-width-1-1 uk-grid-large" uk-grid>
+
     {% if pagination.items %}
     {% for group in pagination.items %}
+
     <div>
-        <div uk-grid>
-            <div class="uk-width-auto">
-                {{ render_group_logo(group) }}
+        <div class="uk-card uk-card-default uk-grid-collapse uk-child-width-1-2@s uk-margin" uk-grid>
+            <div class="{{'uk-card-media-left' if loop.index % 2 == 0 else 'uk-card-media-right uk-flex-last@s' }}">
+                <div class="uk-background-cover uk-height-1-1" data-src="{{ group.get_background_url(width=1366) }}" uk-img></div>
             </div>
-            <div class="uk-width-expand">
-                <div class="uk-card uk-card-default">
-                    <div class="uk-card-header">
-                        <h3 class="uk-card-title uk-margin-remove">{{ group.name }}</h3>
-                    </div>
-                    <div class="uk-card-body">
-                        <div>{{ group.abstract | markdown }}</div>
-                    </div>
-                    <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-between">
-                        <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=group.slug) }}">Ansehen</a>
+            <div>
+                <div class="uk-card-header">
+                    <div uk-grid>
+                        <div>
+                            {{ render_group_logo(group, 64) }}
+                        </div>
+                        <div class="uk-flex uk-flex-middle">
+                            <h2>{{ group.name }}</h2>
+                        </div>
                     </div>
                 </div>
+                <div class="uk-card-body">
+                    {{ group.abstract | markdown }}
+                </div>
+                <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-between">
+                    <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=group.slug) }}">Ansehen</a>
+                    {% if group.flyer_version %}
+                    <a class="uk-button uk-button-text" href="{{ group.get_flyer_url() }}">Flyer</a>
+                    {% endif %}
+                </div>
             </div>
-    </div>
+        </div>
     </div>
     {% endfor %}
     {% else %}

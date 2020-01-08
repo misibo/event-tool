@@ -382,12 +382,6 @@ class Event(db.Model):
         os.makedirs(folder, exist_ok=True)
         return folder
 
-    def get_url(self, file, version):
-        if version:
-            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
-        else:
-            return False
-
     def save_background(self, file):
         try:
             store_background(file, self.get_folder(), 'background')
@@ -398,7 +392,11 @@ class Event(db.Model):
             self.background_version += 1
 
     def get_background_url(self, resolution=1920):
-        return self.get_url(f'background_{resolution}.jpg', self.background_version)
+        file = f'background_{resolution}.jpg'
+        if self.background_version:
+            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
+        else:
+            return url_for('static', filename=f'default/event/{file}')
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
@@ -431,11 +429,13 @@ class Group(db.Model):
         os.makedirs(folder, exist_ok=True)
         return folder
 
-    def get_url(self, file, version):
+    def get_url(self, file, version, default=False):
         if version:
             return url_for('static', filename=os.path.join('group', str(self.id), file), v=version)
+        elif default:
+            return url_for('static', filename=f'default/group/{file}')
         else:
-            return False
+            return ''
 
     def save_logo(self, file):
         try:
@@ -463,7 +463,7 @@ class Group(db.Model):
         return self.get_url(f'logo_{resolution}.png', self.logo_version)
 
     def get_background_url(self, width=1920):
-        return self.get_url(f'background_{width}.jpg', self.background_version)
+        return self.get_url(f'background_{width}.jpg', self.background_version, default=True)
 
     def get_flyer_url(self):
         return self.get_url(f'flyer.pdf', self.flyer_version)
