@@ -391,10 +391,10 @@ class Event(db.Model):
         else:
             self.background_version += 1
 
-    def get_background_url(self, resolution=1920):
-        file = f'background_{resolution}.jpg'
+    def get_background_url(self, width=1920):
+        file = f'background_{width}.jpg'
         if self.background_version:
-            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
+            return url_for('static', filename=os.path.join('event', str(self.id), file), v=self.background_version)
         else:
             return url_for('static', filename=f'default/event/{file}')
 

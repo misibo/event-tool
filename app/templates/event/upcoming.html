@@ -1,34 +1,68 @@
 {% extends 'layout.html' %}
 {% from 'macros.html' import render_pagination, render_event_date with context %}
 
+{% block head %}
+<style>
+    @media (max-width: 640px) {
+        .background-height {
+            height: 300px
+        }
+    }
+</style>
+{%  endblock %}
+
 {% block title %}Anstehende Anlässe{% endblock %}
 
 {% block content %}
-<div class="uk-child-width-1-1 uk-grid-divider" uk-grid>
+
+<div class="uk-text-center">
+    <h1 class="uk-margin-remove uk-heading-medium">Nächstens</h1>
+    <hr class="uk-margin-large uk-divider-small">
+</div>
+
+<div class="uk-grid-large uk-child-width-1-1@s" uk-grid>
     {% if pagination.items %}
     {% for event in pagination.items %}
-    <div>
-        <div uk-grid>
-            <div>
-                {{ render_event_date(event) }}
+    <div class="uk-width-3-4@m">
+        <div class="uk-card uk-card-default uk-grid-collapse" uk-grid>
+            <div class="uk-width-1-2@s uk-width-2-5@m {{'uk-card-media-left' if loop.index % 2 == 0 else 'uk-card-media-right uk-flex-last@s' }}">
+                <div class="background-height uk-position-relative uk-background-cover uk-height-1-1" data-src="{{ event.get_background_url(width=1366) }}" uk-img style="">
+                    <div class="uk-background-default uk-position-small {{'uk-position-top-right' if loop.index % 2 == 0 else 'uk-position-top-left uk-flex-last@s' }}">
+                        <div class="uk-padding-small">
+                            {{ render_event_date(event) }}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="uk-width-expand">
-                <div class="uk-card uk-card-default">
-                    <div class="uk-card-header">
-                        <h3 class="uk-card-title uk-margin-remove">{{ event.name }}</h3>
-                        <div class="uk-text-muted"><span uk-icon="calendar"></span> {{ event.print_duration() }}</div>
-                        <div class="uk-text-muted"><span uk-icon="location"></span> {{ event.location }}</div>
+            <div class="uk-width-1-2@s uk-width-3-5@m">
+                <div class="uk-card-header">
+                    <h3 class="uk-card-title uk-margin-remove">{{ event.name }}</h3>
+                    <div class="uk-text-muted"><span uk-icon="calendar"></span> {{ event.print_duration() }}</div>
+                    <div class="uk-text-muted"><span uk-icon="location"></span> {{ event.location }}</div>
+                    <div class="uk-text-muted">
+                        <span uk-icon="users"></span>
+                        <div class="uk-inline">
+                            <ul class="uk-subnav uk-margin-remove">
+                                {% for group in event.groups %}
+                                    <li style="padding-left: {{ '0px' if loop.index == 1 else '5px'}}">
+                                        <a href="{{ url_for('group.view', slug=group.slug) }}">{{ group.name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
-                    <div class="uk-card-body">
-                        <div>{{ event.abstract | markdown }}</div>
-                    </div>
-                    <div class="uk-card-footer">
-                        <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
-                    </div>
+                </div>
+                <div class="uk-card-body">
+                    <div>{{ event.abstract | markdown }}</div>
+                </div>
+                <div class="uk-card-footer">
+                    <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                 </div>
             </div>
         </div>
     </div>
+    <div class="uk-visible@m uk-width-1-4"></div>
+    <div class="uk-visible@m uk-width-1-4"></div>
     {% endfor %}
     {% else %}
     <div class="uk-text-center uk-margin">
