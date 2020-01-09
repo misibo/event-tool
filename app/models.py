@@ -146,6 +146,15 @@ class GroupMember(db.Model):
     user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
+    def is_spectator(self):
+        return self.role == self.Role.SPECTATOR
+
+    def is_member(self):
+        return self.role == self.Role.MEMBER
+
+    def is_leader(self):
+        return self.role == self.Role.LEADER
+
     def get_role_label(self):
         return self.Role.get_choice_label(self.role)
 

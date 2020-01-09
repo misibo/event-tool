@@ -31,35 +31,54 @@ def upcoming():
 def view(id):
     event = Event.query.get_or_404(id)
 
-    leaders = User.query.\
-        join(GroupMember, GroupMember.user_id == User.id).\
+    logged_in = g.user is not None
+
+    members = GroupMember.query.\
+        options(joinedload(GroupMember.user)).\
         join(Group, Group.id == GroupMember.group_id).\
         join(GroupEventRelation, GroupEventRelation.group_id == Group.id).\
         join(Event, Event.id == GroupEventRelation.event_id).\
         filter(Event.id == id).\
-        filter(GroupMember.role == GroupMember.Role.LEADER).\
         all()
 
-    participants = Participant.query.options(joinedload(Participant.user)).\
+    membership_event_groups = []
+    leaders = []
+
+    for member in members:
+
+        # filter leaders for event via its assigned groups
+        if member.is_leader():
+            leaders.append(member.user)
+
+        # get membership of current user of assigned groups of event
+        if logged_in and member.user_id == g.user.id:
+            membership_event_groups.append(member)
+
+    participants = Participant.query.\
+        options(joinedload(Participant.user)).\
         filter(Participant.event_id == event.id).\
         all()
 
-    participants = []
-    participant = None
-    logged_in = g.user is not None
+    participation = None
+    registered = []
 
-    for inv in participants:
-        if inv.accepted_reply():
-            participants.append(inv.user)
-        if logged_in and inv.user_id == g.user.id:
-            participant = inv
+    for participant in participants:
+
+        # filter for registred participants
+        if participant.is_registered():
+            registered.append(participant.user)
+
+        # get participation of current user
+        if logged_in and participant.user_id == g.user.id:
+            participation = participant
 
     return render_template(
         'event/event.html',
         event=event,
         leaders=leaders,
-        participants=participants,
-        participant=participant
+        membership_event_groups=membership_event_groups,
+        registered=registered,
+        participation=participation
     )
 
 class GroupChoices(Choices):
