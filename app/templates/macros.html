@@ -219,8 +219,8 @@
 
 {% macro render_event_date(event, size=64) %}
 <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{size}}px; width: {{size}}px;">
-    <div class="uk-text-large uk-text-bold">{{ event.start.astimezone(tz).strftime('%d') }}</div>
-    <div>{{ event.start.astimezone(tz).strftime('%b') }}</div>
+    <div class="uk-text-large uk-text-bold">{{ event.print_start_day() }}</div>
+    <div>{{ event.print_start_month() }}</div>
 </div>
 {% endmacro %}
 

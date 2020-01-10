@@ -373,6 +373,12 @@ class Event(db.Model):
         else:
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
 
+    def print_start_day(self):
+        return self.start.astimezone(tz).strftime('%d')
+
+    def print_start_month(self):
+        return self.start.astimezone(tz).strftime('%b')
+
     def get_folder(self):
         folder = os.path.join('app', 'static', 'event', str(self.id))
         os.makedirs(folder, exist_ok=True)
