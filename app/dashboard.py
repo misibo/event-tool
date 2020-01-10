@@ -26,7 +26,7 @@ def upcoming():
         order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
 
-    participants = Participant.query.\
+    participations = Participant.query.\
         join(Event, Event.id == Participant.event_id).\
         filter(Participant.user_id == g.user.id).\
         all()
@@ -41,8 +41,7 @@ def upcoming():
         'dashboard/upcoming.html',
         pagination=pagination,
         tz=tz,
-        participants=participants,
-        memberships=memberships,
+        participations=participations,
         find=find
     )
 
