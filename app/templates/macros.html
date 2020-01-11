@@ -176,7 +176,7 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_group_logo(group, resolution=32, link=true, target='') %}
+{% macro render_group_logo(group, resolution=64, link=true, target='') %}
 {% set logo %}
 <div {{ render_tooltip(group.name) }}>
     {% if group.logo_version %}
@@ -191,7 +191,7 @@
 {{ logo if not link else cover_link(logo, url_for('group.view', slug=group.slug), target=target, tooltip=group.name) }}
 {% endmacro %}
 
-{% macro render_user_avatar(user, resolution=32, link=true, target='', tooltip=true) %}
+{% macro render_user_avatar(user, resolution=64, link=true, target='', tooltip=true) %}
 {% set avatar %}
     <div {{ render_tooltip(user.get_fullname()) }}>
         {% if user.avatar_version %}
@@ -280,16 +280,12 @@
 {% macro render_groupmember_actions(member, group) %}
     <div class="uk-flex">
         {% if member %}
-        <span class="uk-margin-small-right">Du bist {{ member.get_role_label() }}</span>
-        <ul class="uk-iconnav">
-            <li><a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('groupmember.edit', id=member.id)}}"></a></li>
-            <li><a uk-icon="sign-out" uk-tooltip="Verlassen" href="{{ url_for('groupmember.remove', id=member.id)}}"></a></li>
-        </ul>
+        <span class="uk-margin-small-right">Du bist {{ member.get_role_label() }}.</span>
+        <a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('groupmember.edit', id=member.id)}}"></a>
+        <a class="uk-margin-small-left" uk-icon="sign-out" uk-tooltip="Verlassen" href="{{ url_for('groupmember.remove', id=member.id)}}"></a>
         {% else %}
         <span>Du bist nicht Mitglied.</span>
-        <ul class="uk-iconnav">
-            <li><a uk-icon="sign-in" uk-tooltip="Beitreten" href="{{ url_for('groupmember.join', id=group.id) }}"></a></li>
-        </ul>
+        <a uk-icon="sign-in" uk-tooltip="Beitreten" href="{{ url_for('groupmember.join', id=group.id) }}"></a>
         {% endif %}
     </div>
 {% endmacro %}

@@ -5,41 +5,65 @@
     Mitgliedschaften
 {% endblock %}
 
+{% block head %}
+<style>
+    @media (max-width: 640px) {
+        .background-height {
+            height: 300px
+        }
+    }
+</style>
+{%  endblock %}
+
 {% block dashboard %}
-    {% if pagination.items %}
-    <div class="uk-child-width-1-2@m uk-flex-center" uk-grid>
-        {% for membership in pagination.items %}
-        <div>
-            <div uk-grid>
-                <div class="uk-width-auto">
-                    {{ render_group_logo(membership.group) }}
-                </div>
-                <div class="uk-width-expand">
-                    <div class="uk-card uk-card-default">
-                        <div class="uk-card-header">
-                            <h3 class="uk-card-title uk-margin-remove">{{ membership.group.name }}</h3>
-                            {% if g.user.can_manage() %}
-                                {{ render_manage_group_nav(membership.group_id) }}
-                            {% endif %}
-                        </div>
-                        <div class="uk-card-body">
-                            {{ membership.group.abstract }}
-                        </div>
-                        <div class="uk-card-footer uk-flex uk-flex-between uk-flex-middle">
-                            {{ render_groupmember_actions(membership, membership.group) }}
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ url_for('group.view', slug=membership.group.slug) }}">Ansehen</a>
+
+{% if pagination.items %}
+<div class="uk-child-width-1-1@s uk-grid-large" uk-grid>
+    {% for groupmember in pagination.items %}
+    {% set group = groupmember.group %}
+    <div class="uk-width-3-4@m">
+        <div class="uk-card uk-card-default uk-grid-collapse" uk-grid>
+            <div class="uk-width-1-2@s uk-width-2-5@m {{'uk-card-media-left' if loop.index % 2 == 0 else 'uk-card-media-right uk-flex-last@s' }}">
+                <div class="background-height uk-position-relative uk-background-cover uk-height-1-1" data-src="{{ group.get_background_url(width=1366) }}" uk-img style="">
+                    <div class="uk-background-default uk-position-small {{'uk-position-top-right' if loop.index % 2 == 0 else 'uk-position-top-left uk-flex-last@s' }}">
+                        <div class="uk-padding-small">
+                            {{ render_group_logo(group) }}
                         </div>
                     </div>
                 </div>
             </div>
+            <div class="uk-width-1-2@s uk-width-3-5@m">
+                <div class="uk-card-header">
+                    <h2>{{ group.name }}</h2>
+                    {% if g.user.can_manage() %}
+                    {{ render_manage_group_nav(group.id) }}
+                    {% endif %}
+                </div>
+                <div class="uk-card-body">
+                    {{ group.abstract | markdown }}
+                    <div class="uk-text-primary">
+                        {{ render_groupmember_actions(groupmember) }}
+                    </div>
+                </div>
+                <div class="uk-card-footer uk-flex uk-flex-middle uk-flex-between">
+                    <a class="uk-button uk-button-text" href="{{ url_for('group.view', slug=group.slug) }}">Ansehen</a>
+                    {% if group.flyer_version %}
+                    <a class="uk-button uk-button-text" href="{{ group.get_flyer_url() }}">Flyer</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        {% endfor %}
     </div>
-    {% else %}
-    <div class="uk-text-center uk-text-large uk-margin">
-        <p class="uk-text-muted">Du bist in keiner Gruppe Mitglied.</p>
-        <a class="uk-button uk-button-text" href="{{ url_for('group.groups') }}">Werde Mitglied</a>
-    </div>
-    {% endif %}
-    {{ render_pagination(pagination, 'dashboard.memberships')}}
+    <div class="uk-visible@m uk-width-1-4"></div>
+    <div class="uk-visible@m uk-width-1-4"></div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="uk-text-center uk-margin">
+    <h3 class="uk-text-muted">Keine Gruppen</h3>
+</div>
+{% endif %}
+
+{{ render_pagination(pagination, 'dashboard.memberships') }}
+
 {% endblock %}
