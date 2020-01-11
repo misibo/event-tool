@@ -2,12 +2,13 @@ from datetime import datetime
 
 from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
+from sqlalchemy.orm import joinedload
 
 from . import mail
-from .forms import GroupEditForm, GroupMemberForm, ConfirmForm
+from .forms import ConfirmForm, GroupEditForm, GroupMemberForm
 from .models import Event, Group, GroupEventRelation, GroupMember, User, db
 from .security import admin_required, login_required, manager_required
-from .utils import url_back, now
+from .utils import now, url_back
 
 bp = Blueprint("group", __name__, url_prefix="/group")
 
@@ -27,6 +28,7 @@ def view(slug):
         first_or_404()
 
     members = GroupMember.query.\
+        options(joinedload(GroupMember.group)).\
         filter(GroupMember.group_id == group.id).\
         join(GroupMember.user).\
         order_by(GroupMember.role.desc()).\
