@@ -33,6 +33,7 @@
                         {% endif %}
                     </ul>
                 </dd>
+                {% if g.user %}
                 <dt>Kontakt</dt>
                 <dd>
                     <a class="uk-link-reset" href="mailto:{{ user.email }}">{{ user.email }}</a><br>
@@ -43,11 +44,14 @@
                     {{ user.street | if_not('Keine Strasse') }} <br>
                     {{ user.postal_code | if_not('Kein PLZ') }} {{ user.city | if_not('Keine Stadt') }}
                 </dd>
+                {% endif %}
             </dl>
         </div>
         <div class="uk-card-footer">
-            dabei seit <span class="uk-text-muted">{{ user.registered.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span><br>
-            zuletzt angemeldet <span class="uk-text-muted">{{ user.last_login.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</span>
+            dabei seit <span class="uk-text-muted">{{ user.registered | shortdatetime }}</span><br>
+            {% if g.user %}
+            zuletzt angemeldet <span class="uk-text-muted">{{ user.last_login | shortdatetime }}</span>
+            {% endif %}
         </div>
     </div>
 </div>
