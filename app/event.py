@@ -125,25 +125,27 @@ def create():
     return render_template('event/edit.html', form=form, event=event)
 
 
-@bp.route('/copy/<int:id>', methods=['GET'])
+@bp.route('/copy/<int:id>', methods=['GET', 'POST'])
 @manager_required
 def copy(id):
+
     event = Event.query.get_or_404(id)
-    name = event.name
 
-    db.session.expunge(event)
-    make_transient(event)
+    form = EventEditForm(obj=event)
 
-    event.id = None
-    event.name =  f'{name} - Kopie'
-    event.created = now
-    event.modified = now
+    if form.validate_on_submit():
+        new_event = Event()
+        form.populate_obj(new_event)
+        new_event.created = now
+        new_event.modified = now
+        db.session.add(new_event)
+        db.session.commit()
+        flash(f'Die bearbeitete Kopie von "{event.name}" wurde neu als "{new_event.name}" gespeichert.')
+        return redirect(url_for('event.edit', id=new_event.id, url_back=form.url_back.data))
 
-    db.session.add(event)
-    db.session.commit()
+    flash(f'Du bearbeitest eine Kopie von "{event.name}".', 'warning')
 
-    flash(f'Kopie von Anlass "{name}" erstellt.', 'success')
-    return redirect(url_for('event.edit', id=event.id, url_back=url_back()))
+    return render_template('event/edit.html', form=form, event=event)
 
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
@@ -172,7 +174,7 @@ def delete(id):
         if 'confirm' in request.form:
             db.session.delete(event)
             db.session.commit()
-            flash(f'{event.name} wurde gelöscht.', 'success')
+            flash(f'{event.name} wurde gelöscht.', 'warning')
         return redirect(form.url_back.data)
 
     return render_template('event/delete.html', form=form, event=event)
