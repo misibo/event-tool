@@ -1,25 +1,19 @@
-{% extends 'layout.html' %}
-{% from 'macros.html' import render_field %}
+{% extends 'confirm.html' %}
 
-{% block title %}Anlässe{% endblock %}
+{% block title %}Anlass löschen{% endblock %}
 
-{% block content %}
-<form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
-    <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
-        <div class="uk-width-1-2 uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
-            <p><div class="uk-alert uk-alert-danger uk-alert-large">
-                Willst du den Anlass "{{event.name}}" wirklich löschen?
-            </div></p>
-            <p><strong>Zeit: </strong>{{event.start}}</p>
-            <p><strong>Treffpunkt: </strong>{{event.location}}</p>
-            <p>{{event.abstract | markdown}}</p>
-            <div>
-                <input type="submit" class="uk-button uk-button-primary" name='cancel' value="Zurück">
-                <input type="submit" class="uk-button uk-button-danger" name='confirm' value="Löschen">
-            </div>
-        </div>
-    </div>
-    {{ form.csrf_token }}
-</form>
+{% block message %}
+<div class="uk-alert uk-alert-danger uk-alert-large">
+    Willst du den Anlass "{{event.name}}" wirklich löschen?
+</div>
+
+<dl class="uk-description-list">
+    <dt>Treffpunkt</dt>
+    <dd>{{ event.location }}</dd>
+    <dt>Zeit</dt>
+    <dd>{{ event.start | shortdatetime }}</dd>
+</dl>
+
+{{ event.abstract | markdown }}
 
 {% endblock %}

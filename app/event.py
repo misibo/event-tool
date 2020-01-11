@@ -171,10 +171,9 @@ def delete(id):
     form = ConfirmForm(url_back=url_back())
 
     if form.validate_on_submit():
-        if 'confirm' in request.form:
-            db.session.delete(event)
-            db.session.commit()
-            flash(f'{event.name} wurde gelöscht.', 'warning')
+        db.session.delete(event)
+        db.session.commit()
+        flash(f'{event.name} wurde gelöscht.', 'warning')
         return redirect(form.url_back.data)
 
     return render_template('event/delete.html', form=form, event=event)
