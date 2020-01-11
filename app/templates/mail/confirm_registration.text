@@ -1,0 +1,9 @@
+Hallo {{first_name}},
+
+Du hast dich erfolgreich registriert auf {{hostname}} registriert.
+Bitte öffne folgenden Link im Browser, um die E-Mail Adresse zu bestätigen:
+
+{{confirm_url}}
+
+Liebe Grüsse,
+Das Team

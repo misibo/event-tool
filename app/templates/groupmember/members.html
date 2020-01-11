@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_search, render_filter, render_user_avatar with context %}
+
+{% block title %}
+    Mitglieder
+{% endblock %}
+
+{% block content %}
+<form id="filter_sort" method="GET">
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <input type="submit" hidden>
+</form>
+
+<div class="uk-margin" uk-grid>
+    <div>
+        <h3 class="uk-heading-bullet">
+            <a class="uk-link-heading" href="{{ url_for('group.edit', id=group.id) }}">{{ group.name }}</a>
+        </h3>
+    </div>
+    <div class="uk-width-expand@s">
+        {{ render_search(args, form='filter_sort') }}
+    </div>
+    <div>
+        <a class="uk-button uk-button-default" href="{{ url_back(url_for('group.list')) }}">Zurück</a>
+    </div>
+</div>
+<input name="page" value="{{ pagination.page }}" hidden>
+<table class="uk-table uk-table-striped uk-table-small">
+    <thead>
+        <tr>
+            <th></th>
+            <th>{{ render_order('Vorname', 'first_name', args, form='filter_sort') }}</th>
+            <th>{{ render_order('Nachname', 'family_name', args, form='filter_sort') }}</th>
+            <th>{{ render_filter('Rolle', 'role', GroupMemberRoles, args, form='filter_sort') }}</th>
+            <th>Aktion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for member in pagination.items %}
+        <tr>
+            <td>{{ render_user_avatar(member.user, resolution=32) }}</td>
+            <td>{{ member.user.first_name }}</td>
+            <td>{{ member.user.family_name }}</td>
+            <td>{{ member.get_role_label() }}</td>
+            <td>
+                <a uk-tooltip="Bearbeiten" href="{{ url_for('groupmember.edit', id=member.id) }}" uk-icon="pencil"></a>
+                <a uk-tooltip="Entfernen" href="{{ url_for('groupmember.remove', id=member.id) }}" uk-icon="sign-out"></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if pagination.items %}
+{{ render_pagination(pagination, 'groupmember.members', args) }}
+{% else %}
+<div class="uk-text-center uk-margin">
+    <h3 class="uk-text-muted">Keine Mitglieder gefunden</h3>
+</div>
+{% endif %}
+{% endblock %}

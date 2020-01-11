@@ -1,0 +1,18 @@
+{% extends 'form.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block title %}Teilnahme für Anlass "{{participant.event.name}}"{% endblock %}
+
+{% block form %}
+<form class="uk-form-stacked" method="POST">
+    {{ render_field(form.registration_status, class='uk-input') }}
+    {{ render_field(form.num_friends, class='uk-input') }}
+    {{ render_field(form.num_car_seats, class='uk-input') }}
+
+    {{ form.csrf_token }}
+
+    <div class="uk-margin-large-top">
+        <input type="submit" class="uk-button uk-button-primary" value="Speichern">
+    </div>
+</form>
+{% endblock %}

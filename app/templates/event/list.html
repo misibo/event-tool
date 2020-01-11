@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_pagination, render_order, render_filter, render_search, render_event_date, render_manage_event_nav with context%}
+
+{% block title %}
+    Anlässe
+{% endblock %}
+
+{% block content %}
+<form method="GET">
+    <div class="uk-margin" uk-grid>
+        <div class="uk-width-expand@s">
+            {{ render_search(args) }}
+        </div>
+        <div>
+            <a href="{{ url_for('event.create', url_back=request.url) }}" class="uk-button uk-button-primary">Hinzufügen</a>
+        </div>
+    </div>
+    <input name="page" value="{{ pagination.page }}" hidden>
+    <div class="uk-overflow-auto">
+        <table class="uk-table uk-table-small uk-table-hover uk-table-striped uk-table-middle">
+            <thead>
+                <tr>
+                    <th class="uk-visible@m"></th>
+                    <th>{{ render_order('Name', 'name', args)}}</th>
+                    <th class="uk-visible@xl">Kurzinfo</th>
+                    <th>Standort</th>
+                    <th>{{ render_order('Start', 'start', args)}}</th>
+                    <th class="uk-visible@s">Ende</th>
+                    <th>{{ render_order('Deadline', 'deadline', args)}}</th>
+                    <th class="uk-visible@m">{{ render_order('Geändert', 'modified', args)}}</th>
+                    <th>{{ render_filter('Gruppen', 'group', GroupChoices, args)}}</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in pagination.items %}
+                <tr>
+                    <td class="uk-visible@m">
+                        {{ render_event_date(event) }}
+                    </td>
+                    <td>{{ event.name }}</td>
+                    <td class="uk-visible@xl">{{ event.abstract | markdown }}</td>
+                    <td>{{ event.location }}</td>
+                    <td>{{ event.start | shortdatetime }}</td>
+                    <td class="uk-visible@s">{{ event.end | shortdatetime }}</td>
+                    <td>{{ event.deadline | shortdatetime }}</td>
+                    <td class="uk-visible@m">{{ event.modified | shortdatetime }}</td>
+                    <td>
+                        <ul class="uk-subnav">
+                            {% for group in event.groups %}
+                                <li>
+                                    <a class="uk-link" href="{{ url_for('group.view', slug=group.slug) }}" target="_blank">{{ group.name }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    <td>
+                        {{ render_manage_event_nav(event.id) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagination.items %}
+    {{ render_pagination(pagination, 'event.list', args) }}
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted">Keine Events gefunden</h3>
+    </div>
+    {% endif %}
+</form>
+{% endblock %}

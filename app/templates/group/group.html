@@ -1,0 +1,109 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field, render_event_date, render_user_avatar, render_groupmember_actions, render_hero, render_manage_group_nav with context %}
+{% block title %}{{ group.name }}{% endblock %}
+{% block logo %}
+<div class="uk-navbar-item uk-logo">
+    <img class="uk-logo" data-src="{{ group.get_logo_url(resolution=64) }}" uk-img>
+</div>
+{% endblock %}
+
+{% block hero %}
+    {% set content %}
+    <div class="uk-text-center">
+        <h1>{{ group.name }}</h1>
+        <div class="uk-text-lead uk-text-bold">
+            {{ group.abstract }}</p>
+        </div>
+        {% if g.user %}
+        <hr class="uk-divider-small">
+        <h5>Teilnahme</h5>
+        <div class="uk-flex uk-flex-center">
+            {{ render_groupmember_actions(membership, group) }}
+        </div>
+            {% if g.user.can_manage() %}
+                <hr class="uk-divider-small">
+                <h5>Verwalten</h5>
+                <div class="uk-flex uk-flex-center">
+                    {{ render_manage_group_nav(group.id) }}
+                </div>
+            {% endif %}
+        {% endif %}
+        <hr class="uk-divider-small">
+        <div class="uk-margin">
+            <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
+        </div>
+    </div>
+    {% endset %}
+    {{ render_hero(content, group.get_background_url()) }}
+{% endblock %}
+
+{% block top %}
+<div id="details" class="uk-section uk-section-secondary">
+    <div class="uk-container uk-container-xsmall">
+        <div class="uk-text-center">
+            <h4>Details</h4>
+            <hr class="uk-divider-small">
+        </div>
+        {{ group.details | if_not('Keine Details vorhanden.') | markdown }}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div>
+    <div class="uk-text-center">
+        <h4>Nächstens</h4>
+        <hr class="uk-divider-small">
+    </div>
+
+    {% if upcoming %}
+    <div class="uk-grid-small" uk-grid>
+    {% for event in upcoming %}
+        <div>
+            <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+                <div>
+                    {{ render_event_date(event) }}
+                    <h4 class="uk-margin-remove">{{ event.name }}</h4>
+                    <div class="uk-text-muted">
+                        {{ event.print_duration() }}
+                    </div>
+                    <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted uk-margin-remove">Keine anstehenden Anlässe.</h3>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block footer %}
+{% if membership %}
+<div class="uk-margin-large-bottom">
+    <div class="uk-text-center">
+        <h4>Mitglieder</h4>
+        <hr class="uk-divider-small">
+    </div>
+
+    {% if members %}
+    <div class="uk-flex-center uk-grid-small" uk-grid>
+    {% for member in members %}
+        <div>
+            {{ render_user_avatar(member.user) }}
+        </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted uk-margin-remove">Keine Mitglieder.</h3>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+

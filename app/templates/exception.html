@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    {{ exception.name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="uk-text-center">
+    <h2>{{ exception.code }}</h2>
+    <p class="uk-text-large uk-text-muted">{{ exception.description }}</p>
+</div>
+
+{% endblock %}

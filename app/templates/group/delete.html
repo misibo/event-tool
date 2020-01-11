@@ -1,0 +1,14 @@
+{% extends 'confirm.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block title %}Gruppe löschen{% endblock %}
+
+{% block message %}
+
+<div class="uk-alert uk-alert-danger uk-alert-large">
+    Willst du die Gruppe "{{group.name}}" wirklich löschen?
+</div>
+
+{{group.abstract | markdown}}
+
+{% endblock %}

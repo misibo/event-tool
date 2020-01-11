@@ -1,0 +1,13 @@
+{% extends 'confirm.html' %}
+
+{% block title %}Gruppe verlassen{% endblock %}
+
+{% block message %}
+
+<div class="uk-alert uk-alert-danger uk-alert-large">
+    Willst du wirklich die Gruppe "{{member.group.name}}" wirklich verlassen?
+</div>
+
+{{ member.group.abstract | markdown }}
+
+{% endblock %}

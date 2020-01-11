@@ -4,12 +4,23 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+entrypoints = "*"
+pycodestyle = "*"
+flake8 = "*"
+jupyter = "*"
+pylint = "*"
 
 [packages]
 flask = "*"
 flask-sqlalchemy = "*"
 flask-wtf = "*"
-sqlalchemy = "*"
+flask-mail = "*"
+pytz = "*"
+itsdangerous = "*"
+Pillow = "*"
+python-slugify="*"
+psycopg2-binary = "*"
+flask-markdown = "*"
+flask-simplemde = "*"
 
 [requires]
-python_version = "3.6"

@@ -1,16 +1,325 @@
+{% macro render_field_errors(field) %}
+{% if field.errors %}
+<div class="uk-alert-danger" uk-alert>
+    <a class="uk-alert-close" uk-close></a>
+    {%- for error in field.errors %}
+    <p>{{ error }}</p>
+    {%- endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
 {% macro render_field(field) %}
-    <div class="uk-margin">
-        <label class="uk-form-label">{{ field.label }}</label>
-        <div class="uk-form-controls">
-            {{ field(**kwargs)|safe }}
-            {% if field.errors %}
-            <div class="uk-alert-danger" uk-alert>
-                <a class="uk-alert-close" uk-close></a>
-                {% for error in field.errors %}
-                <p>{{ error }}</p>
-                {% endfor %}
+<div class="uk-margin">
+    {{ field.label(class_='uk-form-label') }}
+    <div class="uk-form-controls">
+        {{ field(**kwargs) | safe }}
+        {{ render_field_errors(field) }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_file_field(field) %}
+<div class="uk-margin">
+    <div class="uk-inline uk-width-1-1" uk-form-custom="target: true">
+        {{ field(**kwargs) | safe }}
+        <input class="uk-input" type="text" placeholder="Datei auswählen" disabled>
+        <span class="uk-form-icon uk-form-icon-flip" href="#" uk-icon="icon: folder"></span>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_document_field(field, url, accept) %}
+<div class="uk-margin">
+    {{ field.label(class_='uk-form-label') }}
+    <div class="uk-form-controls">
+        {% if url %}
+            <span uk-icon="icon: file-pdf"></span><a class="uk-button uk-button-text uk-margin-small-left" href="{{ url }}" target="_blank">Öffnen</a>
+        {% endif %}
+        {{ render_file_field(field, accept=accept, **kwargs) }}
+        {{ render_field_errors(field) }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_image_field(field, url, accept) %}
+<div class="uk-margin">
+    {{ field.label(class_='uk-form-label') }}
+    <div class="uk-form-controls">
+        {% if url %}
+            <div data-src="{{ url }}" uk-img
+                class="uk-flex uk-flex-middle uk-flex-center uk-height-medium uk-placeholder uk-background-contain">
             </div>
-            {% endif %}
+        {% endif %}
+        {{ render_file_field(field, accept=accept, **kwargs) }}
+        {{ render_field_errors(field) }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_pagination(pagination, endpoint, params={}, position='center') %}
+{% if pagination.pages > 1 %}
+<ul class="uk-pagination uk-flex-{{position}}">
+    {% if pagination.has_prev %}
+    <li><a href="{{ url_for(endpoint, **merge_into(params, page=pagination.prev_num)) }}"><span uk-pagination-previous></span></a>
+    </li>
+    {% endif %}
+    {%- for page in pagination.iter_pages() %}
+    {% if page %}
+    {% if page != pagination.page %}
+    <li><a href="{{ url_for(endpoint, **merge_into(params, page=page)) }}">{{ page }}</a></li>
+    {% else %}
+    <li class="uk-active"><span>{{ page }}</span></li>
+    {% endif %}
+    {% else %}
+    <li class="uk-disabled"><span>...</span></li>
+    {% endif %}
+    {%- endfor %}
+    {% if pagination.has_next %}
+    <li><a href="{{ url_for(endpoint, **merge_into(params, page=pagination.next_num)) }}"><span uk-pagination-next></span></a></li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endmacro %}
+
+{% macro render_order(label, name, args, form='') %}
+<div uk-form-custom>
+    {% with selected = args.get('order.'+name, None) %}
+    <select name="order.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
+        <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
+        <option {% if selected == 'asc' %}selected{% endif %} value="asc">Aufsteigend</option>
+        <option {% if selected == 'desc' %}selected{% endif %} value="desc">Absteigend</option>
+    </select>
+    <div class="uk-text-nowrap">
+        <span>{{ label | safe }}</span>
+        <span>|</span>
+        {% if selected == 'asc' %}
+        <span uk-icon="icon: arrow-up"></span>
+        {% elif selected == 'desc' %}
+        <span uk-icon="icon: arrow-down"></span>
+        {% else %}
+        <span uk-icon="icon: pencil"></span>
+        {% endif %}
+    </div>
+    {% endwith %}
+</div>
+{% endmacro %}
+
+{% macro render_filter(label, name, Choices, args, form='') %}
+<div uk-form-custom>
+    {% with selected = args.get('filter.'+name, None) %}
+    <select name="filter.{{ name }}" onchange="this.form.submit()" {% if form %}form="{{form}}"{% endif %}>
+        <option {% if not selected %}selected{% endif %} value="">Entfernen</option>
+        {% for val, label in Choices.get_items() %}
+        <option value="{{ val }}" {% if val == Choices.cast_value(selected) %}selected=""{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <div class="uk-text-nowrap">
+        <span>{{ label | safe }}</span>
+        <span>|</span>
+        {% if selected %}
+        <span>{{ Choices.get_choice_label(selected) }}</span>
+        {% else %}
+        <span uk-icon="pencil"></span>
+        {% endif %}
+    </div>
+    {% endwith %}
+</div>
+{% endmacro %}
+
+{% macro render_search(args, form='') %}
+<div class="uk-search uk-search-default uk-width-medium">
+    <button uk-search-icon></button>
+    <input class="uk-search-input uk-width-large" type="search" placeholder="Search ..." name="search" {% if args['search'] %} value="{{ args['search'] }}" {% endif %} {% if form %}form="{{form}}"{% endif %}>
+</div>
+{% endmacro %}
+
+{% macro render_menu_item(name, endpoint, active_class='uk-active', li_cls='', a_cls='') %}
+<li {% if url_for(endpoint) == request.path %} class="{{ active_class }}" {% endif %} {% if li_cls %} class="{{ li_cls }}" {% endif %}>
+    <a {% if a_cls %} class="{{ a_cls }}" {% endif %} href="{{ url_for(endpoint) }}">{{ name }}</a>
+</li>
+{% endmacro %}
+
+{% macro _render_rich_text_element(parts) %}
+{% for t in parts %}
+    {% if t.type == 'text' %}
+        {% if t.mode == 'normal' %}
+            {{t.text}}
+        {% elif t.mode == 'bold' %}
+            <strong>{{t.text}}</strong>
+        {% elif t.mode == 'italic' %}
+            <em>{{t.text}}</em>
+        {% elif t.mode == 'monospace' %}
+            <kbd>{{t.text}}</kbd>
+        {% endif %}
+    {% elif t.type == 'link' %}
+        <a href="{{t.url}}">{{_render_rich_text_element(t.richtext)}}</a>
+    {% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro text2html(text) %}
+    {% for p in text|parse_freeform %}
+        {% if p.type == 'simple' %}
+            <p>
+                {{_render_rich_text_element(p.parts)}}
+            </p>
+        {% elif p.type == 'list' %}
+            <ul class="uk-list uk-list-striped">
+                {% for item in p.items %}
+                    <li>
+                        {{_render_rich_text_element(item.parts)}}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+{% macro render_group_logo(group, resolution=64, link=true, target='') %}
+{% set logo %}
+<div {{ render_tooltip(group.name) }}>
+    {% if group.logo_version %}
+    <img data-src="{{ group.get_logo_url(resolution=resolution) }}" uk-img>
+    {% else %}
+    <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle" style="height:{{ resolution }}px; width:{{ resolution }}px;">
+        <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ group.name[0:2] }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endset %}
+{{ logo if not link else cover_link(logo, url_for('group.view', slug=group.slug), target=target, tooltip=group.name) }}
+{% endmacro %}
+
+{% macro render_user_avatar(user, resolution=64, link=true, target='', tooltip=true) %}
+{% set avatar %}
+    <div {{ render_tooltip(user.get_fullname()) }}>
+        {% if user.avatar_version %}
+        <img class="{{ class }}" data-src="{{ user.get_avatar_url(resolution) }}" uk-img>
+        {% else %}
+        <div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle {{ class }}" style="height:{{ resolution }}px; width:{{ resolution }}px;">
+            <div class="{% if resolution > 48 %}uk-text-large{% endif %} uk-text-bold uk-text-uppercase">{{ user.first_name[0] }}{{ user.family_name[0] }}</div>
+        </div>
+        {% endif %}
+    </div>
+{% endset %}
+ {{ avatar if not link else cover_link(avatar, url_for('user.view', username=user.username), target=target, tooltip=user.get_fullname()) }}
+{% endmacro %}
+
+{% macro cover_link(content, link='#', target='', tooltip='') %}
+<div class="uk-inline">
+    {{ content }}
+    <a {{ render_tooltip(tooltip) }} class="uk-position-cover" href="{{ link }}"></a>
+</div>
+{% endmacro %}
+
+{% macro render_tooltip(tooltip='') %}
+{% if tooltip %}uk-tooltip="{{ tooltip }}" {% endif %}
+{% endmacro %}
+
+{% macro render_event_date(event, size=64) %}
+<div class="uk-placeholder uk-margin-remove uk-padding-remove uk-flex uk-flex-center uk-flex-middle uk-flex-column" style="height: {{size}}px; width: {{size}}px;">
+    <div class="uk-text-large uk-text-bold">{{ event.print_start_day() }}</div>
+    <div>{{ event.print_start_month() }}</div>
+</div>
+{% endmacro %}
+
+{% macro render_hero(content, src) %}
+    <div class="uk-light uk-background-cover uk-background-blend-overlay uk-background-secondary" data-src="{{ src }}" uk-img>
+        <div class="uk-flex uk-flex-middle uk-flex-center" uk-height-viewport="offset-bottom: 80px">
+            <div class="uk-overlay uk-width-4-5@s uk-width-2-3@m uk-width-1-2@l">
+                {{ content }}
+            </div>
         </div>
     </div>
+{% endmacro %}
+
+{% macro render_countdown(datetime) %}
+<div class="uk-grid-small uk-child-width-auto" uk-grid uk-countdown="date: {{ datetime.isoformat() }}">
+    <div>
+        <div class="uk-countdown-number uk-countdown-days"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Tage</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-hours"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Stunden</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-minutes"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Minuten</div>
+    </div>
+    <div class="uk-countdown-separator">:</div>
+    <div>
+        <div class="uk-countdown-number uk-countdown-seconds"></div>
+        <div class="uk-countdown-label uk-margin-small uk-text-center uk-visible@s">Sekunden</div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_manage_event_nav(id) %}
+<ul class="uk-iconnav" uk-margin>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.event_info', id=id, url_back=request.url) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Teilnehmer" href="{{ url_for('participant.list', id=id, url_back=request.url) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('event.edit', id=id, url_back=request.url) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Kopieren" href="{{ url_for('event.copy', id=id, url_back=request.url) }}" uk-icon="copy"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('event.delete', id=id, url_back=request.url) }}" uk-icon="trash"></a></li>
+</ul>
+{% endmacro %}
+
+{% macro render_manage_group_nav(id) %}
+<ul class="uk-iconnav" uk-margin>
+    <li><a uk-tooltip="Infomail" href="{{ url_for('mail.group_info', id=id, url_back=request.url) }}" uk-icon="mail"></a></li>
+    <li><a uk-tooltip="Mitglieder" href="{{ url_for('groupmember.members', id=id, url_back=request.url) }}" uk-icon="users"></a></li>
+    <li><a uk-tooltip="Bearbeiten" href="{{ url_for('group.edit', id=id, url_back=request.url) }}" uk-icon="file-edit"></a></li>
+    <li><a uk-tooltip="Löschen" href="{{ url_for('group.delete', id=id, url_back=request.url) }}" uk-icon="trash"></a></li>
+</ul>
+{% endmacro %}
+
+{% macro render_groupmember_actions(member, group) %}
+    <div class="uk-flex">
+        {% if member %}
+        <span class="uk-margin-small-right">Du bist {{ member.get_role_label() }}.</span>
+        <a uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('groupmember.edit', id=member.id)}}"></a>
+        <a class="uk-margin-small-left" uk-icon="sign-out" uk-tooltip="Verlassen" href="{{ url_for('groupmember.remove', id=member.id)}}"></a>
+        {% else %}
+        <span>Du bist nicht Mitglied.</span>
+        <a uk-icon="sign-in" uk-tooltip="Beitreten" href="{{ url_for('groupmember.join', id=group.id) }}"></a>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_participant_actions(participant, event) %}
+    <div>
+        {% if participant %}
+            <b>Du bist {{ participant.get_registration_status_label() }}. </b>
+            <a class="uk-margin-small-left" uk-icon="file-edit" uk-tooltip="Ändern" href="{{ url_for('participant.edit', id=participant.id)}}"></a>
+            {% if participant.is_registered() %}
+            <br><span>{{ participant.num_friends }} eingeladene Freunde. {{ participant.num_car_seats }} Fahrplätze angeboten.</span>
+            {% endif %}
+            <br><i>Du kannst Details deiner Anmeldung noch bis am {{ event.deadline | shortdatetime }} ändern.</i>
+        {% else  %}
+            {% if event.has_registration_started() %}
+            <span>Du kannst dich seit dem {{ event.registration_start | shortdatetime }} anmelden. Deine Teilnahme ist noch unklar.</span>
+            <a class="uk-margin-left" uk-icon="sign-in" uk-tooltip="Ändern" href="{{ url_for('participant.participate', id=event.id) }}"></a>
+            {% elif event.registration_start  %}
+            <span>Anmeldung startet am {{ event.registration_start | shortdatetime }}.</span>
+            {% else %}
+            <span>Anmeldestart noch nicht gesetzt.</span>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_event_duration(event, cls_date='', cls_time='') %}
+    {% set start_date, start_time, end_date, end_time = event.start.astimezone(tz).strftime("%d.%m.%y"), event.start.astimezone(tz).strftime("%H:%M"), event.end.astimezone(tz).strftime("%d.%m.%y"), event.end.astimezone(tz).strftime("%H:%M") %}
+    {% if event.start.day == event.end.day %}
+        <span class="{{ cls_date }}">{{ start_date }}</span>,
+        <span class="{{ cls_time }}">{{ start_time }}</span>
+        bis <span class="{{ cls_time }}">{{ end_time }}</span>
+    {% else %}
+        <span class="{{ cls_date }}">{{ start_date }}</span> <span class="{{ cls_time }}">{{ start_time }}</span>
+        bis <span class="{{ cls_date }}">{{ end_date }}</span> <span class="{{ cls_time }}">{{ end_time }}</span>
+    {% endif %}
 {% endmacro %}

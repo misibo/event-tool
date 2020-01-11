@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block title %}Gruppen{% endblock %}
+
+{% block content %}
+<form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
+    <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
+        <div class="uk-width-1-2 uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
+            <p><div class="uk-alert uk-alert-danger uk-alert-large">
+            Willst du den Benutzer <strong>{{user.name}}</strong> wirklich löschen?
+            </div></p>
+            <p><strong>Vorname: </strong>{{user.first_name}}</p>
+            <p><strong>Nachname: </strong>{{user.family_name}}</p>
+            <div>
+                <input type="submit" class="uk-button uk-button-primary" name='cancel' value="Zurück">
+                <input type="submit" class="uk-button uk-button-danger" name='confirm' value="Löschen">
+            </div>
+        </div>
+    </div>
+    {{ form.csrf_token }}
+</form>
+
+{% endblock %}

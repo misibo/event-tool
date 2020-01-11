@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_user_avatar %}
+
+{% block title %}Benutzerprofil{% endblock %}
+
+{% block content %}
+<div class="uk-flex uk-flex-center uk-flex-middle">
+    <div class="uk-width-1-2@m uk-card uk-card-default">
+        <div class="uk-card-header">
+            <div class="uk-flex-middle uk-grid-small" uk-grid>
+                <div>
+                    {{ render_user_avatar(user, resolution=128) }}
+                </div>
+                <div class="uk-width-expand">
+                    <h3 class="uk-card-title uk-margin-remove">{{ user.get_fullname() }}</h3>
+                    <span class="uk-text-muted">{{ user.username }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="uk-card-body">
+            <dl class="uk-description-list">
+                <dt>Gruppen</dt>
+                <dd>
+                    <ul class="uk-subnav" uk-margin>
+                        {% if user.memberships %}
+                        {% for membership in user.memberships %}
+                        <li>
+                            <a href="{{ url_for('group.view', slug=membership.group.slug) }}">{{ membership.group.name }}</a>
+                        </li>
+                        {% endfor %}
+                        {% else %}
+                            In keiner Gruppe Mitglied
+                        {% endif %}
+                    </ul>
+                </dd>
+                {% if g.user %}
+                <dt>Kontakt</dt>
+                <dd>
+                    <a class="uk-link-reset" href="mailto:{{ user.email }}">{{ user.email }}</a><br>
+                    <a class="uk-link-reset" href="tel:{{ user.mobile_phone }}">{{ user.mobile_phone | if_not('Keine Nummer') }}</a>
+                </dd>
+                <dt>Adresse</dt>
+                <dd>
+                    {{ user.street | if_not('Keine Strasse') }} <br>
+                    {{ user.postal_code | if_not('Kein PLZ') }} {{ user.city | if_not('Keine Stadt') }}
+                </dd>
+                {% endif %}
+            </dl>
+        </div>
+        <div class="uk-card-footer">
+            dabei seit <span class="uk-text-muted">{{ user.registered | shortdatetime }}</span><br>
+            {% if g.user %}
+            zuletzt angemeldet <span class="uk-text-muted">{{ user.last_login | shortdatetime }}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
