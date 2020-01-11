@@ -100,7 +100,7 @@ def edit(id=0, token=''):
         return flask.abort(403)
 
     if participant.event.deadline < now:
-        flash('Die Deadline, um auf die Einladung für Anlass "{participant.event.name}" ist vorüber!')
+        flash(f'Die Deadline, um auf die Einladung für Anlass "{participant.event.name}" ist vorüber!')
         return redirect(url_back(url_for('participant.list')) if editing else url_back(url_for('event.view', id=participant.event.id)))
 
     form = EditParticipantForm(obj=participant)
@@ -110,12 +110,12 @@ def edit(id=0, token=''):
         db.session.commit()
 
         if editing:
-            flash(f'Die Antwort von "{participant.user.get_fullname()}" auf die Einladung für Anlass "{participant.event.name}" ist "{participant.get_reply_label()}"')
+            flash(f'"{participant.user.get_fullname()}" ist nun für den Anlass "{participant.event.name}" {participant.get_registration_status_label()}')
         else:
-            flash(f'Deine Anwort auf die Einladung für den Anlass "{participant.event.name}" ist: "{participant.get_reply_label()}"')
+            flash(f'Deine Anwort auf die Einladung für den Anlass "{participant.event.name}" ist: "{participant.get_registration_status_label()}"')
 
-        if participant.accepted_reply():
-            flash(f'Es sind {participant.num_friends} Freunde angemeldet und {participant.num_car_seats} Fahrplätze registriert worden.')
+        if participant.is_registered():
+            flash(f'Du hast {participant.num_friends} Freunde angemeldet und {participant.num_car_seats} Fahrplätze registriert.')
         return redirect(url_for('participant.list', id=participant.event.id))
 
     return render_template(

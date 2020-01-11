@@ -89,7 +89,7 @@ def event_info(id):
 
         event.details = form.data.event_details
 
-        if not event.is_registration_allowed():
+        if not event.has_registration_started():
             event.registration_start = now
 
         for user in uninvited:

@@ -34,10 +34,11 @@
             </div>
             <div class="uk-width-1-2@s uk-width-3-5@m">
                 <div class="uk-card-header">
-                    <h2>{{ group.name }}</h2>
                     {% if g.user.can_manage() %}
-                    {{ render_manage_group_nav(group.id) }}
+                        {{ render_manage_group_nav(group.id) }}
+                        <hr class="uk-margin-small">
                     {% endif %}
+                    <h2>{{ group.name }}</h2>
                 </div>
                 <div class="uk-card-body">
                     {{ group.abstract | markdown }}
