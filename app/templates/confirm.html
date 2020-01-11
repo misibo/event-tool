@@ -3,9 +3,9 @@
 {% block form %}
 <form class="uk-form-stacked" method="POST">
     {% block message %} {% endblock %}
-    <div>
+    <div class="uk-flex">
         <a type="submit" class="uk-button uk-button-default">Zurück</a>
-        <input type="submit" class="uk-button uk-button-danger" value="Löschen">
+        <input type="submit" class="uk-margin-small-left uk-button uk-button-danger" value="Bestätigen">
     </div>
     {{ form.csrf_token }}
 </form>

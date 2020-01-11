@@ -1,23 +1,14 @@
-{% extends 'layout.html' %}
+{% extends 'confirm.html' %}
 {% from 'macros.html' import render_field %}
 
-{% block title %}Gruppen{% endblock %}
+{% block title %}Gruppe löschen{% endblock %}
 
-{% block content %}
-<form class="uk-form-stacked" method="POST" enctype="multipart/form-data">
-    <div class="uk-flex uk-flex-center uk-flex-middle" uk-height-viewport="offset-top: true">
-        <div class="uk-width-1-2 uk-overlay uk-overlay-default uk-flex-middle uk-text-center">
-            <p><div class="uk-alert uk-alert-danger uk-alert-large">
-                Willst du die Gruppe "{{group.name}}" wirklich löschen?
-            </div></p>
-            <p>{{group.abstract | markdown}}</p>
-            <div>
-                <input type="submit" class="uk-button uk-button-primary" name='cancel' value="Zurück">
-                <input type="submit" class="uk-button uk-button-danger" name='confirm' value="Löschen">
-            </div>
-        </div>
-    </div>
-    {{ form.csrf_token }}
-</form>
+{% block message %}
+
+<div class="uk-alert uk-alert-danger uk-alert-large">
+    Willst du die Gruppe "{{group.name}}" wirklich löschen?
+</div>
+
+{{group.abstract | markdown}}
 
 {% endblock %}
