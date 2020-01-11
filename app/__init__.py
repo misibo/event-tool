@@ -1,117 +1,123 @@
-from datetime import datetime
-
-import logging
 import os
-import pytz
-import itsdangerous
-from flask import Flask, current_app, render_template, request, url_for, flash, redirect
-from flask_mail import Mail
-from flask_simplemde import SimpleMDE
-from flaskext.markdown import Markdown
-from werkzeug.exceptions import NotFound, Unauthorized, Forbidden, MethodNotAllowed
-from . import utils
-from logging.config import dictConfig
-from urllib.parse import urlparse
+import hashlib
+import uuid
+import flask
+import datetime
+from .forms import RegisterForm, LoginForm, EditUserForm
+from .models import User, db_session
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '%(levelname)s|%(module)s|%(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+app = flask.Flask(__name__)
+app.secret_key = b'misibo'  # os.urandom(16)
 
 
-app = Flask(__name__, instance_relative_config=True, static_url_path='/static')
-Markdown(app)
-SimpleMDE(app)
-
-# load conig
-app.config.from_object('config')  # load ./config.py
-app.config.from_pyfile('config.py')  # load ./instance/config.py
-app.secret_key = os.urandom(16)  # os.urandom(16)
-app.secure_serializer = itsdangerous.URLSafeSerializer(os.urandom(16))
-
-# set mailer
-app.add_template_global(utils.pretty_format_date, 'pretty_format_date')
+def close_session():
+    for key in {'user_id', 'timestamp'}:
+        if key in flask.session:
+            flask.session.pop(key)
 
 
-# register blueprints
-from . import event, group, groupmember, participant, security, user, dashboard, mail
-app.register_blueprint(security.bp)
-app.register_blueprint(dashboard.bp)
-app.register_blueprint(user.bp)
-app.register_blueprint(group.bp)
-app.register_blueprint(groupmember.bp)
-app.register_blueprint(event.bp)
-app.register_blueprint(participant.bp)
-app.register_blueprint(mail.bp)
+def create_session(user_id):
+    close_session()
+    created_at = datetime.datetime.utcnow()
+    flask.session['user_id'] = user_id
+    flask.session['timestamp'] = f'{created_at:%Y-%m-%d %H:%M:%S}'
 
 
-# initizalize database
-from .models import db
-db.init_app(app)
-
-with app.app_context():
-    db.create_all()
+def is_session_active():
+    return all(key in flask.session for key in {'user_id', 'timestamp'})
 
 
-@app.template_filter()
-def parse_freeform(text):
-    """Convert a string to all caps."""
-    from .parser import parse_text
-    return parse_text(text)
+def with_checked_session(callback):
+    app.logger.warning(flask.session)
+    if is_session_active():
+        timestamp = datetime.datetime.strptime(
+            flask.session['timestamp'], '%Y-%m-%d %H:%M:%S')
+        if not (timestamp <= datetime.datetime.utcnow() < timestamp + datetime.timedelta(hours=2)):
+            # timestamp has expired
+            return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
-@app.template_filter()
-def if_not(value, string):
-    if value:
-        return value
+        user = db_session.query(User).filter_by(
+            id=flask.session['user_id']).first()
+        if user is None:
+            # user has been deleted
+            return flask.redirect(flask.url_for('login', redirect=flask.request.url))
+
+        return callback(user)
     else:
-        return string
-
-app.jinja_env.filters['utc_to_localtime'] = utils.utc_to_localtime
-app.jinja_env.filters['localtime_to_utc'] = utils.localtime_to_utc
-app.jinja_env.filters['shortdate'] = utils.shortdate
-app.jinja_env.filters['longdate'] = utils.longdate
-app.jinja_env.filters['shortdatetime'] = utils.shortdatetime
-app.jinja_env.filters['longdatetime'] = utils.longdatetime
-
-@app.context_processor
-def utils_processor():
-
-    def _merge_into(d, **kwargs):
-        d.update(kwargs)
-        return d
-
-    return dict(
-        merge_into=_merge_into,
-        url_back=utils.url_back
-    )
+        return flask.redirect(flask.url_for('login', redirect=flask.request.url))
 
 
-@app.context_processor
-def timezone_processor():
-    return dict(
-        tz=pytz.timezone(app.config['TIMEZONE'])
-    )
-
-
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('home.html')
+    if is_session_active():
+        return flask.redirect(flask.url_for('account'))
+    else:
+        return flask.redirect(flask.url_for('login'))
 
-@app.errorhandler(NotFound)
-@app.errorhandler(Unauthorized)
-@app.errorhandler(Forbidden)
-@app.errorhandler(MethodNotAllowed)
-def handle_exception(exception):
-    return render_template('exception.html', exception=exception)
 
+@app.route('/account/', methods=['GET', 'POST'])
+def account():
+    def callback(user):
+        form = EditUserForm(obj=user)
+        if form.validate_on_submit():
+            user.username = form.username.data
+            user.first_name = form.first_name.data
+            user.email = form.email.data
+            user.family_name = form.family_name.data
+            db_session.commit()
+            flask.flash('Profil erfolgreich angepasst.')
+
+        return flask.render_template('user/edit.html', form=form)
+
+    return with_checked_session(callback)
+
+
+@app.route('/login/', methods=['GET', 'POST'])
+def login():
+
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = db_session.query(User).filter_by(
+            username=form.username.data).first()
+        create_session(user.id)
+        flask.flash('Du hast dich erfolgreich eingeloggt.')
+        return flask.redirect(flask.url_for('account'))
+
+    return flask.render_template('user/login.html', form=form)
+
+
+@app.route('/register/', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        salt = str(uuid.uuid4())
+        password_hash = hashlib.pbkdf2_hmac(
+            'sha256', form.password.data.encode('UTF-8'), salt.encode('UTF-8'), 1000)
+
+        user = User(
+            username=form.username.data,
+            first_name=form.first_name.data,
+            family_name=form.family_name.data,
+            email=form.email.data,
+            password_salt=salt,
+            password_hash=password_hash,
+        )
+
+        db_session.add(user)
+        db_session.commit()
+
+        create_session(user.id)
+
+        flask.flash('Du hast dich erfolgreich registriert.', 'info')
+
+        return flask.redirect(flask.url_for('account'))
+
+    return flask.render_template('user/register.html', form=form)
+
+
+@app.route('/logout/')
+def logout():
+    close_session()
+    return flask.redirect(flask.url_for('index'))

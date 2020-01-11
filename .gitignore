@@ -105,15 +105,3 @@ venv.bak/
 
 # pipenv
 *.lock
-
-# vscode
-.vscode
-workspace.code-workspace
-
-# app
-app/static/group/
-app/static/event/
-app/static/user/
-app/static/upload/
-
-.idea/
