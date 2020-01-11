@@ -1,7 +1,10 @@
-from flask import Blueprint, redirect, flash, render_template, g, url_for, current_app, request
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, url_for)
+from sqlalchemy.orm import joinedload
+
+from .forms import ConfirmForm, GroupMemberForm
+from .models import Group, GroupMember, User, db
 from .security import login_required, manager_required
-from .forms import GroupMemberForm, ConfirmForm
-from .models import db, Group, GroupMember, User
 from .utils import now, url_back
 
 bp = Blueprint("groupmember", __name__, url_prefix="/group")
@@ -24,9 +27,6 @@ def join(id):
         member.joined = now
         db.session.add(member)
         db.session.commit()
-
-        # TODO send mission participants for user who joined the new group
-        # mail.send_participants()
 
         flash(f'Du bist jetzt "{member.get_role_label()}"" der Gruppe "{group.name}"."', 'success')
 
@@ -68,7 +68,9 @@ def edit(id):
 @bp.route('/member/<int:id>/remove', methods=['GET', 'POST'])
 @login_required
 def remove(id):
-    member = GroupMember.query.get_or_404(id)
+    member = GroupMember.query.\
+        options(joinedload(GroupMember.group)).\
+        get_or_404(id)
 
     editing = member.user_id != g.user.id
 

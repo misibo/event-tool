@@ -146,6 +146,15 @@ class GroupMember(db.Model):
     user = db.relationship('User', back_populates='memberships')
     group = db.relationship('Group', back_populates='members')
 
+    def is_spectator(self):
+        return self.role == self.Role.SPECTATOR
+
+    def is_member(self):
+        return self.role == self.Role.MEMBER
+
+    def is_leader(self):
+        return self.role == self.Role.LEADER
+
     def get_role_label(self):
         return self.Role.get_choice_label(self.role)
 
@@ -329,18 +338,6 @@ class User(db.Model):
 
 class Event(db.Model):
 
-    class RegistrationType(Choices):
-
-        LOCKED = 1
-        OPEN = 2
-
-        @classmethod
-        def get_choices(self):
-            return {
-                self.LOCKED: 'Geschlossen',
-                self.OPEN: 'Offen',
-            }
-
     __tablename__ = 'Event'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -354,7 +351,6 @@ class Event(db.Model):
     created = db.Column(UtcDateTime)
     modified = db.Column(UtcDateTime)
     registration_start = db.Column(UtcDateTime)
-    regitration_type = db.Column(db.SmallInteger)
     deadline = db.Column(UtcDateTime)
     background_version = db.Column(db.Integer, default=0, nullable=False)
 
@@ -365,7 +361,7 @@ class Event(db.Model):
     def is_upcoming(self):
         return self.start > now
 
-    def is_registration_allowed(self):
+    def has_registration_started(self):
         return self.registration_start and self.registration_start < now
 
     def is_deadline_over(self):
@@ -377,16 +373,16 @@ class Event(db.Model):
         else:
             return f'{self.start.astimezone(tz).strftime("%d.%m.%y %H:%M")} bis {self.end.astimezone(tz).strftime("%d.%m.%y %H:%M")}'
 
+    def print_start_day(self):
+        return self.start.astimezone(tz).strftime('%d')
+
+    def print_start_month(self):
+        return self.start.astimezone(tz).strftime('%b')
+
     def get_folder(self):
         folder = os.path.join('app', 'static', 'event', str(self.id))
         os.makedirs(folder, exist_ok=True)
         return folder
-
-    def get_url(self, file, version):
-        if version:
-            return url_for('static', filename=os.path.join('event', str(self.id), file), v=version)
-        else:
-            return False
 
     def save_background(self, file):
         try:
@@ -397,8 +393,12 @@ class Event(db.Model):
         else:
             self.background_version += 1
 
-    def get_background_url(self, resolution=1920):
-        return self.get_url(f'background_{resolution}.jpg', self.background_version)
+    def get_background_url(self, width=1920):
+        file = f'background_{width}.jpg'
+        if self.background_version:
+            return url_for('static', filename=os.path.join('event', str(self.id), file), v=self.background_version)
+        else:
+            return url_for('static', filename=f'default/event/{file}')
 
     def __repr__(self):
         return auto_repr(self, ['id', 'name', 'location', 'start'])
@@ -431,11 +431,13 @@ class Group(db.Model):
         os.makedirs(folder, exist_ok=True)
         return folder
 
-    def get_url(self, file, version):
+    def get_url(self, file, version, default=False):
         if version:
             return url_for('static', filename=os.path.join('group', str(self.id), file), v=version)
+        elif default:
+            return url_for('static', filename=f'default/group/{file}')
         else:
-            return False
+            return ''
 
     def save_logo(self, file):
         try:
@@ -463,7 +465,7 @@ class Group(db.Model):
         return self.get_url(f'logo_{resolution}.png', self.logo_version)
 
     def get_background_url(self, width=1920):
-        return self.get_url(f'background_{width}.jpg', self.background_version)
+        return self.get_url(f'background_{width}.jpg', self.background_version, default=True)
 
     def get_flyer_url(self):
         return self.get_url(f'flyer.pdf', self.flyer_version)

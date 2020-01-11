@@ -6,6 +6,9 @@
 <form class="uk-form uk-form-stacked" method="POST">
     {{ render_field(form.role, class='uk-select') }}
     <input class="uk-button uk-button-default" type="submit" value="{{ 'Ändern' if member.id else 'Beitreten' }}">
+    <div class="uk-alert uk-alert-primary uk-alert-large">
+        "Zuschauer" werden erhalten Infomails bzgl. Anlässen, können sich aber im Gegensatz zu "Teilnehmer" nicht dafür anmelden.
+    </div>
     {{ form.csrf_token }}
 </form>
 {% endblock %}

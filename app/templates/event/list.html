@@ -22,7 +22,7 @@
                 <tr>
                     <th class="uk-visible@m"></th>
                     <th>{{ render_order('Name', 'name', args)}}</th>
-                    <th class="uk-visible@m">Kurzinfo</th>
+                    <th class="uk-visible@xl">Kurzinfo</th>
                     <th>Standort</th>
                     <th>{{ render_order('Start', 'start', args)}}</th>
                     <th class="uk-visible@s">Ende</th>
@@ -39,7 +39,7 @@
                         {{ render_event_date(event) }}
                     </td>
                     <td>{{ event.name }}</td>
-                    <td class="uk-visible@m">{{ event.abstract | markdown }}</td>
+                    <td class="uk-visible@xl">{{ event.abstract | markdown }}</td>
                     <td>{{ event.location }}</td>
                     <td>{{ event.start | shortdatetime }}</td>
                     <td class="uk-visible@s">{{ event.end | shortdatetime }}</td>

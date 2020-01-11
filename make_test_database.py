@@ -8,8 +8,7 @@ from slugify import slugify
 from app import app
 # from app.participant import list_missing_participants
 from app.models import Event, Group, GroupMember, Participant, User, db
-
-tz = pytz.timezone('Europe/Zurich')
+from app.utils import tz, now
 random.seed(42)
 
 
@@ -24,9 +23,9 @@ def create_user(first_name, family_name, role=User.Role.USER):
         username=username,
         first_name=first_name,
         family_name=family_name,
-        registered=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now()),
-        last_login=tz.localize(datetime.now()),
+        registered=now,
+        modified=now,
+        last_login=now,
         email=email,
         role=role,
     )
@@ -41,26 +40,27 @@ def create_group(name, abstract, details=''):
         abstract=abstract,
         details=details,
         slug=slugify(name),
-        created=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now())
+        created=now,
+        modified=now
     )
     db.session.add(group)
     return group
 
 
-def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, groups, invited=False):
+def create_event(name, abstract, details, location, start, end, equipment, cost, deadline, groups, registration_start):
     event = Event(
         name=name,
         abstract=abstract,
         details=details,
         location=location,
-        start=tz.localize(start),
-        end=tz.localize(end),
+        start=start,
+        end=end,
         equipment=equipment,
         cost=cost,
-        deadline=tz.localize(deadline),
-        created=tz.localize(datetime.now()),
-        modified=tz.localize(datetime.now()),
+        registration_start=registration_start if registration_start else None,
+        deadline=deadline,
+        created=now,
+        modified=now,
     )
     for group in groups:
         event.groups.append(group)
@@ -97,10 +97,6 @@ with app.app_context():
         create_group('20up', '20 Jahre und älter'),
     ]
 
-
-    today = datetime.now()
-    today = datetime(today.year, today.month, today.day)
-
     events = [
         create_event(
             name='Nationalpark-Paket Arenal',
@@ -128,11 +124,12 @@ with app.app_context():
                 Mehr informationen auf: [Kuoni](https://www.kuoni.ch/nord-und-zentralamerika/costa-rica/rundreisen/nationalpark-paket-arenal/)
                 """),
             location='Zypern',
-            start=today + timedelta(days=-2, hours=18, minutes=30),
-            end=today + timedelta(days=-2, hours=22),
+            start=now + timedelta(days=-2, hours=18, minutes=30),
+            end=now + timedelta(days=-2, hours=22),
             equipment='Taschenlampe',
             cost=0,
-            deadline=today + timedelta(days=-4),
+            registration_start=now + timedelta(days=-3),
+            deadline=now + timedelta(days=-4),
             groups=[groups[0]],
         ),
         create_event(
@@ -168,11 +165,12 @@ with app.app_context():
                 Mehr informationen auf: [Kuoni](https://www.kuoni.ch/nord-und-zentralamerika/costa-rica/rundreisen/wilder-sueden/)
                 """),
             location='Costa Rica',
-            start=today + timedelta(hours=18, minutes=45),
-            end=today + timedelta(hours=24),
+            start=now + timedelta(hours=18, minutes=45),
+            end=now + timedelta(hours=24),
             equipment='Zelt',
             cost=120,
-            deadline=today + timedelta(hours=12),
+            registration_start=None,
+            deadline=now + timedelta(hours=12),
             groups=[groups[0], groups[1]],
         ),
         create_event(
@@ -210,11 +208,12 @@ with app.app_context():
                 Mehr informationen auf: <https://www.kuoni.ch/asien/indonesien/rundreisen/komodo-flores-zum-kennenlernen/>
                 """),
             location='Südbali​',
-            start=today + timedelta(days=7, hours=17, minutes=30),
-            end=today + timedelta(days=7, hours=26),
+            start=now + timedelta(days=7, hours=17, minutes=30),
+            end=now + timedelta(days=7, hours=26),
             equipment='Wanderschuhe',
             cost=5,
-            deadline=today + timedelta(days=6, hours=12),
+            registration_start=now + timedelta(days=4, hours=12),
+            deadline=now + timedelta(days=6, hours=12),
             groups=[groups[2]],
         ),
         create_event(
@@ -240,11 +239,12 @@ with app.app_context():
                 Mehr informationen auf: <https://www.kuoni.ch/asien/vietnam/rundreisen/flusskreuzfahrt-mekong-eyes/>
                 """),
             location='Mekong',
-            start=today + timedelta(days=14, hours=18, minutes=00),
-            end=today + timedelta(days=14, hours=20, minutes=15),
+            start=now + timedelta(days=14, hours=18, minutes=00),
+            end=now + timedelta(days=14, hours=20, minutes=15),
             equipment='Hut',
             cost=10,
-            deadline=today + timedelta(days=12),
+            registration_start=now + timedelta(days=10),
+            deadline=now + timedelta(days=12),
             groups=[groups[0]],
         ),
     ]
@@ -252,17 +252,17 @@ with app.app_context():
     for i, user in enumerate(users):
 
         if i < len(groups):
-            role = GroupMember(user=user, group=groups[i], joined=tz.localize(today), role=GroupMember.Role.LEADER)
+            role = GroupMember(user=user, group=groups[i], joined=now, role=GroupMember.Role.LEADER)
             db.session.add(role)
 
         g1, g2 = random.sample(set(range(len(groups))) - {i}, 2)
 
         if random.uniform(0, 1) > 0.3:
-            role = GroupMember(user=user, group=groups[g1], joined=tz.localize(today), role=GroupMember.Role.MEMBER)
+            role = GroupMember(user=user, group=groups[g1], joined=now, role=GroupMember.Role.MEMBER)
             db.session.add(role)
 
         if random.uniform(0, 1) > 0.3:
-            role = GroupMember(user=user, group=groups[g2], joined=tz.localize(today), role=GroupMember.Role.SPECTATOR)
+            role = GroupMember(user=user, group=groups[g2], joined=now, role=GroupMember.Role.SPECTATOR)
             db.session.add(role)
 
     db.session.commit()

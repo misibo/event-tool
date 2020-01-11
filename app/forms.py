@@ -347,7 +347,6 @@ class EventEditForm(FlaskForm):
     cost = IntegerField('Kosten', [Optional(), NumberRange(min=0)])
     registration_start = LocalDateTimeField('Anmeldestart', format='%d.%m.%y %H:%M', validators=[Optional()])
     deadline = LocalDateTimeField('Anmeldeschluss', format='%d.%m.%y %H:%M')
-    registration_type = SelectField('Anmeldetyp', choices=Event.RegistrationType.get_select_choices(), default=Event.RegistrationType.OPEN, coerce=int)
     background = PhotographyFileField('Hintergrund')
     groups = QuerySelectMultipleField(
         'Gruppen',

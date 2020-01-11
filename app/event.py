@@ -21,6 +21,7 @@ bp = Blueprint("event", __name__, url_prefix="/event")
 @bp.route('/')
 def upcoming():
     pagination = Event.query.\
+        filter(Event.start > now).\
         order_by(Event.start.asc()).\
         paginate(per_page=current_app.config['PAGINATION_ITEMS_PER_PAGE'])
     return render_template('event/upcoming.html', pagination=pagination)
@@ -30,35 +31,54 @@ def upcoming():
 def view(id):
     event = Event.query.get_or_404(id)
 
-    leaders = User.query.\
-        join(GroupMember, GroupMember.user_id == User.id).\
+    logged_in = g.user is not None
+
+    members = GroupMember.query.\
+        options(joinedload(GroupMember.user)).\
         join(Group, Group.id == GroupMember.group_id).\
         join(GroupEventRelation, GroupEventRelation.group_id == Group.id).\
         join(Event, Event.id == GroupEventRelation.event_id).\
         filter(Event.id == id).\
-        filter(GroupMember.role == GroupMember.Role.LEADER).\
         all()
 
-    participants = Participant.query.options(joinedload(Participant.user)).\
+    membership_event_groups = []
+    leaders = []
+
+    for member in members:
+
+        # filter leaders for event via its assigned groups
+        if member.is_leader():
+            leaders.append(member.user)
+
+        # get membership of current user of assigned groups of event
+        if logged_in and member.user_id == g.user.id:
+            membership_event_groups.append(member)
+
+    participants = Participant.query.\
+        options(joinedload(Participant.user)).\
         filter(Participant.event_id == event.id).\
         all()
 
-    participants = []
-    participant = None
-    logged_in = g.user is not None
+    participation = None
+    registered = []
 
-    for inv in participants:
-        if inv.accepted_reply():
-            participants.append(inv.user)
-        if logged_in and inv.user_id == g.user.id:
-            participant = inv
+    for participant in participants:
+
+        # filter for registred participants
+        if participant.is_registered():
+            registered.append(participant.user)
+
+        # get participation of current user
+        if logged_in and participant.user_id == g.user.id:
+            participation = participant
 
     return render_template(
         'event/event.html',
         event=event,
         leaders=leaders,
-        participants=participants,
-        participant=participant
+        membership_event_groups=membership_event_groups,
+        registered=registered,
+        participation=participation
     )
 
 class GroupChoices(Choices):
@@ -105,25 +125,27 @@ def create():
     return render_template('event/edit.html', form=form, event=event)
 
 
-@bp.route('/copy/<int:id>', methods=['GET'])
+@bp.route('/copy/<int:id>', methods=['GET', 'POST'])
 @manager_required
 def copy(id):
+
     event = Event.query.get_or_404(id)
-    name = event.name
 
-    db.session.expunge(event)
-    make_transient(event)
+    form = EventEditForm(obj=event)
 
-    event.id = None
-    event.name =  f'{name} - Kopie'
-    event.created = now
-    event.modified = now
+    if form.validate_on_submit():
+        new_event = Event()
+        form.populate_obj(new_event)
+        new_event.created = now
+        new_event.modified = now
+        db.session.add(new_event)
+        db.session.commit()
+        flash(f'Die bearbeitete Kopie von "{event.name}" wurde neu als "{new_event.name}" gespeichert.')
+        return redirect(url_for('event.edit', id=new_event.id, url_back=form.url_back.data))
 
-    db.session.add(event)
-    db.session.commit()
+    flash(f'Du bearbeitest eine Kopie von "{event.name}".', 'warning')
 
-    flash(f'Kopie von Anlass "{name}" erstellt.', 'success')
-    return redirect(url_for('event.edit', id=event.id, url_back=url_back()))
+    return render_template('event/edit.html', form=form, event=event)
 
 
 @bp.route('/edit/<int:id>', methods=['GET', 'POST'])
@@ -149,10 +171,9 @@ def delete(id):
     form = ConfirmForm(url_back=url_back())
 
     if form.validate_on_submit():
-        if 'confirm' in request.form:
-            db.session.delete(event)
-            db.session.commit()
-            flash(f'{event.name} wurde gelöscht.', 'success')
+        db.session.delete(event)
+        db.session.commit()
+        flash(f'{event.name} wurde gelöscht.', 'warning')
         return redirect(form.url_back.data)
 
     return render_template('event/delete.html', form=form, event=event)

@@ -7,130 +7,103 @@
 </div>
 {% endblock %}
 
-{% block attrs %}class="uk-background-cover" data-src="{{ group.get_background_url() }}" uk-img{% endblock %}
-
 {% block hero %}
-{% set content %}
-<div class="uk-text-center">
-    <h1>{{ group.name }}</h1>
-    <p>{{ group.abstract }}</p>
-    {% if g.user %}
-    {% if g.user.can_manage() %}
+    {% set content %}
+    <div class="uk-text-center">
+        <h1>{{ group.name }}</h1>
+        <div class="uk-text-lead uk-text-bold">
+            {{ group.abstract }}</p>
+        </div>
+        {% if g.user %}
         <hr class="uk-divider-small">
-        <div class="uk-form-label uk-margin-small-bottom">
-            Verwalten
-        </div>
+        <h5>Teilnahme</h5>
         <div class="uk-flex uk-flex-center">
-            {{ render_manage_group_nav(group.id) }}
+            {{ render_groupmember_actions(membership, group) }}
         </div>
-    {% endif %}
-    <hr class="uk-divider-small">
-    <div class="uk-form-label uk-margin-small-bottom">
-        Mitgliedschaft
+            {% if g.user.can_manage() %}
+                <hr class="uk-divider-small">
+                <h5>Verwalten</h5>
+                <div class="uk-flex uk-flex-center">
+                    {{ render_manage_group_nav(group.id) }}
+                </div>
+            {% endif %}
+        {% endif %}
+        <hr class="uk-divider-small">
+        <div class="uk-margin">
+            <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
+        </div>
     </div>
-    <div class="uk-flex uk-flex-center">
-        {{ render_groupmember_actions(membership, group) }}
-    </div>
-    {% endif %}
-    <hr class="uk-divider-small">
-    <div class="uk-margin">
-        <a class="uk-icon-button" href="#details" uk-scroll uk-icon="chevron-down"></a>
-    </div>
-</div>
-{% endset %}
-{{ render_hero(content, group.get_background_url()) }}
+    {% endset %}
+    {{ render_hero(content, group.get_background_url()) }}
 {% endblock %}
 
 {% block top %}
 <div id="details" class="uk-section uk-section-secondary">
     <div class="uk-container uk-container-xsmall">
+        <div class="uk-text-center">
+            <h4>Details</h4>
+            <hr class="uk-divider-small">
+        </div>
         {{ group.details | if_not('Keine Details vorhanden.') | markdown }}
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
-    <div id="details">
-        <div class="uk-child-width-1-2@m" uk-grid>
-            <div>
-                <div class="uk-card uk-card-default">
-                    <div class="uk-card-header">
-                        <h3 class="uk-card-title">Details</h3>
+<div>
+    <div class="uk-text-center">
+        <h4>Nächstens</h4>
+        <hr class="uk-divider-small">
+    </div>
+
+    {% if upcoming %}
+    <div class="uk-grid-small" uk-grid>
+    {% for event in upcoming %}
+        <div>
+            <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+                <div>
+                    {{ render_event_date(event) }}
+                    <h4 class="uk-margin-remove">{{ event.name }}</h4>
+                    <div class="uk-text-muted">
+                        {{ event.print_duration() }}
                     </div>
-                    <div class="uk-card-body">
-                        {{ group.details | if_not("Nicht vorhanden.") | markdown }}
-                    </div>
-                    {% if group.flyer_version %}
-                    <div class="uk-card-footer">
-                        <span uk-icon="icon: file-pdf"></span><a href="{{ group.get_flyer_url() }}" class="uk-margin-small-left uk-button uk-button-text" target="_blank">Flyer öffnen</a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div>
-                <div class="uk-card uk-card-default">
-                    <div class="uk-card-header">
-                        <h3 class="uk-card-title">Nächstens</h3>
-                    </div>
-                    <div class="uk-card-body">
-                        {% if upcoming %}
-                        <div class="uk-grid-small" uk-grid>
-                        {% for event in upcoming %}
-                            <div>
-                                <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
-                                    <div class="uk-width-auto">
-                                        {{ render_event_date(event) }}
-                                    </div>
-                                    <div class="uk-width-expand">
-                                        <h4 class="uk-margin-remove">{{ event.name }}</h4>
-                                        <div class="uk-text-muted">
-                                            {{ event.print_duration() }}
-                                        </div>
-                                        <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                        </div>
-                        {% else %}
-                            Keine anstehenden Anlässe
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="uk-card uk-card-default">
-                    <div class="uk-card-header">
-                        <h3 class="uk-card-title">Mitglieder</h3>
-                    </div>
-                    <div class="uk-card-body">
-                        {% if members %}
-                        <div class="uk-grid-small uk-child-width-1-4 uk-child-width-1-6@s uk-child-width-1-4@m uk-child-width-1-5@l uk-child-width-1-6@xl" uk-grid>
-                        {% for member in members %}
-                            <div>
-                                <div class="uk-inline" uk-tooltip="title: {{ member.user.first_name }} {{ member.user.family_name }}; pos: bottom-right">
-                                    {{ render_user_avatar(member.user, resolution=64) }}
-                                    <div class="uk-position-absolute" style="right: -5px; bottom: -5px;">
-                                        {% if member.role == member.Role.SPECTATOR %}
-                                            <span class="uk-icon-button" uk-icon="icon: bell"></span>
-                                        {% elif member.role == member.Role.MEMBER %}
-                                            <span class="uk-icon-button" uk-icon="icon: user"></span>
-                                        {% elif member.role == member.Role.LEADER %}
-                                            <span class="uk-icon-button" uk-icon="icon: bolt"></span>
-                                        {% endif %}
-                                    </div>
-                                    <a class="uk-link-reset uk-position-cover" href="{{ url_for('user.view', username=member.user.username) }}"></a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                        </div>
-                        {% else %}
-                            Keine Mitglieder
-                        {% endif %}
-                    </div>
+                    <a class="uk-button uk-button-text" href="{{ url_for('event.view', id=event.id) }}">Ansehen</a>
                 </div>
             </div>
         </div>
+    {% endfor %}
     </div>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted uk-margin-remove">Keine anstehenden Anlässe.</h3>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
+
+{% block footer %}
+{% if membership %}
+<div class="uk-margin-large-bottom">
+    <div class="uk-text-center">
+        <h4>Mitglieder</h4>
+        <hr class="uk-divider-small">
+    </div>
+
+    {% if members %}
+    <div class="uk-flex-center uk-grid-small" uk-grid>
+    {% for member in members %}
+        <div>
+            {{ render_user_avatar(member.user) }}
+        </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="uk-text-center uk-margin">
+        <h3 class="uk-text-muted uk-margin-remove">Keine Mitglieder.</h3>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
 

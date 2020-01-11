@@ -106,7 +106,7 @@ def timezone_processor():
 
 @app.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('dashboard.upcoming'))
+    return render_template('home.html')
 
 @app.errorhandler(NotFound)
 @app.errorhandler(Unauthorized)

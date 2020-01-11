@@ -58,10 +58,6 @@
                 Anmeldestart wird auch gesetzt, wenn Einladungen für den Anlass versendet werden.
             </div>
             {{ render_field(form.deadline, class='uk-input', placeholder='dd.mm.yy hh:mm') }}
-            {{ render_field(form.registration_type, class='uk-select') }}
-            <div class="uk-alert-primary" uk-alert>
-                Bei "Offen" können alle Mitglieder der Gruppen, welche dem Anlass zugeordnet sind, daran teilnehmen. "Geschlossen" erlaubt nur eingeladene Mitglieder.
-            </div>
             {{ render_field(form.groups) }}
         </div>
     </div>

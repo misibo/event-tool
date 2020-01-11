@@ -31,7 +31,7 @@
         <tbody>
             {% for group in pagination.items %}
             <tr>
-                <td> {{ render_group_logo(group) }}</td>
+                <td> {{ render_group_logo(group, 32) }}</td>
                 <td>{{ group.name }}</td>
                 <td class="uk-table-expand">{{ group.abstract | markdown }}</td>
                 <td>{{ group.modified.astimezone(tz).strftime('%d.%m.%y %H:%M') }}</td>
